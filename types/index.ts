@@ -12,7 +12,6 @@ export enum BloodGroup {
   }
   
   export enum UserStatus {
-    ACTIVE = 'Active',
     INACTIVE = 'Inactive',
     SUSPENDED = 'Suspended',
     REST = 'Rest',
@@ -32,6 +31,7 @@ export enum BloodGroup {
     PROBATION_LEAVE = 'Probation Leave',
     ON_DUTY = 'On Duty',
     ON_OUT_DUTY = 'On Out Duty',
+    OFF_DUTY='Off Duty'
   }
 
   export interface IUser {
