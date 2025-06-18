@@ -1,6 +1,7 @@
+import { IPermission } from "@/types";
 import { Schema, model, models } from "mongoose";
 
-const PermissionSchema = new Schema({
+const PermissionSchema = new Schema<IPermission>({
     name: {type:String, required:true},
     guard_name: { type: String, default: 'User' },
     created_at: { type: Date, default: Date.now },

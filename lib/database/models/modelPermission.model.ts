@@ -1,6 +1,7 @@
+import { IModelPermission } from "@/types";
 import { Schema, model, models } from "mongoose";
 
-const ModelPermissionSchema = new Schema({
+const ModelPermissionSchema = new Schema<IModelPermission>({
     permission_id: {type:Schema.Types.ObjectId, ref:'Permission'},
     model_type: { type: String, default: 'User' },
     model_id: {type:Schema.Types.ObjectId}
