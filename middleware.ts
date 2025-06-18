@@ -11,8 +11,10 @@ import { NextRequest, NextResponse } from 'next/server'; // Import Next.js reque
 
 // Define required permissions for specific routes
 const routePermissions: Record<string, string> = {
+  '/admin/dashboard': 'manage_dashboard', // Accessing /admin/users requires 'manage_users' permission
   '/admin/users': 'manage_users', // Accessing /admin/users requires 'manage_users' permission
   '/admin/roles': 'manage_roles', // Accessing /admin/roles requires 'manage_roles' permission
+  '/admin/permissions': 'manage_permissions', // Accessing /admin/roles requires 'manage_roles' permission
 };
 
 // Middleware function that runs on every request

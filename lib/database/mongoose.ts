@@ -2,7 +2,7 @@
 import mongoose, { Mongoose } from 'mongoose';
 
 // Get the MongoDB connection string from environment variables
-console.log('MONGODB_URI =', process.env.MONGODB_URI);
+// console.log('MONGODB_URI =', process.env.MONGODB_URI);
 const MONGODB_URI = process.env.MONGODB_URI;
 
 // Define a TypeScript interface to structure the cached connection

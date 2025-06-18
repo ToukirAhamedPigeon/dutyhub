@@ -7,6 +7,8 @@
  * If the conditions are not met, it renders nothing (null).
  */
 
+"use client";
+
 import { ReactNode } from 'react';           // Import ReactNode type for typing children prop
 import { useSelector } from 'react-redux';  // Import useSelector hook to access Redux store
 

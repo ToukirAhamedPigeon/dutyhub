@@ -5,14 +5,15 @@
  * for further authorization use throughout the app.
  */
 
-import NextAuth from 'next-auth'; // Import NextAuth core
+import NextAuth, {NextAuthOptions,Session} from 'next-auth'; // Import NextAuth core
+import type { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials'; // Import the credentials provider
 import { dbConnect } from '@/lib/database/mongoose'; // Import database connection helper
 import User from '@/lib/database/models/user.model'; // Import User model from database
 import bcrypt from 'bcryptjs'; // Import bcrypt to compare hashed passwords
 
 // Define the NextAuth configuration object
-export const authOptions = NextAuth({
+export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' }, // Use JWT strategy for managing sessions (stateless)
 
   providers: [
@@ -47,22 +48,17 @@ export const authOptions = NextAuth({
   ],
 
   callbacks: {
-    // Modify the JWT token after authentication
-    async jwt({ token, user }) {
-      if (user) token.id = user.id; // Add user ID to token payload
-      return token; // Return updated token
+    async jwt({ token, user }: { token: JWT; user?: any }): Promise<JWT> {
+      if (user) token.id = user.id;
+      return token;
     },
 
-    // Modify the session object returned to the client
-    async session({ session, token }) {
-      // If session has a user and token includes ID, attach ID to session.user
-      if (session.user && token.id) {
-        session.user.id = token.id as string;
-      }
-      return session; // Return updated session
+    async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
+      if (session.user && token.id) session.user.id = token.id as string;
+      return session;
     }
   }
-});
+};
 
 // Create the NextAuth handler using the configuration
 const handler = NextAuth(authOptions);
