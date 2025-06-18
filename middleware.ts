@@ -26,7 +26,6 @@ export function middleware(req: NextRequest) {
   if (!required) return NextResponse.next();
 
   const cookie = req.cookies.get('user-permissions'); // Get the user's permissions from cookies
-
   // If no cookie found, redirect to unauthorized page
   if (!cookie) return NextResponse.redirect(new URL('/401', req.url));
 
