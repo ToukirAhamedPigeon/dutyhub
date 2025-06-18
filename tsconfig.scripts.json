@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+        "@/*": ["./*"]
+        },
+      "noEmit": false,
+      "module": "CommonJS", // Important for compatibility with ts-node
+      "outDir": "dist"
+    },
+    "include": ["lib/database/scripts/**/*.ts"]
+  }
+  
