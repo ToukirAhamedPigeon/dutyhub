@@ -1,0 +1,37 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserStatus = exports.BloodGroup = void 0;
+var BloodGroup;
+(function (BloodGroup) {
+    BloodGroup["A_POS"] = "A+";
+    BloodGroup["A_NEG"] = "A-";
+    BloodGroup["B_POS"] = "B+";
+    BloodGroup["B_NEG"] = "B-";
+    BloodGroup["AB_POS"] = "AB+";
+    BloodGroup["AB_NEG"] = "AB-";
+    BloodGroup["O_POS"] = "O+";
+    BloodGroup["O_NEG"] = "O-";
+})(BloodGroup || (exports.BloodGroup = BloodGroup = {}));
+var UserStatus;
+(function (UserStatus) {
+    UserStatus["INACTIVE"] = "Inactive";
+    UserStatus["SUSPENDED"] = "Suspended";
+    UserStatus["REST"] = "Rest";
+    UserStatus["MEDICAL_REST"] = "Medical Rest";
+    UserStatus["CASUAL_LEAVE"] = "Casual Leave";
+    UserStatus["SICK_LEAVE"] = "Sick Leave";
+    UserStatus["PATERNITY_LEAVE"] = "Paternity Leave";
+    UserStatus["MATERNITY_LEAVE"] = "Maternity Leave";
+    UserStatus["BEREAVEMENT_LEAVE"] = "Bereavement Leave";
+    UserStatus["MARRIAGE_LEAVE"] = "Marriage Leave";
+    UserStatus["DEATH_LEAVE"] = "Death Leave";
+    UserStatus["VACATION_LEAVE"] = "Vacation Leave";
+    UserStatus["FESTVAL_LEAVE"] = "Festival Leave";
+    UserStatus["OTHER_LEAVE"] = "Other Leave";
+    UserStatus["RECREATIONAL_LEAVE"] = "Recreational Leave";
+    UserStatus["TRAINING_LEAVE"] = "Training Leave";
+    UserStatus["PROBATION_LEAVE"] = "Probation Leave";
+    UserStatus["ON_DUTY"] = "On Duty";
+    UserStatus["ON_OUT_DUTY"] = "On Out Duty";
+    UserStatus["OFF_DUTY"] = "Off Duty";
+})(UserStatus || (exports.UserStatus = UserStatus = {}));
