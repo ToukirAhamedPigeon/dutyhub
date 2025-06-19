@@ -75,9 +75,9 @@ export default function SignInPage() {
 
         {/* Login Card */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5, ease: 'easeOut', delay: 0.5 }}
           className="relative z-10"
         >
           <Container className="w-full max-w-sm md:max-w-lg lg:max-w-xl xl:max-w-2xl">
@@ -103,7 +103,7 @@ export default function SignInPage() {
                   className="space-y-5"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0 }}
                 >
                   <div>
                     <Label htmlFor="username" className="text-gray-700">
