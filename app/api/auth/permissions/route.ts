@@ -1,55 +1,61 @@
-/**
- * API Route: /api/auth/permissions
- *
- * Purpose:
- * This API handler authenticates a user using NextAuth, connects to the database,
- * and fetches all permissions assigned to the user—both directly and through roles.
- * It returns a merged list of unique permission IDs that the authenticated user has.
- */
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from './../[...nextauth]/route';
+import { dbConnect } from '@/lib/database/mongoose';
 
-import { Session, getServerSession } from 'next-auth'; // Import NextAuth utilities for session handling
-import { authOptions } from './../[...nextauth]/route'; // Import NextAuth configuration (authOptions)
-import { dbConnect } from '@/lib/database/mongoose'; // Import MongoDB connection function
-import ModelRole from '@/lib/database/models/modelRole.model'; // Import model that links users to roles
-import RolePermission from '@/lib/database/models/rolePermission.model'; // Import model that links roles to permissions
-import ModelPermission from '@/lib/database/models/modelPermission.model'; // Import model that links users directly to permissions
-import { NextApiRequest, NextApiResponse } from 'next'; // Import types for Next.js API handlers
+import ModelRole from '@/lib/database/models/modelRole.model';
+import RolePermission from '@/lib/database/models/rolePermission.model';
+import ModelPermission from '@/lib/database/models/modelPermission.model';
+import Role from '@/lib/database/models/role.model'; // Assuming role names are in this model
+import Permission from '@/lib/database/models/permission.model'; // Assuming permission names are here
 
-// Default export of the API route handler
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Get the session object from the server using NextAuth
-  const session = await getServerSession(req, res, authOptions) as Session | null;
+export async function GET() {
+  const session = await getServerSession(authOptions);
 
-  // If no session or missing user ID, return 401 Unauthorized
   if (!session || !session.user || !session.user.id) {
-    return res.status(401).end();
+    return new NextResponse('Unauthorized', { status: 401 });
   }
 
-  // Connect to MongoDB
   await dbConnect();
-  const userId = session.user.id; // Get the user ID from the session
+  const userId = session.user.id;
 
-  // Get roles assigned to the user from the ModelRole collection
   const roles = await ModelRole.find({ model_id: userId });
-
-  // Extract the role IDs from those roles
   const roleIds = roles.map(r => r.role_id);
 
-  // Get all permissions assigned to these roles
-  const rolePermissions = await RolePermission.find({ role_id: { $in: roleIds } });
+  const roleData = await Role.find({ _id: { $in: roleIds } }); // Get role names
+  const roleNames = roleData.map(role => role.name);
 
-  // Extract the permission IDs from the role-permissions
+  const rolePermissions = await RolePermission.find({ role_id: { $in: roleIds } });
   const rolePermissionIds = rolePermissions.map(rp => rp.permission_id.toString());
 
-  // Get any permissions directly assigned to the user
   const directPermissions = await ModelPermission.find({ model_id: userId });
-
-  // Extract the permission IDs from the direct-permissions
   const directPermissionIds = directPermissions.map(p => p.permission_id.toString());
 
-  // Merge and deduplicate all permission IDs
-  const mergedPermissions = Array.from(new Set([...rolePermissionIds, ...directPermissionIds]));
+  const permissionIds = Array.from(new Set([...rolePermissionIds, ...directPermissionIds]));
+  const permissionData = await Permission.find({ _id: { $in: permissionIds } }); // Get permission names
+  const permissionNames = permissionData.map(p => p.name);
 
-  // Send back the list of unique permission IDs as a JSON response
-  res.json({ permissions: mergedPermissions });
+  const response = NextResponse.json({
+    permissions: permissionNames,
+    roles: roleNames,
+  });
+
+  // 🍪 Set cookie so middleware can use this
+  response.cookies.set('user-permissions', JSON.stringify(permissionNames), {
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: false,
+    maxAge: 60 * 60 * 24,
+  });
+
+  response.cookies.set('user-roles', JSON.stringify(roleNames), {
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: false,
+    maxAge: 60 * 60 * 24,
+  });
+
+  return response;
 }

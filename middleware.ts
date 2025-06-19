@@ -1,39 +1,50 @@
-/**
- * Middleware: Permission-Based Route Protection
- *
- * Purpose:
- * This middleware protects specific routes based on user permissions. It reads a
- * cookie called `user-permissions` and checks if the user has the required permission
- * to access a given route. If not, it redirects the user to a 401 (Unauthorized) page.
- */
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextRequest, NextResponse } from 'next/server'; // Import Next.js request/response types for middleware
-
-// Define required permissions for specific routes
 const routePermissions: Record<string, string> = {
-  '/admin/dashboard': 'manage_dashboard', // Accessing /admin/users requires 'manage_users' permission
-  '/admin/users': 'manage_users', // Accessing /admin/users requires 'manage_users' permission
-  '/admin/roles': 'manage_roles', // Accessing /admin/roles requires 'manage_roles' permission
-  '/admin/permissions': 'manage_permissions', // Accessing /admin/roles requires 'manage_roles' permission
+  '/admin/dashboard': 'manage_dashboard',
+  '/admin/users': 'manage_users',
+  '/admin/roles': 'manage_roles',
+  '/admin/permissions': 'manage_permissions',
 };
 
-// Middleware function that runs on every request
 export function middleware(req: NextRequest) {
-  const url = req.nextUrl.pathname; // Extract the path from the request URL
-  const required = routePermissions[url]; // Look up required permission for the path
+  const { pathname } = req.nextUrl;
 
-  // If the route doesn't require a specific permission, allow access
-  if (!required) return NextResponse.next();
+  const sessionCookie = req.cookies.get('next-auth.session-token') || req.cookies.get('__Secure-next-auth.session-token');
+  const permissionsCookie = req.cookies.get('user-permissions');
 
-  const cookie = req.cookies.get('user-permissions'); // Get the user's permissions from cookies
-  // If no cookie found, redirect to unauthorized page
-  if (!cookie) return NextResponse.redirect(new URL('/401', req.url));
+  // Redirect root path "/" to "/login" or "/admin/dashboard" if logged in
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL(sessionCookie ? '/admin/dashboard' : '/login', req.url));
+  }
 
-  const permissions = JSON.parse(cookie.value || '[]'); // Parse the permissions from the cookie
+  // If user accesses /login and is already logged in, redirect to /admin/dashboard
+  if (pathname === '/login' && sessionCookie) {
+    return NextResponse.redirect(new URL('/admin/dashboard', req.url));
+  }
 
-  // If the required permission is not included in the user's permissions, deny access
-  if (!permissions.includes(required)) return NextResponse.redirect(new URL('/401', req.url));
+  // Redirect "/admin" to "/admin/dashboard"
+  if (pathname === '/admin') {
+    return NextResponse.redirect(new URL('/admin/dashboard', req.url));
+  }
 
-  // User has the required permission; allow the request to proceed
+  // Protect routes that require specific permissions
+  const requiredPermission = routePermissions[pathname];
+  if (requiredPermission) {
+    if (!sessionCookie || !permissionsCookie) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    const userPermissions = JSON.parse(permissionsCookie.value || '[]');
+    if (!userPermissions.includes(requiredPermission)) {
+      return NextResponse.redirect(new URL('/unauthorized', req.url));
+    }
+  }
+
   return NextResponse.next();
 }
+
+// Define what paths this middleware applies to
+export const config = {
+  matcher: ['/((?!_next|api|favicon.ico).*)'], // Protect everything except Next.js internals and API
+};

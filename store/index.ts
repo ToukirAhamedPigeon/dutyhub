@@ -9,11 +9,13 @@
 
 import { configureStore } from '@reduxjs/toolkit' // Import the store configuration utility from Redux Toolkit
 import permissionsReducer from './permissionsSlice' // Import the reducer for the permissions slice
+import rolesReducer from './rolesSlice' // Import the reducer for the permissions slice
 
 // Create and export the Redux store
 export default configureStore({
   reducer: {
     // Register the permissions reducer under the 'permissions' key in the store
-    permissions: permissionsReducer
+    permissions: permissionsReducer,
+    roles: rolesReducer
   }
 })
