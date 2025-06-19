@@ -8,7 +8,7 @@
  */
 
 import { Session, getServerSession } from 'next-auth'; // Import NextAuth utilities for session handling
-import { authOptions } from './[...nextauth]'; // Import NextAuth configuration (authOptions)
+import { authOptions } from './../[...nextauth]/route'; // Import NextAuth configuration (authOptions)
 import { dbConnect } from '@/lib/database/mongoose'; // Import MongoDB connection function
 import ModelRole from '@/lib/database/models/modelRole.model'; // Import model that links users to roles
 import RolePermission from '@/lib/database/models/rolePermission.model'; // Import model that links roles to permissions

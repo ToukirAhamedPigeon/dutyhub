@@ -8,6 +8,8 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import PermissionRedirector from '@/components/PermissionRedirector'
 
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -19,6 +21,7 @@ import Footer from '@/components/Footer'
 
 export default function SignInPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [error, setError] = useState<string | null>(null)
 
   const {
@@ -44,6 +47,14 @@ export default function SignInPage() {
         throw new Error(res?.error || 'Login failed')
       }
 
+      const permissionRes = await fetch('/api/auth/permissions');
+      if (!permissionRes.ok) {
+        throw new Error('Failed to fetch permissions');
+      }
+  
+      const permissionData = await permissionRes.json();
+      localStorage.setItem('permissions', JSON.stringify(permissionData.permissions));
+
       router.push('/admin/dashboard')
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
@@ -51,6 +62,7 @@ export default function SignInPage() {
   }
 
   return (
+  <>
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#141e30] to-[#243b55] overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -153,5 +165,8 @@ export default function SignInPage() {
         </Container>
       </motion.div>
     </div>
+    {/* Once session exists, this will kick in and redirect after permissions are loaded */}
+    {session && <PermissionRedirector />}
+    </>
   )
 }
