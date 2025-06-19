@@ -9,15 +9,15 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useSession } from 'next-auth/react'
-import PermissionRedirector from '@/components/PermissionRedirector'
+import PermissionRedirector from '@/components/custom/PermissionRedirector'
 
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { signInSchema, SignInSchemaType } from '@/lib/validations'
-import Container from '@/components/Container'
-import Footer from '@/components/Footer'
+import Container from '@/components/custom/Container'
+import Footer from '@/components/custom/Footer'
 
 export default function SignInPage() {
   const router = useRouter()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import Footer from '@/components/Footer'
+import Footer from '@/components/custom/Footer'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 
