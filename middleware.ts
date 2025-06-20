@@ -5,6 +5,8 @@ const routePermissions: Record<string, string> = {
   '/admin/users': 'manage_users',
   '/admin/roles': 'manage_roles',
   '/admin/permissions': 'manage_permissions',
+  '/admin/lookups': 'manage_lookups',
+  '/admin/logs': 'manage_logs',
 };
 
 export function middleware(req: NextRequest) {

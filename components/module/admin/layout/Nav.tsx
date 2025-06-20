@@ -3,13 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, ChevronUp, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { ChevronRight, ChevronUp, ChevronDown, LayoutDashboard, Users, UserCog, UserCheck, History, ListFilter } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {Can} from '@/components/custom/Can';
 
 const menuItems = [
   { label: 'Dashboard', icon: <LayoutDashboard size={22} className="mr-2" />, basePath: '/admin/dashboard', children: [], permissions: ['manage_dashboard'] },
-  // {label: 'Logs', icon: '📝', basePath: '/admin/logs', children: [], permissions: ['manage_logs']}
+  {label: 'Lookups', icon: <ListFilter size={22} className="mr-2" />, basePath: '/admin/lookups', children: [], permissions: ['manage_lookups']},
+  { label: 'Users', icon: <Users size={22} className="mr-2" />, basePath: '/admin/users', children: [], permissions: ['manage_users'] },
+  { label: 'Roles', icon: <UserCog size={22} className="mr-2" />, basePath: '/admin/roles', children: [], permissions: ['manage_roles'] },
+  { label: 'Permissions', icon: <UserCheck size={22} className="mr-2" />, basePath: '/admin/permissions', children: [], permissions: ['manage_permissions'] },
+  {label: 'Logs', icon: <History size={22} className="mr-2" />, basePath: '/admin/logs', children: [], permissions: ['manage_logs']}
 ];
 
 export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
@@ -39,7 +43,7 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
             <div>
               {children?.length > 0 ? (
                 <button
-                  className={`w-full flex items-center justify-between px-4 py-3 text-left bg-white/60 hover:bg-white/80 border-b border-white transition-all 
+                  className={`w-full flex items-center justify-between px-4 py-3 text-left bg-white/10 hover:bg-white/80 border-b border-white transition-all 
                     ${alwaysOpen ? 'main-link-gradient text-white font-semibold' : ''}`}
                   onClick={() => toggleMenu(label)}
                 >
@@ -50,7 +54,7 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
                 <Link
                   href={basePath}
                   onClick={onLinkClick}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-left bg-white/60 hover:bg-white/80  transition-all
+                  className={`w-full flex items-center justify-between px-4 py-3 text-left text-white bg-transparent hover:bg-white/20  transition-all
                     ${alwaysOpen ? 'main-link-gradient text-white font-semibold' : ''}`}
                 >
                   <span><div className='flex flex-row'>{icon} {label}</div></span>
