@@ -6,7 +6,7 @@ interface SidebarState {
 }
 
 const initialState: SidebarState = {
-  isVisible: false,
+  isVisible: true,
 };
 
 const sidebarSlice = createSlice({

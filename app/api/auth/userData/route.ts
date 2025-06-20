@@ -51,23 +51,23 @@ export async function GET() {
     path: '/',
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    httpOnly: false,
+    httpOnly: false, // <-- CHANGE THIS
     maxAge: 60 * 60 * 24,
   });
-
+  
   response.cookies.set('user-permissions', JSON.stringify(permissionNames), {
     path: '/',
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    httpOnly: false,
+    httpOnly: false, // <-- CHANGE THIS
     maxAge: 60 * 60 * 24,
   });
-
+  
   response.cookies.set('user-roles', JSON.stringify(roleNames), {
     path: '/',
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    httpOnly: false,
+    httpOnly: false, // <-- CHANGE THIS
     maxAge: 60 * 60 * 24,
   });
 

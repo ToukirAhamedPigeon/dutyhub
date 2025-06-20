@@ -10,7 +10,7 @@
 import { createSlice } from '@reduxjs/toolkit' // Import helper to create Redux slice
 const initialState = {
     object_id: null,
-    name: null,
+    name: '',
     email: null,
     bp_no: null,
     phone_1: null,

@@ -9,42 +9,59 @@ const routePermissions: Record<string, string> = {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const cleanPath = pathname.replace(/\/$/, '');
 
-  const sessionCookie = req.cookies.get('next-auth.session-token') || req.cookies.get('__Secure-next-auth.session-token');
+  const sessionCookie =
+    req.cookies.get('next-auth.session-token') ||
+    req.cookies.get('__Secure-next-auth.session-token');
   const permissionsCookie = req.cookies.get('user-permissions');
 
-  // Redirect root path "/" to "/login" or "/admin/dashboard" if logged in
+  // Handle root redirect
   if (pathname === '/') {
-    return NextResponse.redirect(new URL(sessionCookie ? '/admin/dashboard' : '/login', req.url));
+    const target = sessionCookie && permissionsCookie ? '/admin/dashboard' : '/login';
+    return NextResponse.redirect(new URL(target, req.url));
   }
 
-  // If user accesses /login and is already logged in, redirect to /admin/dashboard
-  if (pathname === '/login' && sessionCookie) {
+  // Already logged in and trying to visit /login
+  if (pathname === '/login' && sessionCookie && permissionsCookie) {
     return NextResponse.redirect(new URL('/admin/dashboard', req.url));
   }
 
-  // Redirect "/admin" to "/admin/dashboard"
+  // Shortcut for /admin
   if (pathname === '/admin') {
     return NextResponse.redirect(new URL('/admin/dashboard', req.url));
   }
 
-  // Protect routes that require specific permissions
-  const requiredPermission = routePermissions[pathname];
+  // Match route and permission
+  const matchedRoute = Object.keys(routePermissions).find((route) =>
+    pathname.startsWith(route)
+  );
+  const requiredPermission = matchedRoute ? routePermissions[matchedRoute] : null;
+
+  // If route requires permission
   if (requiredPermission) {
     if (!sessionCookie || !permissionsCookie) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
-    const userPermissions = JSON.parse(permissionsCookie.value || '[]');
+    let userPermissions: string[] = [];
+    try {
+      userPermissions = JSON.parse(permissionsCookie.value || '[]');
+    } catch (error) {
+      console.error('Invalid permissions cookie:', permissionsCookie);
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
     if (!userPermissions.includes(requiredPermission)) {
       return NextResponse.redirect(new URL('/unauthorized', req.url));
     }
   }
 
+  // ✅ Allow request to proceed
   return NextResponse.next();
 }
 
-// Define what paths this middleware applies to
+// Only match non-static, non-API paths
 export const config = {
-  matcher: ['/((?!_next|api|favicon.ico).*)'], // Protect everything except Next.js internals and API
+  matcher: ['/((?!_next|api|favicon.ico|.*\\..*).*)'],
 };

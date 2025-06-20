@@ -1,9 +1,7 @@
 'use client'
 
-import { useAppSelector } from '@/hooks/useRedux';
 import Sidebar from '@/components/module/admin/layout/Sidebar'
 
-import { redirect } from 'next/navigation'
 import Footer from '@/components/custom/Footer'
 
 import Header from '@/components/module/admin/layout/Header'
@@ -12,16 +10,12 @@ import RouteProgress from '@/components/module/admin/layout/RouteProgress'
 import { Toaster } from 'sonner'
 
 export default function AdminNavbarLayout({ children }: { children: React.ReactNode }) {
-  const authUser = useAppSelector((state) => state.authUser);
-  if (!authUser.isAuthenticated) {
-    redirect('/login')
-  }
   return (
     <>
       <RouteProgress color="#ffffff" />
       <div className="flex flex-col min-h-screen">
         {/* Header */}
-        <Header user={authUser} />
+        <Header />
 
         {/* Layout Body */}
         <div className="flex pt-16">

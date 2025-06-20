@@ -9,6 +9,7 @@ import { motion } from 'framer-motion'
 import { Users, MapPin, Layers3, Route, LayoutGrid, User, Rows } from 'lucide-react'
 import CountBox from '@/components/custom/CountUp'
 import PieChart from '@/components/custom/PieChart'
+import { useEffect } from 'react';
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend)
 
 const countData = [
@@ -59,7 +60,9 @@ const lineChartData = {
 
 export default function Dashboard() {
   const dispatch = useAppDispatch();
-  dispatch(hideLoader());
+  useEffect(() => {
+    dispatch(hideLoader());
+  }, [dispatch]);
     const items = [
         {
           title: 'Zones',

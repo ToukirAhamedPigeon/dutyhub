@@ -4,21 +4,22 @@ import React from 'react';
 import Logo from './Logo';
 import UserDropdown from './UserDropdown';
 import SidebarMobileSheet from './SidebarMobileSheet';
-import { useSidebar } from '@/contexts/SidebarContext';
+import { useAppDispatch } from '@/hooks/useRedux';
+import { toggleSidebar } from '@/store/sidebarSlice';
 import { Menu } from 'lucide-react';
-import { adminLayoutUserProps } from '@/types'
+import { Button } from '@/components/ui/button';
 
-type Props = {
-    user: adminLayoutUserProps
-}
 
-export default function Header({ user }: Props){
+export default function Header(){
     function ToggleSidebarButton() {
-        const { toggleCollapse } = useSidebar()
+        const dispatch = useAppDispatch();
+        const toggleCollapse = () => {
+          dispatch(toggleSidebar());
+        };
         return (
-          <button onClick={toggleCollapse} className=''>
+          <Button onClick={toggleCollapse} className=''>
             <Menu className="h-6 w-6 text-white" />
-          </button>
+          </Button>
         )
       }
     return (
@@ -32,7 +33,7 @@ export default function Header({ user }: Props){
             </div>
             <Logo isTitle={false} className="lg:hidden py-4" />
             <div className="flex items-center gap-2 h-full px-4 bg-white/30 backdrop-blur-sm text-gray-800">
-                <UserDropdown user={user} />
+                <UserDropdown />
             </div>
         </nav>
     );

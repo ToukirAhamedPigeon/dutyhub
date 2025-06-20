@@ -11,7 +11,7 @@ import { signIn } from 'next-auth/react'
 import { useSession } from 'next-auth/react'
 import PermissionRedirector from '@/components/custom/PermissionRedirector'
 import { useAppDispatch } from '@/hooks/useRedux';
-import { showLoader } from '@/store/fullPageLoaderSlice';
+import { showLoader,hideLoader } from '@/store/fullPageLoaderSlice';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,6 +20,7 @@ import { signInSchema, SignInSchemaType } from '@/lib/validations'
 import Container from '@/components/custom/Container'
 import Footer from '@/components/custom/Footer'
 import { toast } from "sonner"
+import { initAuthUser } from '@/lib/initAuthUser';
 
 export default function SignInPage() {
   const router = useRouter()
@@ -36,34 +37,46 @@ export default function SignInPage() {
   })
 
   const onSubmit = async (data: SignInSchemaType) => {
-    setError(null)
+    setError(null);
+    dispatch(showLoader());
+  
     try {
+      // Sign in with credentials provider
       const res = await signIn('credentials', {
         redirect: false,
         username: data.username,
         password: data.password,
-      })
-
+      });
+  
       if (!res || !res.ok) {
-        toast.error("Login failed.");
-        throw new Error(res?.error || 'Login failed')
+        toast.error('Login failed.');
+        console.error('Login failed:', res?.error);
+        throw new Error(res?.error || 'Invalid username or password.');
       }
-
-      const userDataRes = await fetch('/api/auth/userData')
-      if (!userDataRes.ok) {
-        toast.error("Failed to fetch permissions.")
-        throw new Error('Failed to fetch permissions')
-      }
-      dispatch(showLoader());
-      const userData = await userDataRes.json()
-      localStorage.setItem('authUser', JSON.stringify(userData.authUser))
-      localStorage.setItem('roles', JSON.stringify(userData.roles))
-      localStorage.setItem('permissions', JSON.stringify(userData.permissions))
-      router.push('/admin/dashboard')
+  
+      // Fetch user data and permissions
+      // const userDataRes = await fetch('/api/auth/userData');
+      // if (!userDataRes.ok) {
+      //   console.error('Failed to fetch user data:', userDataRes.statusText);
+      //   toast.error('Failed to fetch user data.');
+      //   throw new Error('Failed to fetch user data.');
+      // }
+  
+      // const userData = await userDataRes.json();
+  
+      // // Save to localStorage
+      // localStorage.setItem('authUser', JSON.stringify(userData.authUser));
+      // localStorage.setItem('roles', JSON.stringify(userData.roles));
+      // localStorage.setItem('permissions', JSON.stringify(userData.permissions));
+      await initAuthUser(dispatch);
+      router.push('/admin/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Something went wrong')
+      console.error('Login error:', err);
+      setError(err.message || 'Something went wrong.');
+    } finally {
+      // dispatch(hideLoader());
     }
-  }
+  };
 
   return (
     <>
