@@ -266,6 +266,14 @@
       /* Tailwind: bg-gradient-to-r from-[#f3e5f5] via-[#ce93d8] to-[#8e24aa] */
 
   }
+
+  .secondary-link-gradient{
+    @apply relative bg-cover bg-center bg-no-repeat;
+    background-image: 
+      linear-gradient(to top right, rgba(252, 57, 180, 0.85), rgba(184, 1, 117, 0.85)),
+      url('/backgrounds/full-load-bg.jpg'); /* Replace with actual image path */
+    background-blend-mode: multiply;
+  }
   .secondary-gradient {
     @apply relative bg-cover bg-center bg-no-repeat;
     background-image: 
