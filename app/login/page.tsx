@@ -10,7 +10,8 @@ import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useSession } from 'next-auth/react'
 import PermissionRedirector from '@/components/custom/PermissionRedirector'
-
+import { useAppDispatch } from '@/hooks/useRedux';
+import { showLoader } from '@/store/fullPageLoaderSlice';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,11 +19,13 @@ import { Label } from '@/components/ui/label'
 import { signInSchema, SignInSchemaType } from '@/lib/validations'
 import Container from '@/components/custom/Container'
 import Footer from '@/components/custom/Footer'
+import { toast } from "sonner"
 
 export default function SignInPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [error, setError] = useState<string | null>(null)
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -42,15 +45,20 @@ export default function SignInPage() {
       })
 
       if (!res || !res.ok) {
+        toast.error("Login failed.");
         throw new Error(res?.error || 'Login failed')
       }
 
-      const permissionRes = await fetch('/api/auth/permissions')
-      if (!permissionRes.ok) throw new Error('Failed to fetch permissions')
-
-      const permissionData = await permissionRes.json()
-      localStorage.setItem('permissions', JSON.stringify(permissionData.permissions))
-
+      const userDataRes = await fetch('/api/auth/userData')
+      if (!userDataRes.ok) {
+        toast.error("Failed to fetch permissions.")
+        throw new Error('Failed to fetch permissions')
+      }
+      dispatch(showLoader());
+      const userData = await userDataRes.json()
+      localStorage.setItem('authUser', JSON.stringify(userData.authUser))
+      localStorage.setItem('roles', JSON.stringify(userData.roles))
+      localStorage.setItem('permissions', JSON.stringify(userData.permissions))
       router.push('/admin/dashboard')
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
