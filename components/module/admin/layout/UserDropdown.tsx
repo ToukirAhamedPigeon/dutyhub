@@ -33,7 +33,7 @@ import { capitalize } from '@/lib/helpers'
           {/* Top Section */}
           <div className="flex flex-col items-center text-center gap-1 px-2 py-3">
             <Avatar className="w-14 h-14 mb-2">
-              <AvatarImage src={user.image || '/assets/policeman.png'} alt={user.name} />
+              <AvatarImage src={user.image || '/policeman.png'} alt={user.name} />
               <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="font-medium">{user.name}</div>
@@ -46,7 +46,7 @@ import { capitalize } from '@/lib/helpers'
           {/* Footer - Logout */}
           <DropdownMenuItem className="text-red-500 font-medium">
             <LogoutButton variant="default" className="w-full bg-red-500 hover:bg-red-600">
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-4 h-4 mr-2 text-white" />
               Logout
             </LogoutButton>
           </DropdownMenuItem>

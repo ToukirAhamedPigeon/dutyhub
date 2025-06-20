@@ -17,7 +17,7 @@ export default function Header(){
           dispatch(toggleSidebar());
         };
         return (
-          <Button onClick={toggleCollapse} className=''>
+          <Button variant="link" onClick={toggleCollapse} className=''>
             <Menu className="h-6 w-6 text-white" />
           </Button>
         )
@@ -27,7 +27,7 @@ export default function Header(){
             <div className="flex items-center gap-2 py-4">
                 <SidebarMobileSheet />
                 <div className="hidden lg:flex items-center gap-2 lg:justify-between w-60">
-                <Logo isTitle titleClassName="text-white" />
+                <Logo isTitle titleClassName="" />
                 <ToggleSidebarButton />
                 </div>
             </div>

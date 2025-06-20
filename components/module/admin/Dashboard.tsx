@@ -106,14 +106,14 @@ export default function Dashboard() {
         transition={{ delay: 0.2, duration: 0.6 }}
         className="grid grid-cols-1 md:grid-cols-2 gap-8 px-2"
       >
-        <Card className="rounded-2xl shadow-md max-h-[400px] bg-gradient-to-br from-white-100 via-white-100 to-orange-100">
+        <Card className="rounded-2xl shadow-md max-h-[400px] lg:max-h-[600px] bg-gradient-to-br from-white-100 via-white-100 to-orange-100">
           <CardContent className="p-4 cursor-pointer">
             <h2 className="text-lg font-semibold mb-2">Module Distribution (Bar)</h2>
             <Bar data={barChartData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-md max-h-[400px] bg-gradient-to-br from-white-100 via-white-100 to-orange-100">
+        <Card className="rounded-2xl shadow-md max-h-[400px] lg:max-h-[600px] bg-gradient-to-br from-white-100 via-white-100 to-orange-100">
           <CardContent className="p-4 cursor-pointer">
             <h2 className="text-lg font-semibold mb-2">Module Breakdown (Pie)</h2>
             <PieChart

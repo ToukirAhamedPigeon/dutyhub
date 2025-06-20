@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronUp, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {Can} from '@/components/custom/Can';
 
 const menuItems = [
-  { label: 'Dashboard', icon: '🏠', basePath: '/admin/dashboard', children: [], permissions: ['manage_dashboard'] },
+  { label: 'Dashboard', icon: <LayoutDashboard size={22} className="mr-2" />, basePath: '/admin/dashboard', children: [], permissions: ['manage_dashboard'] },
   // {label: 'Logs', icon: '📝', basePath: '/admin/logs', children: [], permissions: ['manage_logs']}
 ];
 
@@ -40,20 +40,20 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
               {children?.length > 0 ? (
                 <button
                   className={`w-full flex items-center justify-between px-4 py-3 text-left bg-white/60 hover:bg-white/80 border-b border-white transition-all 
-                    ${alwaysOpen ? 'main-gradient text-white font-semibold' : ''}`}
+                    ${alwaysOpen ? 'main-link-gradient text-white font-semibold' : ''}`}
                   onClick={() => toggleMenu(label)}
                 >
-                  <span>{icon} {label}</span>
+                  <span><div className='flex flex-row'>{icon} {label}</div></span>
                   <span>{isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</span>
                 </button>
               ) : (
                 <Link
                   href={basePath}
                   onClick={onLinkClick}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-left bg-white/60 hover:bg-white/80 border-b border-white transition-all 
-                    ${alwaysOpen ? 'main-gradient text-white font-semibold' : ''}`}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-left bg-white/60 hover:bg-white/80  transition-all
+                    ${alwaysOpen ? 'main-link-gradient text-white font-semibold' : ''}`}
                 >
-                  <span>{icon} {label}</span>
+                  <span><div className='flex flex-row'>{icon} {label}</div></span>
                 </Link>
               )}
 
@@ -71,7 +71,7 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
                         key={subLabel}
                         href={subPath}
                         onClick={onLinkClick}
-                        className={`block px-4 py-2 bg-white/20 hover:bg-white/50 border-b border-white transition-all 
+                        className={`block px-4 py-2 bg-white/20 hover:bg-white/50  transition-all 
                           ${isActiveSubmenu(subPath) ? 'bg-blue-200 hover:bg-blue-300 text-blue-600 font-semibold' : ''}`}
                       >
                         <span className="flex items-center gap-2 text-sm">
