@@ -4,6 +4,7 @@ import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import Logo from './Logo'
 import Nav from './Nav'
+import LanguageSwitcher from '@/components/custom/LanguageSwitcher'
 
 export default function SidebarMobileSheet() {
   const [open, setOpen] = useState(false)
@@ -27,6 +28,9 @@ export default function SidebarMobileSheet() {
           </SheetClose>
         </SheetHeader>
         <div className="p-4">
+          <div className='flex flex-row justify-between'>
+            <LanguageSwitcher/>
+          </div>
           <Nav onLinkClick={() => setOpen(false)}/>
         </div>
       </SheetContent>

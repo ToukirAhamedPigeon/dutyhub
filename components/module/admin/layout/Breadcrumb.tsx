@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 type Crumb = {
   label: string;
@@ -22,6 +23,7 @@ export default function Breadcrumb({
   showTitle = true,
   className = '',
 }: BreadcrumbProps) {
+  const t = useTranslations('Common');
   return (
     <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-4", className)}>
       {showTitle && (

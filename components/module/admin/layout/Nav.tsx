@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ChevronRight, ChevronUp, ChevronDown, LayoutDashboard, Users, UserCog, UserCheck, History, ListFilter } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {Can} from '@/components/custom/Can';
+import { useTranslations } from 'next-intl';
 
 const menuItems = [
   { label: 'Dashboard', icon: <LayoutDashboard size={22} className="mr-2" />, basePath: '/admin/dashboard', children: [], permissions: ['manage_dashboard'] },
@@ -20,6 +21,7 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
 
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const t = useTranslations("Common");
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>
@@ -47,7 +49,7 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
                     ${alwaysOpen ? 'main-link-gradient text-white font-semibold' : ''}`}
                   onClick={() => toggleMenu(label)}
                 >
-                  <span><div className='flex flex-row'>{icon} {label}</div></span>
+                  <span><div className='flex flex-row text-sm'>{icon} {t(label)}</div></span>
                   <span>{isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</span>
                 </button>
               ) : (
@@ -57,7 +59,7 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
                   className={`w-full flex items-center justify-between px-4 py-3 text-left text-white bg-transparent hover:bg-white/20  transition-all
                     ${alwaysOpen ? 'main-link-gradient text-white font-semibold' : ''}`}
                 >
-                  <span><div className='flex flex-row'>{icon} {label}</div></span>
+                  <span><div className='flex flex-row text-sm'>{icon} {t(label)}</div></span>
                 </Link>
               )}
 

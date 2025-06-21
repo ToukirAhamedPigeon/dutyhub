@@ -4,12 +4,23 @@ import { useRouter } from 'next/navigation'
 import Footer from '@/components/custom/Footer'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
+import LanguageSwitcher from '@/components/custom/LanguageSwitcher'
+import { useTranslations } from 'next-intl';
 
 export default function NotFoundPage() {
+  const t = useTranslations('ErrorPages');
   const router = useRouter()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#CB356B] to-[#BD3F32]">
+      <motion.div
+       className="absolute top-4 right-4 z-20"
+       initial={{ opacity: 0, y: -30 }}
+       animate={{ opacity: 1, y: 0 }}
+       transition={{ delay: 1, duration: 0.6 }}
+       >
+          <LanguageSwitcher />
+      </motion.div>
       <div className="text-center text-white space-y-4">
         {/* 404 animated with spring pop-in effect */}
         <motion.h1

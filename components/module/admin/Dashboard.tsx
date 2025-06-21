@@ -10,6 +10,7 @@ import { Users, MapPin, Layers3, Route, LayoutGrid, User, Rows } from 'lucide-re
 import CountBox from '@/components/custom/CountUp'
 import PieChart from '@/components/custom/PieChart'
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend)
 
 const countData = [
@@ -59,6 +60,7 @@ const lineChartData = {
 }
 
 export default function Dashboard() {
+  const t = useTranslations("Dashboard");
   const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(hideLoader());

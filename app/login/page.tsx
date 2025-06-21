@@ -21,12 +21,16 @@ import Container from '@/components/custom/Container'
 import Footer from '@/components/custom/Footer'
 import { toast } from "sonner"
 import { initAuthUser } from '@/lib/initAuthUser';
+import LanguageSwitcher from '@/components/custom/LanguageSwitcher';
+import { useTranslations } from 'next-intl';
+
 
 export default function SignInPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [error, setError] = useState<string | null>(null)
   const dispatch = useAppDispatch();
+  const t = useTranslations('SignInPage');
 
   const {
     register,
@@ -84,6 +88,15 @@ export default function SignInPage() {
         className="fixed inset-0 flex items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/backgrounds/login-bg.jpg')" }}
       >
+        {/* Language Switcher Top Right */}
+        <motion.div
+        className="absolute top-4 right-4 z-20"
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.6 }}
+        >
+            <LanguageSwitcher />
+        </motion.div>
         {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#141e30]/90 to-[#243b55]/90 z-0" />
 

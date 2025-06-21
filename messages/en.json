@@ -1,0 +1,14 @@
+{
+    "Common":{
+        "Dashboard": "Dashboard",
+        "Users": "Users",
+        "Roles": "Roles",
+        "Permissions": "Permissions",
+        "Logs": "Logs",
+        "Lookups": "Lookups"
+    },
+    "Dashboard":{},
+    "SignInPage":{}, 
+    "ErrorPages":{}, 
+    "Errors":{} 
+}

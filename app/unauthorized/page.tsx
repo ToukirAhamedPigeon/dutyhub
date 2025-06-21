@@ -4,12 +4,23 @@ import { useRouter } from 'next/navigation'
 import Footer from '@/components/custom/Footer'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
+import LanguageSwitcher from '@/components/custom/LanguageSwitcher'
+import { useTranslations } from 'next-intl';
 
 export default function UnauthorizedPage() {
   const router = useRouter()
+  const t = useTranslations('ErrorPages')
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5c400] to-[#bc6d00]">
+      <motion.div
+       className="absolute top-4 right-4 z-20"
+       initial={{ opacity: 0, y: -30 }}
+       animate={{ opacity: 1, y: 0 }}
+       transition={{ delay: 1, duration: 0.6 }}
+       >
+          <LanguageSwitcher />
+      </motion.div>
       <div className="text-center text-white space-y-4">
         {/* 401 tada animation */}
         <motion.h1

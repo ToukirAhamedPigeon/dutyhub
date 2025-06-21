@@ -11,9 +11,11 @@ import {
   import LogoutButton from '@/components/custom/LogoutButton'
   import { useState } from 'react'
   import { useAppSelector } from '@/hooks/useRedux';
-import { capitalize } from '@/lib/helpers'
+  import { capitalize } from '@/lib/helpers'
+  import { useTranslations } from 'next-intl';
 
   export default function UserDropdown() {
+    const t = useTranslations("Common");
     const [isOpen, setIsOpen] = useState(false)
     const user = useAppSelector((state) => state.authUser);
     const roles = useAppSelector((state) => state.roles);

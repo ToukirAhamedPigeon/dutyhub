@@ -8,6 +8,7 @@ import { useAppDispatch } from '@/hooks/useRedux';
 import { toggleSidebar } from '@/store/sidebarSlice';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import LanguageSwitcher from '@/components/custom/LanguageSwitcher';
 
 
 export default function Header(){
@@ -27,8 +28,12 @@ export default function Header(){
             <div className="flex items-center gap-2 py-4">
                 <SidebarMobileSheet />
                 <div className="hidden lg:flex items-center gap-2 lg:justify-between w-60">
-                <Logo isTitle titleClassName="" />
-                <ToggleSidebarButton />
+                  <Logo isTitle titleClassName="" />
+                  <ToggleSidebarButton />
+                  
+                </div>
+                <div className="hidden lg:flex items-center gap-2 lg:justify-between w-60">
+                  <LanguageSwitcher/>
                 </div>
             </div>
             <Logo isTitle={false} className="lg:hidden py-4" />

@@ -1,6 +1,5 @@
 'use client'
 import { useAppSelector } from '@/hooks/useRedux';
-import { hideLoader } from '@/store/fullPageLoaderSlice';
 import { cn } from '@/lib/utils'
 import Nav from './Nav'
 

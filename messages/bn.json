@@ -1,0 +1,15 @@
+{
+    "Common":{
+        "Dashboard": "ড্যাশবোর্ড",
+        "Users": "ইউজার",
+        "Roles": "রোল",
+        "Permissions": "পারমিশন",
+        "Logs": "লগ",
+        "Lookups": "লুকআপ"
+    },
+    "Dashboard":{},
+    "SignInPage":{}, 
+    "ErrorPages":{}, 
+    "Errors":{} 
+}
+  
