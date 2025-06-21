@@ -153,15 +153,13 @@ export function TablePaginationFooter({
     )
 }
 
-export function TableLoader({loading}: {loading: boolean}){
+export function TableLoader({ loading }: { loading: boolean }) {
   return (
     loading ? (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-white bg-opacity-60"></div>
-        <div className="relative z-10">
+      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-60">
         <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
-    </div>
-  ) : null)
-};
+    ) : null
+  )
+}
   
