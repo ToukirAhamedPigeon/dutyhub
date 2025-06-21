@@ -51,6 +51,7 @@ export enum BloodGroup {
     dob?: Date;
     description?: string;
     current_status: string; // or UserStatus
+    refreshToken?: string;
     created_at?: Date;
     created_by?: ObjectId | IUser;
     updated_at?: Date;

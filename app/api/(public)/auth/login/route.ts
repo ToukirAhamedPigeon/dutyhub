@@ -3,6 +3,7 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import User from '@/lib/database/models/user.model';
+import { signRefreshToken, signAccessToken } from '@/lib/jwt'; 
 
 export default async function auth(req: NextApiRequest, res: NextApiResponse) {
   return await NextAuth(req, res, {
@@ -20,7 +21,24 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
           const isValid = await bcrypt.compare(credentials!.password, user.password);
           if (!isValid) return null;
 
-          return { id: user._id, name: user.name, email: user.email };
+          const refreshToken = signRefreshToken({ id: user._id });
+          user.refreshToken = refreshToken;
+          await user.save();
+
+          const accessToken = signAccessToken({
+            id: user._id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+          });
+
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            accessToken,
+            refreshToken,
+          };
         },
       }),
     ],
@@ -32,7 +50,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
         return token;
       },
       async session({ session, token }) {
-        session.user.id = token.id;
+        session.user.id = token.id ?? '';
         return session;
       },
     },

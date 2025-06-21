@@ -2,6 +2,8 @@ import { AppDispatch } from '@/store'; // adjust if needed
 import { setAuthUser } from '@/store/authUserSlice';
 import { setPermissions } from '@/store/permissionsSlice';
 import { setRoles } from '@/store/rolesSlice';
+import api from '@/lib/axios'
+import {authorizationHeader} from '@/lib/tokens'
 
 export const initAuthUser = async (dispatch: AppDispatch) => {
   const authUserCache = localStorage.getItem('authUser');
@@ -13,8 +15,9 @@ export const initAuthUser = async (dispatch: AppDispatch) => {
     dispatch(setPermissions(JSON.parse(permissionCache)));
     dispatch(setRoles(JSON.parse(roleCache)));
   } else {
-    const res = await fetch('/api/auth/userData');
-    const data = await res.json();
+    const headers = await authorizationHeader();
+    const res = await api.get('/userData',{headers});  
+    const data = res.data;
 
     localStorage.setItem('authUser', JSON.stringify(data.authUser));
     localStorage.setItem('permissions', JSON.stringify(data.permissions));

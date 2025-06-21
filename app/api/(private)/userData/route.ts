@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../[...nextauth]/route';
+import { authOptions } from '../../(public)/auth/[...nextauth]/route';
+import { verifyAccessToken } from '@/lib/jwt';
 import { dbConnect } from '@/lib/database/mongoose';
 
 import ModelRole from '@/lib/database/models/modelRole.model';
@@ -10,7 +11,21 @@ import User from '@/lib/database/models/user.model'; // Assuming user names are 
 import Role from '@/lib/database/models/role.model'; // Assuming role names are in this model
 import Permission from '@/lib/database/models/permission.model'; // Assuming permission names are here
 
-export async function GET() {
+export async function GET(req: Request) {
+
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const decoded = verifyAccessToken(token);
+
+  if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
+    return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 });
+  }
+
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user || !session.user.id) {

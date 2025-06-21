@@ -3,7 +3,9 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setAuthUser } from '@/store/authUserSlice';
 import { setPermissions } from '@/store/permissionsSlice';
-import { setRoles } from '@/store/rolesSlice'; // <- You need this action
+import { setRoles } from '@/store/rolesSlice';
+import api from '@/lib/axios'
+import { authorizationHeader } from '@/lib/tokens'
 
 export function useAuthUser(session: Session | null) {
   const dispatch = useDispatch();
@@ -22,8 +24,9 @@ export function useAuthUser(session: Session | null) {
         dispatch(setPermissions(permissions));
         dispatch(setRoles(roles));
       } else if (session) {
-        const res = await fetch('/api/auth/userData');
-        const data = await res.json();
+        const headers = await authorizationHeader();
+        const res = await api.get('/userData',{headers});  
+        const data = res.data;
 
         localStorage.setItem('authUser', JSON.stringify(data.authUser));
         localStorage.setItem('permissions', JSON.stringify(data.permissions));

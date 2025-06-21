@@ -17,6 +17,7 @@ const UserSchema = new Schema<IUser>({
     dob: Date,
     description: String,
     current_status: {type:String, required:true, Default:"Inactive"},
+    refreshToken: { type: String, default: '' },
     created_at: { type: Date, default: Date.now },
     created_by: {type:Schema.Types.ObjectId, ref:'User'},
     updated_at: { type: Date, default: Date.now },

@@ -1,10 +1,9 @@
-// lib/axios.ts
 import axios from 'axios'
-import Cookies from 'js-cookie'
+import { getSession } from 'next-auth/react'
 
 const api = axios.create({
   baseURL: '/api',
-  withCredentials: true, // send cookies
+  withCredentials: true,
 })
 
 // Flag to prevent multiple refresh calls
@@ -23,8 +22,9 @@ const processQueue = (error: any, token: string | null = null) => {
 }
 
 api.interceptors.request.use(
-  (config) => {
-    const token = Cookies.get('inparking_access_token')
+  async (config) => {
+    const session = await getSession()
+    const token = session?.accessToken
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -44,25 +44,25 @@ api.interceptors.response.use(
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            return api(originalRequest)
-          })
-          .catch((err) => Promise.reject(err))
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return api(originalRequest)
+        }).catch((err) => Promise.reject(err))
       }
 
       isRefreshing = true
 
       try {
-        const response = await axios.post('/api/refresh', {}, { withCredentials: true })
-
-        const newToken = response.data.token
-        Cookies.set('inparking_access_token', newToken)
+        // This assumes your NextAuth setup auto-refreshes token when `getSession()` is called.
+        const session = await getSession()
+        const newToken = session?.accessToken
 
         processQueue(null, newToken)
 
-        originalRequest.headers.Authorization = `Bearer ${newToken}`
+        if (newToken) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`
+        }
+
         return api(originalRequest)
       } catch (err) {
         processQueue(err, null)
