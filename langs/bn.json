@@ -5,11 +5,25 @@
         "Roles": "রোল",
         "Permissions": "পারমিশন",
         "Logs": "লগ",
-        "Lookups": "লুকআপ"
+        "Lookups": "লুকআপ",
+        "Logout" : "লগ আউট",
+        "Welcome to Duty Hub — Preparing your workspace": "DutyHub এ স্বাগতম — আপনার ওয়ার্কস্পেস প্রস্তুত করা হচ্ছে"
     },
     "Dashboard":{},
-    "SignInPage":{}, 
-    "ErrorPages":{}, 
-    "Errors":{} 
+    "SignInPage":{
+        "Login failed": "লগইন ব্যর্থ হয়েছে।",
+        "Username": "ইউজারনেম",
+        "Password": "পাসওয়ার্ড",
+        "Log In": "লগ ইন",
+        "Logging In": "লগ ইন হচ্ছে",
+        "Invalid username or password": "ইউজারনেম বা পাসওয়ার্ড সঠিক নয়।"
+    }, 
+    "ErrorPages":{
+        "The page you’re looking for doesn’t exist": "আপনি যে পৃষ্ঠাটি খুঁজছেন, তা পাওয়া যায়নি।",
+        "You don’t have permission to view this page": "এই পাতায় প্রবেশের জন্য আপনার অনুমতি নেই।",
+        "Go Back": "আগের পেইজে যান"
+    }, 
+    "Errors":{
+    } 
 }
   

@@ -5,10 +5,23 @@
         "Roles": "Roles",
         "Permissions": "Permissions",
         "Logs": "Logs",
-        "Lookups": "Lookups"
+        "Lookups": "Lookups",
+        "Logout" : "Logout",
+        "Welcome to Duty Hub — Preparing your workspace": "Welcome to Duty Hub — Preparing your workspace"
     },
     "Dashboard":{},
-    "SignInPage":{}, 
-    "ErrorPages":{}, 
+    "SignInPage":{
+        "Login failed": "Login failed.",
+        "Username": "Username",
+        "Password": "Password",
+        "Log In": "Log In",
+        "Logging In": "Logging In",
+        "Invalid username or password": "Invalid username or password."
+    }, 
+    "ErrorPages":{
+        "The page you’re looking for doesn’t exist": "The page you’re looking for doesn’t exist.",
+        "You don’t have permission to view this page": "You don’t have permission to view this page.",
+        "Go Back": "Go Back"
+    },  
     "Errors":{} 
 }

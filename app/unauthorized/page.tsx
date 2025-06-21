@@ -44,7 +44,7 @@ export default function UnauthorizedPage() {
           transition={{ delay: 0.6, duration: 0.6 }}
         >
           <p className="font-bold text-2xl">Unauthorized Access</p>
-          <p className="mt-2">You don’t have permission to view this page.</p>
+          <p className="mt-2">{t("You don’t have permission to view this page")}</p>
         </motion.div>
 
         {/* Go Back Button: slide up */}
@@ -57,7 +57,7 @@ export default function UnauthorizedPage() {
             onClick={() => router.back()}
             className="mt-6 px-6 py-2 bg-white text-[#e56700] font-semibold rounded hover:bg-gray-100 transition"
           >
-            Go Back
+            {t("Go Back")}
           </Button>
         </motion.div>
 

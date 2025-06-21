@@ -53,25 +53,10 @@ export default function SignInPage() {
       });
   
       if (!res || !res.ok) {
-        toast.error('Login failed.');
+        toast.error(t('Login failed'));
         console.error('Login failed:', res?.error);
-        throw new Error(res?.error || 'Invalid username or password.');
+        throw new Error(t("Invalid username or password"));
       }
-  
-      // Fetch user data and permissions
-      // const userDataRes = await fetch('/api/auth/userData');
-      // if (!userDataRes.ok) {
-      //   console.error('Failed to fetch user data:', userDataRes.statusText);
-      //   toast.error('Failed to fetch user data.');
-      //   throw new Error('Failed to fetch user data.');
-      // }
-  
-      // const userData = await userDataRes.json();
-  
-      // // Save to localStorage
-      // localStorage.setItem('authUser', JSON.stringify(userData.authUser));
-      // localStorage.setItem('roles', JSON.stringify(userData.roles));
-      // localStorage.setItem('permissions', JSON.stringify(userData.permissions));
       await initAuthUser(dispatch);
       router.push('/admin/dashboard');
     } catch (err: any) {
@@ -141,7 +126,7 @@ export default function SignInPage() {
                 >
                   <div>
                     <Label htmlFor="username" className="text-gray-700">
-                      Username
+                      {t("Username")}
                     </Label>
                     <Input
                       id="username"
@@ -158,7 +143,7 @@ export default function SignInPage() {
 
                   <div>
                     <Label htmlFor="password" className="text-gray-700">
-                      Password
+                      {t("Password")}
                     </Label>
                     <Input
                       id="password"
@@ -188,7 +173,7 @@ export default function SignInPage() {
                     className="w-full bg-gray-900 hover:bg-gray-700 text-white transition duration-200"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? 'Logging In...' : 'Log In'}
+                    {isSubmitting ? t('Logging In')+'...' : t('Log In')}
                   </Button>
 
                   <Footer

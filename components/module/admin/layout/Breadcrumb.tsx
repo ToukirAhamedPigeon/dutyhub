@@ -27,7 +27,7 @@ export default function Breadcrumb({
   return (
     <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-4", className)}>
       {showTitle && (
-        <h1 className="text-lg md:text-xl font-bold text-gray-800">{title}</h1>
+        <h1 className="text-lg md:text-xl font-bold text-gray-800">{t(title)}</h1>
       )}
      {items.length > 0 && <nav className="flex items-center text-xs md:text-sm text-gray-800 flex-wrap gap-x-2">
         <Link
@@ -45,10 +45,10 @@ export default function Breadcrumb({
                 href={item.href}
                 className="hover:underline text-gray-800/90"
               >
-                {item.label}
+                {t(item.label)}
               </Link>
             ) : (
-              <span className="text-gray-800 font-semibold">{item.label}</span>
+              <span className="text-gray-800 font-semibold">{t(item.label)}</span>
             )}
           </div>
         ))}

@@ -49,7 +49,7 @@ import {
           <DropdownMenuItem className="text-red-500 font-medium">
             <LogoutButton variant="default" className="w-full bg-red-500 hover:bg-red-600">
               <LogOut className="w-4 h-4 mr-2 text-white" />
-              Logout
+              {t('Logout')}
             </LogoutButton>
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -44,7 +44,7 @@ export default function NotFoundPage() {
           transition={{ delay: 0.5, duration: 0.6 }}
         >
           <p className="font-bold text-2xl">Page Not Found</p>
-          <p className="mt-2">The page you’re looking for doesn’t exist.</p>
+          <p className="mt-2">{t("The page you’re looking for doesn’t exist")}</p>
         </motion.div>
 
         {/* Go Back Button: slide up */}
@@ -57,7 +57,7 @@ export default function NotFoundPage() {
             onClick={() => router.back()}
             className="mt-6 px-6 py-2 bg-white text-[#CB356B] font-semibold rounded hover:bg-gray-100 transition"
           >
-            Go Back
+            {t("Go Back")}
           </Button>
         </motion.div>
 

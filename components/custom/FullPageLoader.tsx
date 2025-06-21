@@ -2,10 +2,12 @@
 
 import { useAppSelector } from '@/hooks/useRedux';
 import { motion } from 'framer-motion'
-import { CarIcon, DownloadCloudIcon } from 'lucide-react'
+import { DownloadCloudIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl';
 
 const FullPageLoader = () => {
   const isLoading = useAppSelector((state) => state.fullPageLoader.isLoading);
+  const t = useTranslations('Common');
   if (!isLoading) return null;
   return (
     <div className="fixed inset-0 secondary-link-gradient flex items-center justify-center z-50">
@@ -17,12 +19,12 @@ const FullPageLoader = () => {
       >
         <DownloadCloudIcon className="w-40 h-40 text-white  animate-pulse" />
         <motion.div
-          className="text-2xl font-semibold text-white"
+          className="text-2xl font-semibold text-white text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0.2, 1, 0.2] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          Welcome to Duty Hub — Preparing your workspace...
+          {t("Welcome to Duty Hub — Preparing your workspace")+"..."}
         </motion.div>
       </motion.div>
     </div>
