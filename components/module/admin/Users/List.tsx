@@ -153,6 +153,7 @@ export default function UserListTable() {
   return (
     //Main Container
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      <div className='table-container relative'>
       {/* Header Actions */}
       <TableHeaderActions
         searchValue={globalFilter}
@@ -164,6 +165,7 @@ export default function UserListTable() {
       />
 
       {/* Table */}
+     
       <TableLoader loading={loading} />
       <div className="relative overflow-auto rounded-xl shadow">
         <table className="table-auto w-full text-left border">
@@ -219,6 +221,7 @@ export default function UserListTable() {
         setPageIndex={setPageIndex}
         setPageSize={setPageSize}
       />
+      </div>
 
         {/* Detail Modal */}
       {/* <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">

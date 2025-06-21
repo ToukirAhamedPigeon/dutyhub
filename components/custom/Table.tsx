@@ -3,6 +3,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FaEye, FaEdit, FaTrash, FaPlus, FaPrint, FaFileExcel } from 'react-icons/fa'
+import Image from 'next/image'
 
 interface RowActionsProps<T> {
   row: T
@@ -154,12 +155,16 @@ export function TablePaginationFooter({
 }
 
 export function TableLoader({ loading }: { loading: boolean }) {
-  return (
-    loading ? (
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 bg-opacity-60">
-        <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    ) : null
-  )
+  return loading ? (
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
+      <Image
+        src="/loader.svg"
+        alt="Loading…"
+        className="h-12 w-12 animate-spin"
+        width={120} height={120}
+        style={{ background: "transparent" }}
+      />
+    </div>
+  ) : null;
 }
   
