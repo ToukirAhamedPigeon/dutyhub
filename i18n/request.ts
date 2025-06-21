@@ -9,6 +9,6 @@ export default async function getRequestConfig(): Promise<RequestConfig> {
 
   return {
     locale,
-    messages: (await import(`../messages/${locale}.json`)).default,
+    messages: (await import(`../langs/${locale}.json`)).default,
   };
 }
