@@ -5,12 +5,11 @@ import { setRoles } from '@/store/rolesSlice';
 import api from '@/lib/axios'
 import {authorizationHeader} from '@/lib/tokens'
 
-export const initAuthUser = async (dispatch: AppDispatch) => {
+export const initAuthUser = async (dispatch: AppDispatch, mustFetch:boolean=false) => {
   const authUserCache = localStorage.getItem('authUser');
   const permissionCache = localStorage.getItem('permissions');
   const roleCache = localStorage.getItem('roles');
-
-  if (authUserCache && permissionCache && roleCache) {
+  if (authUserCache && permissionCache && roleCache && !mustFetch) {
     dispatch(setAuthUser(JSON.parse(authUserCache)));
     dispatch(setPermissions(JSON.parse(permissionCache)));
     dispatch(setRoles(JSON.parse(roleCache)));

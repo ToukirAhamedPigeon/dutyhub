@@ -8,6 +8,7 @@ import { clearPermissions } from '@/store/permissionsSlice';
 import { clearRoles } from '@/store/rolesSlice';
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens';
+import { clearAuthUser } from '@/store/authUserSlice';
 export default function LogoutButton({ variant, className, children }: { variant: 'default' | 'outline' | 'ghost' | 'link', className?: string, children: React.ReactNode }) {
   const dispatch = useDispatch();
 
@@ -18,8 +19,10 @@ export default function LogoutButton({ variant, className, children }: { variant
   
       await signOut({ redirect: false });
   
+      dispatch(clearAuthUser());
       dispatch(clearPermissions());
       dispatch(clearRoles());
+      localStorage.removeItem('authUser');
       localStorage.removeItem('permissions');
       localStorage.removeItem('roles');
   

@@ -57,7 +57,7 @@ export default function SignInPage() {
         console.error('Login failed:', res?.error);
         throw new Error(t("Invalid username or password"));
       }
-      await initAuthUser(dispatch);
+      await initAuthUser(dispatch, true);
       router.push('/admin/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
