@@ -112,15 +112,15 @@ export default function UserListTable() {
       accessorKey: 'roleNames',
       cell: ({ getValue }) => capitalize(getValue() as string),
     },
-    // {
-    //   header: 'Status',
-    //   accessorKey: 'isActive',
-    //   cell: ({ getValue }) => (
-    //     <Badge variant={getValue() ? 'success' : 'destructive'}>
-    //       {getValue() ? 'Active' : 'Inactive'}
-    //     </Badge>
-    //   ),
-    // },
+    {
+      header: 'Current Status',
+      accessorKey: 'current_status',
+      cell: ({ getValue }) => (
+        <Badge variant={getValue() ? 'success' : 'destructive'}>
+          {getValue() ? 'Active' : 'Inactive'}
+        </Badge>
+      ),
+    },
     {
       header: 'Created At',
       accessorKey: 'created_at',
