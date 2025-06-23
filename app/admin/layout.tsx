@@ -12,7 +12,7 @@ import { Toaster } from 'sonner'
 export default function AdminNavbarLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <RouteProgress color="#ffffff" />
+      <RouteProgress color="#FC39B4" />
       <div className="flex flex-col min-h-screen">
         {/* Header */}
         <Header />
