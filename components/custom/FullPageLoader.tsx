@@ -11,26 +11,32 @@ const FullPageLoader = () => {
 
   if (!isLoading) return null;
 
-  const IconComponent = (LucideIcons as any)[icon] || LucideIcons.DownloadCloudIcon;
+  const IconComponent = (LucideIcons as any)[icon] || LucideIcons.DownloadCloud;
 
   return (
-    <div className="fixed inset-0 secondary-link-gradient flex items-center justify-center z-50">
+    <div className="fixed inset-0 secondary-link-gradient flex flex-col items-center justify-center z-50">
+      {/* Initial entry animation for icon and message */}
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: [20, -10, 20], opacity: 1 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
         className="flex flex-col items-center space-y-4"
       >
-        <IconComponent className="w-40 h-40 text-white animate-pulse" />
-        <motion.div
-          className="text-2xl font-semibold text-white text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.2, 1, 0.2] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
+        <IconComponent className="w-28 h-28 text-white" />
+        <div className="text-2xl font-semibold text-white text-center">
           {t(message) + '...'}
-        </motion.div>
+        </div>
       </motion.div>
+
+      {/* Animated loading indicator */}
+      <div className="flex space-x-2 mt-8">
+        {['delay-0', 'delay-200', 'delay-400'].map((delay, idx) => (
+          <div
+            key={idx}
+            className={`w-3 h-3 rounded-full bg-white animate-bounce ${delay}`}
+          />
+        ))}
+      </div>
     </div>
   );
 };
