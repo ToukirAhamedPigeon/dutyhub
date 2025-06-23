@@ -18,12 +18,19 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
           const user = await User.findOne({ username: credentials?.username });
           if (!user) return null;
 
+          console.log(user);
+
           const isValid = await bcrypt.compare(credentials!.password, user.password);
           if (!isValid) return null;
+
+          console.log(isValid);
 
           const refreshToken = signRefreshToken({ id: user._id });
           user.refreshToken = refreshToken;
           await user.save();
+
+          console.log(refreshToken);
+
 
           const accessToken = signAccessToken({
             id: user._id,
@@ -31,6 +38,10 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
             username: user.username,
             email: user.email,
           });
+
+          console.log(accessToken);
+          console.log(user);
+          console.log(refreshToken);
 
           return {
             id: user._id.toString(),

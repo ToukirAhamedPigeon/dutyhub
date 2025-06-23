@@ -7,7 +7,8 @@
         "Logs": "Logs",
         "Lookups": "Lookups",
         "Logout" : "Logout",
-        "Welcome to Duty Hub — Preparing your workspace": "Welcome to Duty Hub — Preparing your workspace"
+        "Welcome to Duty Hub — Preparing your workspace": "Welcome to Duty Hub — Preparing your workspace",
+        "Logging out — Ending your session": "Logging out — Ending your session"
     },
     "Dashboard":{},
     "SignInPage":{

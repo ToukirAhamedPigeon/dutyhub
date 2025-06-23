@@ -1,7 +1,7 @@
 'use client'
 
-import { useAppDispatch } from '@/hooks/useRedux';
-import { hideLoader } from '@/store/fullPageLoaderSlice';
+ import { useAppDispatch } from '@/hooks/useRedux';
+ import { hideLoader } from '@/store/fullPageLoaderSlice';
 import { Card, CardContent } from '@/components/ui/card'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend } from 'chart.js'
 import { Bar, Line } from 'react-chartjs-2'
@@ -9,7 +9,7 @@ import { motion } from 'framer-motion'
 import { Users, MapPin, Layers3, Route, LayoutGrid, User, Rows } from 'lucide-react'
 import CountBox from '@/components/custom/CountUp'
 import PieChart from '@/components/custom/PieChart'
-import { useEffect } from 'react';
+ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend)
 

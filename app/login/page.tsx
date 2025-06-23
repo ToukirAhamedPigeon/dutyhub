@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,10 +8,10 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
-import { useSession } from 'next-auth/react'
+import { useSession,getSession } from 'next-auth/react'
 import PermissionRedirector from '@/components/custom/PermissionRedirector'
 import { useAppDispatch } from '@/hooks/useRedux';
-import { showLoader,hideLoader } from '@/store/fullPageLoaderSlice';
+import { setLoaderContent, showLoader, hideLoader } from '@/store/fullPageLoaderSlice';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -31,6 +31,9 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null)
   const dispatch = useAppDispatch();
   const t = useTranslations('SignInPage');
+  useEffect(() => {
+    dispatch(hideLoader());
+  }, [dispatch]);
 
   const {
     register,
@@ -42,10 +45,16 @@ export default function SignInPage() {
 
   const onSubmit = async (data: SignInSchemaType) => {
     setError(null);
+    dispatch(
+      setLoaderContent({
+        message: 'Welcome to Duty Hub — Preparing your workspace',
+        icon: 'DownloadCloudIcon',
+      })
+    );
     dispatch(showLoader());
   
     try {
-      // Sign in with credentials provider
+      // Step 1: Sign in
       const res = await signIn('credentials', {
         redirect: false,
         username: data.username,
@@ -55,15 +64,30 @@ export default function SignInPage() {
       if (!res || !res.ok) {
         toast.error(t('Login failed'));
         console.error('Login failed:', res?.error);
-        throw new Error(t("Invalid username or password"));
+        throw new Error(t('Invalid username or password'));
       }
+  
+      // Step 2: Wait for session to be updated
+      const maxRetries = 100;
+      let session;
+      for (let i = 0; i < maxRetries; i++) {
+        session = await getSession();
+        if (session) break;
+        await new Promise((resolve) => setTimeout(resolve, 200)); // wait 200ms
+      }
+  
+      if (!session) {
+        throw new Error('Session not established after login.');
+      }
+  
+      // Step 3: Now session is ready, fetch user data
       await initAuthUser(dispatch, true);
       router.push('/admin/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Something went wrong.');
     } finally {
-      // dispatch(hideLoader());
+      // setTimeout(()=>dispatch(hideLoader()),1000)
     }
   };
 

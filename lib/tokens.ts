@@ -8,7 +8,16 @@ export const accessToken= async() => {
     return session.accessToken;
 }
 
-export const authorizationHeader = async() => {
-    const token = await accessToken();
-    return { Authorization: `Bearer ${token}` };
-}
+export const authorizationHeader = async () => {
+  const session = await getSession();
+  const token = session?.accessToken;
+
+  if (!token) {
+    console.warn('No access token found in session');
+    throw new Error('No access token found in session');
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
