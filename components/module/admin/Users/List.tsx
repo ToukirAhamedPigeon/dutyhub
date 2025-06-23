@@ -107,11 +107,11 @@ export default function UserListTable() {
     //     />
     //   ),
     // },
-    // {
-    //   header: 'Role',
-    //   accessorKey: 'role',
-    //   cell: ({ getValue }) => capitalize(getValue() as string),
-    // },
+    {
+      header: 'Roles',
+      accessorKey: 'roleNames',
+      cell: ({ getValue }) => capitalize(getValue() as string),
+    },
     // {
     //   header: 'Status',
     //   accessorKey: 'isActive',
