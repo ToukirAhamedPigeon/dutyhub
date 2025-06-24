@@ -18,10 +18,13 @@ import { Badge } from '@/components/ui/badge'
 import api from '@/lib/axios'
 import { IUser } from '@/types'
 import { authorizationHeader } from '@/lib/tokens';
+import { useAppSelector } from '@/hooks/useRedux';
 
 export default function UserListTable() {
   //Router Hook
   const router = useRouter()
+  const authroles = useAppSelector((state) => state.roles) as string[];
+  
   //Auth Hook
 
   //Table Hook
@@ -40,7 +43,7 @@ export default function UserListTable() {
         },
       })
 
-      console.log(res.data) // Add this line to log the response data t
+      //console.log(res.data) // Add this line to log the response data t
   
       return {
         data: res.data.users as IUser[],
@@ -50,7 +53,7 @@ export default function UserListTable() {
   })
 
   //Detail Modal Hook
-  // const {isModalOpen,selectedItem,fetchDetail,closeModal: closeDetailModal} = useDetailModal<IUser>('/users')
+  const {isModalOpen,selectedItem,fetchDetail,closeModal: closeDetailModal} = useDetailModal<IUser>('/users')
 
   //Edit Modal Hook
   // const {isOpen: isEditModalOpen,itemToEdit: userToEdit,openEdit: handleEditClick,closeEdit: closeEditModal} = useEditModal<IUser>()
@@ -77,7 +80,7 @@ export default function UserListTable() {
       cell: ({ row }) => (
         <RowActions
           row={row.original}
-          // onDetail={() => fetchDetail(row.original._id.toString())}
+          onDetail={() => fetchDetail(row.original._id.toString())}
           // onEdit={() => handleEditClick(row.original)}
           // onDelete={() => confirmDelete(row.original._id.toString())}
         />
@@ -91,22 +94,22 @@ export default function UserListTable() {
       header: 'Email',
       accessorKey: 'email',
     },
-    // ...(user?.role === EUserRole.DEVELOPER
-    //   ? [{
-    //       header: 'Decrypted Password',
-    //       accessorKey: 'decryptedPassword',
-    //     }]
-    //   : []),
-    // {
-    //   header: 'Profile Picture',
-    //   cell: ({ row }) => (
-    //     <Fancybox
-    //       src={row.original.profilePicture?.imageUrl || '/assets/policeman.png'}
-    //       alt={row.original.name}
-    //       className="w-14 h-14 rounded-full"
-    //     />
-    //   ),
-    // },
+    ...(authroles.includes('developer')
+      ? [{
+          header: 'Decrypted Password',
+          accessorKey: 'decrypted_password',
+        }]
+      : []),
+    {
+      header: 'Profile Picture',
+      cell: ({ row }) => (
+        <Fancybox
+          src={row.original.image || '/policeman.png'}
+          alt={row.original.name || 'Profile Picture'}
+          className="w-14 h-14 rounded-full"
+        />
+      ),
+    },
     {
       header: 'Roles',
       accessorKey: 'roleNames',
@@ -133,7 +136,6 @@ export default function UserListTable() {
     },
   ], [
     pageIndex
-    // , user?.role
   ])
 
   //Table
@@ -224,9 +226,9 @@ export default function UserListTable() {
       </div>
 
         {/* Detail Modal */}
-      {/* <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
+      <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
         <UserDetail user={selectedItem} />
-      </Modal> */}
+      </Modal>
 
       {/* Edit Modal */}  
       {/*<Modal

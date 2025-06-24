@@ -21,7 +21,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, titleCl
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 pt-[50px] flex items-start justify-center bg-black bg-opacity-50 z-50"
+      className="fixed inset-0 pt-[50px] flex items-start justify-center bg-black/50 z-50"
       onClick={onClose}
     >
       <motion.div
@@ -35,7 +35,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, titleCl
         {/* Close icon (top right) */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
+          className="cursor-pointer absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition"
           aria-label="Close modal"
         >
           <X size={24} />

@@ -1,6 +1,6 @@
 // app/api/users/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { authOptions } from '../../(public)/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/(public)/auth/[...nextauth]/route';
 import { getServerSession } from 'next-auth';
 import { verifyAccessToken } from '@/lib/jwt';
 import { dbConnect } from '@/lib/database/mongoose';
@@ -16,8 +16,6 @@ export async function GET(req: NextRequest) {
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  const decoded = verifyAccessToken(token);
 
   try {
     const decoded = verifyAccessToken(token);

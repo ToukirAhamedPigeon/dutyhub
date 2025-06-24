@@ -15,7 +15,6 @@ export function useDetailModal<T>(endpoint: string) {
           Authorization: `Bearer ${token}`,
         },
       })
-      console.log(res)
       setSelectedItem(res.data)
       setIsModalOpen(true)
     } catch (error) {
