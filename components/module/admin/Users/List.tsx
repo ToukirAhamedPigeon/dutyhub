@@ -20,10 +20,10 @@ import { IUser } from '@/types'
 import { authorizationHeader } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
 import FormHolderSheet from "@/components/custom/FormHolderSheet";
+import Register from './Register'
 
 export default function UserListTable() {
   //Router Hook
-  const router = useRouter()
   const authroles = useAppSelector((state) => state.roles) as string[];
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
@@ -237,8 +237,9 @@ export default function UserListTable() {
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         title="Register New User"
+        titleDivClassName='success-gradient'
       >
-        <div>Add Form</div>
+        <Register/>
       </FormHolderSheet>
 
       {/* Edit Modal */}  

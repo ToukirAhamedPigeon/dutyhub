@@ -4,20 +4,22 @@ import { X } from "lucide-react";
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { cn } from "@/lib/utils";
 
 interface FormHolderSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  titleDivClassName?: string;
   children: ReactNode;
 }
 
-export default function FormHolderSheet({ open, onOpenChange, title, children }: FormHolderSheetProps) {
+export default function FormHolderSheet({ open, onOpenChange, title, children,titleDivClassName }: FormHolderSheetProps) {
     const isDesktop = useMediaQuery("(min-width: 640px)");
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        className="p-0 flex flex-col w-full sm:max-w-[50%] sm:h-screen h-[75vh] shadow-[0_0_40px_rgba(0,0,0,0.35)] sm:shadow-[-40px_0_60px_-10px_rgba(0,0,0,0.35)] "
+        className="p-0 flex flex-col w-full sm:max-w-[50%] sm:h-screen h-[75vh] shadow-[0_0_10px_rgba(0,0,0,0.25)] sm:shadow-[-10px_0_20px_-10px_rgba(0,0,0,0.25)] bg-slate-50"
         side={isDesktop ? "right" : "bottom"}
         style={{
           width: isDesktop ? "50%" : "100%",
@@ -26,19 +28,19 @@ export default function FormHolderSheet({ open, onOpenChange, title, children }:
         }}
       >
         <div
-          className="relative flex items-center justify-between px-4 py-3 border-b bg-white"
+          className={cn(titleDivClassName,"relative flex items-center justify-between px-4 py-3 border-b text-white")}
           style={{
             height: "56px",
           }}
         >
-          <SheetTitle className="text-lg font-semibold">{title}</SheetTitle>
+          <SheetTitle className="text-lg font-semibold text-white">{title}</SheetTitle>
           <Button
-            variant="ghost"
+            variant="link"
             size="icon"
             onClick={() => onOpenChange(false)}
             className="text-muted-foreground hover:text-black"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 text-white"/>
           </Button>
         </div>
 

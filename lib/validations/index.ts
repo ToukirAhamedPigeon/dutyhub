@@ -22,7 +22,7 @@ export const checkEmailExists = async (
   ): Promise<boolean> => {
   try {
       const res = await api.post(
-      `/auth/check-email`,
+      `/users/check-email`,
       {
           email,
           exceptFieldName,
