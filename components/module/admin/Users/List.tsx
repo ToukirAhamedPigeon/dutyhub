@@ -1,5 +1,5 @@
 'use client'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, ColumnDef, SortingState, OnChangeFn} from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -19,11 +19,13 @@ import api from '@/lib/axios'
 import { IUser } from '@/types'
 import { authorizationHeader } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
+import FormHolderSheet from "@/components/custom/FormHolderSheet";
 
 export default function UserListTable() {
   //Router Hook
   const router = useRouter()
   const authroles = useAppSelector((state) => state.roles) as string[];
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   //Auth Hook
 
@@ -160,7 +162,7 @@ export default function UserListTable() {
       <TableHeaderActions
         searchValue={globalFilter}
         onSearchChange={setGlobalFilter}
-        onAddNew={() => router.push('/admin/users/register')}
+        onAddNew={() => setIsSheetOpen(true)}
         onPrint={() => window.print()}
         onExport={() => exportExcel({ data, fileName: 'Users', sheetName: 'Users' })}
         addButtonLabel="Register New User"
@@ -229,6 +231,15 @@ export default function UserListTable() {
       <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
         <UserDetail user={selectedItem} />
       </Modal>
+
+      {/* Add New Modal */}
+      <FormHolderSheet
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        title="Register New User"
+      >
+        <div>Add Form</div>
+      </FormHolderSheet>
 
       {/* Edit Modal */}  
       {/*<Modal
