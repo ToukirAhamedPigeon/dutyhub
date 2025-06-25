@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useEffect, useState } from 'react'
-import { EUserRole } from '@/types'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -15,14 +14,16 @@ import { toast } from 'sonner'
 import api from '@/lib/axios'
 import { checkEmailExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
+import { authorizationHeader, accessToken } from '@/lib/tokens';
+import { useAppSelector } from '@/hooks/useRedux';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
-  role: z.nativeEnum(EUserRole),
-  profilePicture: z.any().optional()
+  role: z.string(),
+  image: z.any().optional()
 }).refine((data) => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
   message: "Passwords don't match",
@@ -30,8 +31,6 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-const authUser = localStorage.getItem('authUser')
-const token = JSON.parse(authUser || '{}').token
 
 export default function Register() {
   const [emailChecking, setEmailChecking] = useState(false)
@@ -53,8 +52,8 @@ export default function Register() {
       email: '',
       password: '',
       confirmPassword: '',
-      role: EUserRole.ADMIN,
-      profilePicture: undefined
+      role: 'admin',
+      image: undefined
     }
   })
 
@@ -63,23 +62,23 @@ export default function Register() {
     clearImage,
     onDrop,
     setPreview
-  } = useProfilePicture(setValue, setError, 'profilePicture')
+  } = useProfilePicture(setValue, setError, 'image')
 
-  const profilePic = watch('profilePicture')
+  const imagePic = watch('image')
   const email = watch('email')
 
   // Debounced email validation
   useEffect(() => {
-    if (!email || !email.includes('@')) {
-      setEmailTaken(false)
-      return
-    }
+    // if (!email || !email.includes('@')) {
+    //   setEmailTaken(false)
+    //   return
+    // }
 
     const debounceTimer = setTimeout(async () => {
-      setEmailChecking(true)
-      const exists = await checkEmailExists(email, token)
-      setEmailTaken(exists)
-      setEmailChecking(false)
+      // setEmailChecking(true)
+      // const exists = await checkEmailExists(email, token)
+      // setEmailTaken(exists)
+      // setEmailChecking(false)
     }, 500)
 
     return () => clearTimeout(debounceTimer)
@@ -88,48 +87,48 @@ export default function Register() {
   // Form Submit
   const onSubmit = async (data: FormData) => {
     // Check if email already exists
-    setSubmitLoading(true)
-    const emailTaken = await checkEmailExists(data.email, token)
-    if (emailTaken) {
-      setError('email', { type: 'manual', message: 'Email already exists' })
-      setSubmitLoading(false)
-      return
-    }
+    // setSubmitLoading(true)
+    // const emailTaken = await checkEmailExists(data.email, token)
+    // if (emailTaken) {
+    //   setError('email', { type: 'manual', message: 'Email already exists' })
+    //   setSubmitLoading(false)
+    //   return
+    // }
   
-    try {
-      const formData = new FormData()
-      formData.append('name', data.name)
-      formData.append('email', data.email)
-      formData.append('password', data.password)
-      formData.append('role', data.role)
-      if (data.profilePicture) {
-        formData.append('profilePicture', data.profilePicture)
-      }
+    // try {
+    //   const formData = new FormData()
+    //   formData.append('name', data.name)
+    //   formData.append('email', data.email)
+    //   formData.append('password', data.password)
+    //   formData.append('role', data.role)
+    //   if (data.image) {
+    //     formData.append('image', data.image)
+    //   }
 
-      const res = await api.post('/auth/register', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+    //   const res = await api.post('/users/register', formData, {
+    //     headers: {
+    //       'Authorization': `Bearer ${token}`,
+    //       'Content-Type': 'multipart/form-data'
+    //     }
+    //   })
   
-      const result = res.data
+    //   const result = res.data
   
-      if (!result) {
-        // Backend returns a message for display on error
-        throw new Error(result.message || 'Registration failed')
-      }
+    //   if (!result) {
+    //     // Backend returns a message for display on error
+    //     throw new Error(result.message || 'Registration failed')
+    //   }
   
-      // Optionally: show toast or success message
-      toast.success('User registered successfully!')
+    //   // Optionally: show toast or success message
+    //   toast.success('User registered successfully!')
   
-      // Reset form
-      //handleReset()
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong during registration')
-    } finally {
-      setSubmitLoading(false)
-    }
+    //   // Reset form
+    //   //handleReset()
+    // } catch (error: any) {
+    //   toast.error(error.message || 'Something went wrong during registration')
+    // } finally {
+    //   setSubmitLoading(false)
+    // }
   }
   
 
@@ -192,7 +191,7 @@ export default function Register() {
         </div>
 
         {/* Role */}
-        <div className="space-y-1">
+        {/* <div className="space-y-1">
           <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role <span className="text-red-500">*</span></label>
           <Select defaultValue={EUserRole.ADMIN} onValueChange={(val) => setValue('role', val as EUserRole)}>
             <SelectTrigger id="role">
@@ -205,7 +204,7 @@ export default function Register() {
             </SelectContent>
           </Select>
           {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
-        </div>
+        </div> */}
 
         {/* Profile Picture */}
         <div className="space-y-1">
@@ -253,7 +252,7 @@ export default function Register() {
 
           {/* Animated Error Message */}
           <AnimatePresence>
-            {errors.profilePicture?.message && (
+            {errors.image?.message && (
               <motion.p
                 className="text-red-500 text-sm mt-1"
                 initial={{ opacity: 0, y: -4 }}
@@ -261,7 +260,7 @@ export default function Register() {
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.25 }}
               >
-                {errors.profilePicture.message?.toString()}
+                {errors.image.message?.toString()}
               </motion.p>
             )}
           </AnimatePresence>
