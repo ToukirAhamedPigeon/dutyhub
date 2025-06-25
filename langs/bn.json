@@ -16,6 +16,7 @@
         "Login failed": "লগইন ব্যর্থ হয়েছে।",
         "Username": "ইউজারনেম",
         "Password": "পাসওয়ার্ড",
+        "Confirm Password": "পাসওয়ার্ড নিশ্চিত করুন",
         "Log In": "লগ ইন",
         "Logging In": "লগ ইন হচ্ছে",
         "Invalid username or password": "ইউজারনেম বা পাসওয়ার্ড সঠিক নয়।"

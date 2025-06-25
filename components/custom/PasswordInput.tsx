@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -10,20 +11,23 @@ interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement>
   isHidden?: boolean;
   registerProps?: any;
   inputClassName?: string;
+  isRequiredStar?: boolean;
+  placeHolder?: string;
 }
 
-export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, ...rest }: PasswordInputProps) => {
+export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, isRequiredStar, placeHolder, ...rest }: PasswordInputProps) => {
   const [hidden, setHidden] = useState(isHidden);
-
+  const t = useTranslations('SignInPage');
   return (
     <div className="space-y-1 w-full">
       <label className="block text-sm font-medium text-gray-700">
-        {label} <span className="text-red-500">*</span>
+        {t(label)} {isRequiredStar && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
         <Input
           type={hidden ? 'password' : 'text'}
           className={cn(inputClassName,"pr-10")}
+          placeholder={placeHolder && placeHolder.length>0?t(placeHolder):''}
           {...registerProps}
           {...rest}
         />

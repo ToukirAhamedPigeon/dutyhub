@@ -15,6 +15,7 @@
         "Login failed": "Login failed.",
         "Username": "Username",
         "Password": "Password",
+        "Confirm Password": "Confirm Password",
         "Log In": "Log In",
         "Logging In": "Logging In",
         "Invalid username or password": "Invalid username or password."

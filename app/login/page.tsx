@@ -170,7 +170,6 @@ export default function SignInPage() {
                   <PasswordInput
                     id="password"
                     label="Password"
-                    placeholder="Password"
                     isHidden={true}
                     inputClassName='bg-white'
                     {...register('password')}

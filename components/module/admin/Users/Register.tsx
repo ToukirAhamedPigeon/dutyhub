@@ -214,6 +214,7 @@ export default function Register() {
             id="password"
             label="Password"
             placeholder="Password"
+            isRequiredStar={true}
             isHidden={false}
             {...register('password')}
             error={errors.password?.message}
@@ -222,6 +223,7 @@ export default function Register() {
             id="confirmed_password"
             label="Confirm Password"
             placeholder="Confirm Password"
+            isRequiredStar={true}
             isHidden={false}
             {...register('confirmed_password')}
             error={errors.confirmed_password?.message}
