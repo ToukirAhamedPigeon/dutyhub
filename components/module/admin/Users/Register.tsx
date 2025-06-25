@@ -16,18 +16,28 @@ import { checkEmailExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { authorizationHeader, accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
+import { PasswordInput } from '@/components/custom/PasswordInput'
 
-const schema = z.object({
+export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
+  username: z.string().optional(), // unique check is DB-level
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-  role: z.string(),
-  image: z.any().optional()
-}).refine((data) => data.password === data.confirmPassword, {
-  path: ['confirmPassword'],
+  confirmed_password: z.string().min(1, 'Confirmed password is required'),
+  image: z.string().optional(),
+  bp_no: z.string().optional(),
+  phone_1: z.string().optional(),
+  phone_2: z.string().optional(),
+  address: z.string().optional(),
+  blood_group: z.string().optional(),
+  nid: z.string().optional(),
+  dob: z.coerce.date().optional(),
+  description: z.string().optional(),
+  current_status: z.string().min(1, 'Status is required'),
+}).refine(data => data.password === data.confirmed_password, {
+  path: ['confimed_password'],
   message: "Passwords don't match",
-})
+});
 
 type FormData = z.infer<typeof schema>
 
@@ -49,11 +59,20 @@ export default function Register() {
     resolver: zodResolver(schema),
     defaultValues: {
       name: '',
+      username: '',
       email: '',
       password: '',
-      confirmPassword: '',
-      role: 'admin',
-      image: undefined
+      confirmed_password: '',
+      image: '',
+      bp_no: '',
+      phone_1: '',
+      phone_2: '',
+      address: '',
+      blood_group: '',
+      nid: '',
+      dob: new Date(),
+      description: '',
+      current_status: 'Inactive'
     }
   })
 
@@ -147,14 +166,14 @@ export default function Register() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="p-3 w-full space-y-4">
 
-        {/* Name Field */}
-        <div className="space-y-1">
+        {/* Name */}
+        <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name <span className="text-red-500">*</span></label>
           <Input id="name" placeholder="Name" {...register('name')} />
           {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
         </div>
 
-        {/* Email Field */}
+        {/* Email */}
         <div className="space-y-1">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
           <div className="relative">
@@ -175,38 +194,88 @@ export default function Register() {
           {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
         </div>
 
-        {/* Password */}
-        <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
-          <Input type="password" id="password" placeholder="Password" {...register('password')} />
-          {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+        {/* Username + BP No */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full">
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+            <Input id="username" placeholder="Username" {...register('username')} />
+          </div>
+          <div className="w-full">
+            <label htmlFor="bp_no" className="block text-sm font-medium text-gray-700">BP No</label>
+            <Input id="bp_no" placeholder="BP No" {...register('bp_no')} />
+          </div>
         </div>
 
-        {/* Confirm Password */}
-        <div className="space-y-1">
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password <span className="text-red-500">*</span></label>
-          <Input type="password" id="confirmPassword" placeholder="Confirm Password" {...register('confirmPassword')} />
-          {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>}
+        
+
+        {/* Password + Confirm Password */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <PasswordInput
+            id="password"
+            label="Password"
+            placeholder="Password"
+            isHidden={false}
+            {...register('password')}
+            error={errors.password?.message}
+          />
+          <PasswordInput
+            id="confirmed_password"
+            label="Confirm Password"
+            placeholder="Confirm Password"
+            isHidden={false}
+            {...register('confirmed_password')}
+            error={errors.confirmed_password?.message}
+          />
         </div>
 
-        {/* Role */}
-        {/* <div className="space-y-1">
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role <span className="text-red-500">*</span></label>
-          <Select defaultValue={EUserRole.ADMIN} onValueChange={(val) => setValue('role', val as EUserRole)}>
-            <SelectTrigger id="role">
-              <SelectValue placeholder="Select Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={EUserRole.ADMIN}>Admin</SelectItem>
-              <SelectItem value={EUserRole.USER}>User</SelectItem>
-              <SelectItem value={EUserRole.DEVELOPER}>Developer</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
-        </div> */}
+        {/* Phone 1 + Phone 2 */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full">
+            <label htmlFor="phone_1" className="block text-sm font-medium text-gray-700">Phone 1</label>
+            <Input type="number" id="phone_1" placeholder="Phone 1" {...register('phone_1')} />
+          </div>
+          <div className="w-full">
+            <label htmlFor="phone_2" className="block text-sm font-medium text-gray-700">Phone 2</label>
+            <Input type="number" id="phone_2" placeholder="Phone 2" {...register('phone_2')} />
+          </div>
+        </div>
 
-        {/* Profile Picture */}
-        <div className="space-y-1">
+        {/* Blood Group + Current Status */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700">Blood Group</label>
+            <Select {...register('blood_group')}>
+              <option value="">Select</option>
+              <option value="A+">A+</option>
+              <option value="B+">B+</option>
+              {/* etc */}
+            </Select>
+          </div>
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700">Current Status <span className="text-red-500">*</span></label>
+            <Select {...register('current_status')}>
+              <option value="">Select</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </Select>
+            {errors.current_status && <p className="text-red-500 text-sm">{errors.current_status.message}</p>}
+          </div>
+        </div>
+
+        {/* DOB + NID */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+            <Input type="date" {...register('dob')} />
+          </div>
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700">NID</label>
+            <Input placeholder="NID" {...register('nid')} />
+          </div>
+        </div>
+
+          {/* Profile Picture */}
+          <div className="space-y-1">
           <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
           <Dropzone
             onDrop={onDrop}
@@ -216,7 +285,7 @@ export default function Register() {
             {({ getRootProps, getInputProps }) => (
               <div
                 {...getRootProps()}
-                className="border border-dashed p-4 text-center rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+                className="border border-dashed border-gray-400 p-4 text-center rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
               >
                 <input {...getInputProps()} />
                 <p className="text-sm text-gray-500">Drag & drop or click to select a profile picture</p>
@@ -234,12 +303,10 @@ export default function Register() {
                       type="button"
                       variant="destructive"
                       size="sm"
-                      onClick={
-                        (e) => {
-                          e.stopPropagation()
-                          clearImage()
-                        }
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearImage();
+                      }}
                     >
                       Remove Image
                     </Button>
@@ -248,8 +315,6 @@ export default function Register() {
               </div>
             )}
           </Dropzone>
-
-          {/* Animated Error Message */}
           <AnimatePresence>
             {errors.image?.message && (
               <motion.p
@@ -259,14 +324,26 @@ export default function Register() {
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.25 }}
               >
-                {errors.image.message?.toString()}
+                {errors.image.message.toString()}
               </motion.p>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-between gap-4 mt-4 border-t pt-4">
+        {/* Address */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Address</label>
+          <textarea {...register('address')} className="w-full border rounded-md p-2 text-sm" rows={2} />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <textarea {...register('description')} className="w-full border rounded-md p-2 text-sm" rows={2} />
+        </div>
+
+        {/* Submit Actions */}
+        <div className="flex justify-between gap-4 mt-4 border-t border-gray-300 pt-4">
           <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>
             Reset Form
           </Button>
@@ -274,7 +351,8 @@ export default function Register() {
             {submitLoading ? 'Registering...' : 'Register User'}
           </Button>
         </div>
-      </form>
+        </form>
+
     </motion.div>
   )
 }

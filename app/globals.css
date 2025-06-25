@@ -151,11 +151,13 @@
     background: linear-gradient(to right, #0f9b8e, #007965);
   }
 
+  .border-input{
+    @apply border border-gray-600 rounded-md focus:ring focus:ring-blue-300 focus:border-blue-300;
+  }
+
   .warning-gradient {
     background: linear-gradient(to right, #d97706, #b45309);
   }
-
-
 
   .main-link-gradient {
     /* background: linear-gradient(to right, #ff758c, #ff7eb3); */

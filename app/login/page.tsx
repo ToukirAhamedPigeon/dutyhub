@@ -23,6 +23,7 @@ import { toast } from "sonner"
 import { initAuthUser } from '@/lib/initAuthUser';
 import LanguageSwitcher from '@/components/custom/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
+import { PasswordInput } from '@/components/custom/PasswordInput'
 
 
 export default function SignInPage() {
@@ -166,20 +167,15 @@ export default function SignInPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="password" className="text-gray-700">
-                      {t("Password")}
-                    </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      {...register('password')}
-                      className="mt-1 border-gray-400 bg-white"
-                    />
-                    {errors.password && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.password.message}
-                      </p>
-                    )}
+                  <PasswordInput
+                    id="password"
+                    label="Password"
+                    placeholder="Password"
+                    isHidden={true}
+                    inputClassName='bg-white'
+                    {...register('password')}
+                    error={errors.password?.message}
+                  />
                   </div>
 
                   {error && (
