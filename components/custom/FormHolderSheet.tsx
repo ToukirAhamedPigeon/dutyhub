@@ -19,7 +19,7 @@ export default function FormHolderSheet({ open, onOpenChange, title, children,ti
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        className="p-0 flex flex-col w-full sm:max-w-[50%] sm:h-screen h-[75vh] shadow-[0_0_10px_rgba(0,0,0,0.25)] sm:shadow-[-10px_0_20px_-10px_rgba(0,0,0,0.25)] bg-slate-50"
+        className="p-0 flex flex-col w-full sm:max-w-[50%] sm:h-screen h-[75vh] shadow-[0_0_10px_rgba(0,0,0,0.25)] sm:shadow-[-10px_0_20px_-10px_rgba(0,0,0,0.25)] bg-gradient-to-br from-white via-gray-100 to-white "
         side={isDesktop ? "right" : "bottom"}
         style={{
           width: isDesktop ? "50%" : "100%",
@@ -33,7 +33,7 @@ export default function FormHolderSheet({ open, onOpenChange, title, children,ti
             height: "56px",
           }}
         >
-          <SheetTitle className="text-lg font-semibold text-white">{title}</SheetTitle>
+          <SheetTitle className="text-xl font-semibold text-white">{title}</SheetTitle>
           <Button
             variant="link"
             size="icon"

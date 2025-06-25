@@ -145,8 +145,7 @@ export default function Register() {
       transition={{ duration: 0.5, ease: 'easeInOut' }}
       className="flex items-center justify-center"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-gradient-to-br from-white via-gray-100 to-white shadow-xl rounded-2xl p-6 w-full max-w-xl space-y-4">
-        <h2 className="text-2xl font-bold text-gray-700 text-center">Register New User</h2>
+      <form onSubmit={handleSubmit(onSubmit)} className="p-3 w-full space-y-4">
 
         {/* Name Field */}
         <div className="space-y-1">
