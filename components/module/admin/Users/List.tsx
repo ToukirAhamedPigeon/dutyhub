@@ -1,5 +1,5 @@
 'use client'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, ColumnDef, SortingState, OnChangeFn} from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -18,10 +18,15 @@ import { Badge } from '@/components/ui/badge'
 import api from '@/lib/axios'
 import { IUser } from '@/types'
 import { authorizationHeader } from '@/lib/tokens';
+import { useAppSelector } from '@/hooks/useRedux';
+import FormHolderSheet from "@/components/custom/FormHolderSheet";
+import Register from './Register'
 
 export default function UserListTable() {
   //Router Hook
-  const router = useRouter()
+  const authroles = useAppSelector((state) => state.roles) as string[];
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  
   //Auth Hook
 
   //Table Hook
@@ -40,7 +45,7 @@ export default function UserListTable() {
         },
       })
 
-      console.log(res.data) // Add this line to log the response data t
+      //console.log(res.data) // Add this line to log the response data t
   
       return {
         data: res.data.users as IUser[],
@@ -50,7 +55,7 @@ export default function UserListTable() {
   })
 
   //Detail Modal Hook
-  // const {isModalOpen,selectedItem,fetchDetail,closeModal: closeDetailModal} = useDetailModal<IUser>('/users')
+  const {isModalOpen,selectedItem,fetchDetail,closeModal: closeDetailModal} = useDetailModal<IUser>('/users')
 
   //Edit Modal Hook
   // const {isOpen: isEditModalOpen,itemToEdit: userToEdit,openEdit: handleEditClick,closeEdit: closeEditModal} = useEditModal<IUser>()
@@ -77,7 +82,7 @@ export default function UserListTable() {
       cell: ({ row }) => (
         <RowActions
           row={row.original}
-          // onDetail={() => fetchDetail(row.original._id.toString())}
+          onDetail={() => fetchDetail(row.original._id.toString())}
           // onEdit={() => handleEditClick(row.original)}
           // onDelete={() => confirmDelete(row.original._id.toString())}
         />
@@ -91,36 +96,36 @@ export default function UserListTable() {
       header: 'Email',
       accessorKey: 'email',
     },
-    // ...(user?.role === EUserRole.DEVELOPER
-    //   ? [{
-    //       header: 'Decrypted Password',
-    //       accessorKey: 'decryptedPassword',
-    //     }]
-    //   : []),
-    // {
-    //   header: 'Profile Picture',
-    //   cell: ({ row }) => (
-    //     <Fancybox
-    //       src={row.original.profilePicture?.imageUrl || '/assets/policeman.png'}
-    //       alt={row.original.name}
-    //       className="w-14 h-14 rounded-full"
-    //     />
-    //   ),
-    // },
-    // {
-    //   header: 'Role',
-    //   accessorKey: 'role',
-    //   cell: ({ getValue }) => capitalize(getValue() as string),
-    // },
-    // {
-    //   header: 'Status',
-    //   accessorKey: 'isActive',
-    //   cell: ({ getValue }) => (
-    //     <Badge variant={getValue() ? 'success' : 'destructive'}>
-    //       {getValue() ? 'Active' : 'Inactive'}
-    //     </Badge>
-    //   ),
-    // },
+    ...(authroles.includes('developer')
+      ? [{
+          header: 'Decrypted Password',
+          accessorKey: 'decrypted_password',
+        }]
+      : []),
+    {
+      header: 'Profile Picture',
+      cell: ({ row }) => (
+        <Fancybox
+          src={row.original.image || '/policeman.png'}
+          alt={row.original.name || 'Profile Picture'}
+          className="w-14 h-14 rounded-full"
+        />
+      ),
+    },
+    {
+      header: 'Roles',
+      accessorKey: 'roleNames',
+      cell: ({ getValue }) => capitalize(getValue() as string),
+    },
+    {
+      header: 'Current Status',
+      accessorKey: 'current_status',
+      cell: ({ getValue }) => (
+        <Badge variant={getValue() ? 'success' : 'destructive'}>
+          {getValue() ? 'Active' : 'Inactive'}
+        </Badge>
+      ),
+    },
     {
       header: 'Created At',
       accessorKey: 'created_at',
@@ -133,7 +138,6 @@ export default function UserListTable() {
     },
   ], [
     pageIndex
-    // , user?.role
   ])
 
   //Table
@@ -158,7 +162,7 @@ export default function UserListTable() {
       <TableHeaderActions
         searchValue={globalFilter}
         onSearchChange={setGlobalFilter}
-        onAddNew={() => router.push('/admin/users/register')}
+        onAddNew={() => setIsSheetOpen(true)}
         onPrint={() => window.print()}
         onExport={() => exportExcel({ data, fileName: 'Users', sheetName: 'Users' })}
         addButtonLabel="Register New User"
@@ -224,9 +228,19 @@ export default function UserListTable() {
       </div>
 
         {/* Detail Modal */}
-      {/* <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
+      <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
         <UserDetail user={selectedItem} />
-      </Modal> */}
+      </Modal>
+
+      {/* Add New Modal */}
+      <FormHolderSheet
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        title="Register New User"
+        titleDivClassName='success-gradient'
+      >
+        <Register/>
+      </FormHolderSheet>
 
       {/* Edit Modal */}  
       {/*<Modal
