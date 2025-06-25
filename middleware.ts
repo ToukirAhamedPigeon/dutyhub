@@ -18,10 +18,10 @@ export function middleware(req: NextRequest) {
     req.cookies.get('__Secure-next-auth.session-token');
   const permissionsCookie = req.cookies.get('user-permissions');
 
-  console.log('pathname:', pathname);
-  console.log('cleanPath:', cleanPath);
-  console.log('sessionCookie:', sessionCookie);
-  console.log('permissionsCookie:', permissionsCookie);
+  // console.log('pathname:', pathname);
+  // console.log('cleanPath:', cleanPath);
+  // console.log('sessionCookie:', sessionCookie);
+  // console.log('permissionsCookie:', permissionsCookie);
 
   // Handle root redirect
   if (pathname === '/') {

@@ -35,7 +35,7 @@ export enum BloodGroup {
   }
 
   export interface IUser {
-    _id?: ObjectId;
+    _id: ObjectId;
     name?: string;
     username?: string;
     email: string;
@@ -59,7 +59,7 @@ export enum BloodGroup {
   }
 
   export interface IRole {
-    _id?: ObjectId;
+    _id: ObjectId;
     name: string;
     guard_name?: string;
     created_at?: Date;
@@ -69,7 +69,7 @@ export enum BloodGroup {
   }
 
   export interface IPermission {
-    _id?: ObjectId;
+    _id: ObjectId;
     name: string;
     guard_name?: string;
     created_at?: Date;
@@ -79,20 +79,20 @@ export enum BloodGroup {
   }
 
   export interface IRolePermission {
-    _id?: ObjectId;
+    _id: ObjectId;
     role_id: ObjectId | IRole;
     permission_id: ObjectId | IPermission;
   }
 
   export interface IModelRole {
-    _id?: ObjectId;
+    _id: ObjectId;
     role_id: ObjectId | IRole;
     model_type?: string; // e.g., "User"
     model_id: ObjectId;
   }
 
   export interface IModelPermission {
-    _id?: ObjectId;
+    _id: ObjectId;
     permission_id: ObjectId | IPermission;
     model_type?: string; // e.g., "User"
     model_id: ObjectId;

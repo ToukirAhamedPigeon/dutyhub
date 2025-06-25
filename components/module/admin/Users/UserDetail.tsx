@@ -10,8 +10,8 @@ export default function UserDetail({user}: {user: any}){
             <div className="flex flex-col lg:flex-row gap-6">
                 <div className="lg:w-1/3 w-full flex justify-center items-center">
                     <Image
-                        src={user.profilePictureUrl}
-                        alt="Profile"
+                        src={user.image || '/policeman.png'}
+                        alt={user.name || 'Profile Picture'}
                         className="object-cover rounded-xl border-2 border-white"
                         width={200}
                         height={200}
@@ -31,19 +31,19 @@ export default function UserDetail({user}: {user: any}){
                             </TableRow>
                             <TableRow>
                                 <TableCell><strong>Role:</strong></TableCell>
-                                <TableCell>{<span className='capitalize'>{user.role}</span>}</TableCell>
+                                <TableCell>{<span className='capitalize'>{user.roleNames}</span>}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell><strong>Status:</strong></TableCell>
-                                <TableCell>{user.isActive ? <span className='text-green-500 font-bold'>Active</span> : <span className='text-red-500 font-bold'>Inactive</span>}</TableCell>
+                                <TableCell>{user.current_status=='Active' ? <span className='text-green-500 font-bold'>Active</span> : <span className='text-red-500 font-bold'>Inactive</span>}</TableCell>
                             </TableRow>   
                             <TableRow>
                                 <TableCell><strong>Created At:</strong></TableCell>
-                                <TableCell>{formatDateTime(user.createdAt)}</TableCell>
+                                <TableCell>{formatDateTime(user.created_at)}</TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell><strong>Updated At:</strong></TableCell>
-                                <TableCell>{formatDateTime(user.updatedAt)}</TableCell>
+                                <TableCell>{formatDateTime(user.updated_at)}</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>

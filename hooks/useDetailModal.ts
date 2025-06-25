@@ -1,21 +1,19 @@
 // hooks/useDetailModal.ts
 import { useState } from 'react'
 import api from '@/lib/axios'
+import { authorizationHeader } from '@/lib/tokens';
 
 export function useDetailModal<T>(endpoint: string) {
-  const authUser = localStorage.getItem('authUser')
-  const token = JSON.parse(authUser || '{}').token
+  
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<T | null>(null)
 
   const fetchDetail = async (id: string) => {
     try {
+      const headers = await authorizationHeader();
       const res = await api.get(`${endpoint}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers
       })
-      console.log(res)
       setSelectedItem(res.data)
       setIsModalOpen(true)
     } catch (error) {
