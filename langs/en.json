@@ -20,6 +20,23 @@
         "Logging In": "Logging In",
         "Invalid username or password": "Invalid username or password."
     }, 
+    "User":{
+        "Name": "Name",
+        "Email": "Email",
+        "Username": "Username",
+        "BP No": "BP No",
+        "Password": "Password",
+        "Confirm Password": "Confirm Password",
+        "Phone 1": "Phone 1",
+        "Phone 2": "Phone 2",
+        "Blood Group": "Blood Group",
+        "Current Status": "Current Status",
+        "Date of Birth": "Date of Birth",
+        "NID": "NID",
+        "Profile Picture": "Profile Picture",
+        "Roles": "Roles",
+        "Permissions": "Permissions"
+    },
     "ErrorPages":{
         "The page you’re looking for doesn’t exist": "The page you’re looking for doesn’t exist.",
         "You don’t have permission to view this page": "You don’t have permission to view this page.",

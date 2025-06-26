@@ -12,10 +12,10 @@ interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement>
   registerProps?: any;
   inputClassName?: string;
   isRequiredStar?: boolean;
-  placeHolder?: string;
+  placeholder?: string;
 }
 
-export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, isRequiredStar, placeHolder, ...rest }: PasswordInputProps) => {
+export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, isRequiredStar, placeholder, ...rest }: PasswordInputProps) => {
   const [hidden, setHidden] = useState(isHidden);
   const t = useTranslations('SignInPage');
   return (
@@ -27,7 +27,7 @@ export const PasswordInput = ({ label, error, isHidden = true, registerProps, in
         <Input
           type={hidden ? 'password' : 'text'}
           className={cn(inputClassName,"pr-10")}
-          placeholder={placeHolder && placeHolder.length>0?t(placeHolder):''}
+          placeholder={placeholder && t(placeholder)}
           {...registerProps}
           {...rest}
         />

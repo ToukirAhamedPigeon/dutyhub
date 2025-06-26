@@ -17,6 +17,7 @@ import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { authorizationHeader, accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
 import { PasswordInput } from '@/components/custom/PasswordInput'
+import FormInput from '@/components/custom/FormInput'
 
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -46,6 +47,7 @@ export default function Register() {
   const [emailChecking, setEmailChecking] = useState(false)
   const [emailTaken, setEmailTaken] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
+  const translateKey='User'
 
   const {
     register,
@@ -167,11 +169,15 @@ export default function Register() {
       <form onSubmit={handleSubmit(onSubmit)} className="p-3 w-full space-y-4">
 
         {/* Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name <span className="text-red-500">*</span></label>
-          <Input id="name" placeholder="Name" {...register('name')} />
-          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
-        </div>
+        <FormInput
+        id="name"
+        label="Name"
+        isRequired
+        placeholder="Name"
+        register={register("name", { required: "Name is required" })}
+        error={errors.name}
+        translateKey={translateKey}
+      />
 
         {/* Email */}
         <div className="space-y-1">
@@ -196,17 +202,24 @@ export default function Register() {
 
         {/* Username + BP No */}
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full">
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
-            <Input id="username" placeholder="Username" {...register('username')} />
-          </div>
-          <div className="w-full">
-            <label htmlFor="bp_no" className="block text-sm font-medium text-gray-700">BP No</label>
-            <Input id="bp_no" placeholder="BP No" {...register('bp_no')} />
-          </div>
+          <FormInput
+            id="username"
+            label="Username"
+            isRequired
+            placeholder="Username"
+            register={register("username", { required: "Username is required" })}
+            error={errors.username}
+            translateKey={translateKey}
+          />
+          <FormInput
+            id="bp_no"
+            label="BP No"
+            placeholder="BP No"
+            register={register("bp_no")}
+            error={errors.bp_no}
+            translateKey={translateKey}
+          />
         </div>
-
-        
 
         {/* Password + Confirm Password */}
         <div className="flex flex-col md:flex-row gap-4">
@@ -232,14 +245,26 @@ export default function Register() {
 
         {/* Phone 1 + Phone 2 */}
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full">
-            <label htmlFor="phone_1" className="block text-sm font-medium text-gray-700">Phone 1</label>
-            <Input type="number" id="phone_1" placeholder="Phone 1" {...register('phone_1')} />
-          </div>
-          <div className="w-full">
-            <label htmlFor="phone_2" className="block text-sm font-medium text-gray-700">Phone 2</label>
-            <Input type="number" id="phone_2" placeholder="Phone 2" {...register('phone_2')} />
-          </div>
+        <FormInput
+          id="phone_1"
+          label="Phone 1"
+          type="number"
+          placeholder="Phone 1"
+          register={register("phone_1")}
+          error={errors.phone_1}
+          translateKey={translateKey}
+          onWheel={(e) => e.currentTarget.blur()}
+        />
+          <FormInput
+            id="phone_2"
+            label="Phone 2"
+            type="number"
+            placeholder="Phone 2"
+            register={register("phone_2")}
+            error={errors.phone_2}
+            translateKey={translateKey}
+            onWheel={(e) => e.currentTarget.blur()}
+          />
         </div>
 
         {/* Blood Group + Current Status */}
@@ -270,10 +295,14 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
             <Input type="date" {...register('dob')} />
           </div>
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700">NID</label>
-            <Input placeholder="NID" {...register('nid')} />
-          </div>
+          <FormInput
+            id="nid"
+            label="NID"
+            placeholder="NID"
+            register={register("nid")}
+            error={errors.nid}
+            translateKey={translateKey}
+          />
         </div>
 
           {/* Profile Picture */}

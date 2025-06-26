@@ -3,7 +3,7 @@ import type { RequestConfig } from 'next-intl/server';
 
 export default async function getRequestConfig(): Promise<RequestConfig> {
   const cookieStore = await cookies();
-  const localeFromCookie = cookieStore.get('NEXT_LOCALE')?.value || 'bn';
+  const localeFromCookie = cookieStore.get('NEXT_LOCALE')?.value || 'en';
 
   const locale = localeFromCookie;
 
