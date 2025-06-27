@@ -16,7 +16,7 @@ import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { authorizationHeader, accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
-import DateTimeInput,{BasicInput, CustomSelect, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
+import DateTimeInput,{BasicInput, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -100,10 +100,9 @@ export default function Register() {
     preview,
     clearImage,
     onDrop,
-    setPreview
-  } = useProfilePicture(setValue, setError, 'image')
+  } = useProfilePicture(setValue, setError, 'image', watch('image') || undefined);
 
-  const imagePic = watch('image')
+  // const imagePic = watch('image')
 
   // Form Submit
   const onSubmit = async (data: FormData) => {
@@ -118,8 +117,8 @@ export default function Register() {
 
       if(data.bp_no && data.bp_no.trim().length>0)
       {
-        const bo_no_Taken = await checkValueExists("User", "bp_no", data.bp_no)
-        if (bo_no_Taken) {
+        const bo_no_taken = await checkValueExists("User", "bp_no", data.bp_no)
+        if (bo_no_taken) {
           setError('bp_no', { type: 'manual', message: 'BP No already exists' })
           setSubmitLoading(false)
           return
@@ -166,7 +165,7 @@ export default function Register() {
   // Reset Handler
   const handleReset = () => {
     reset()
-    setPreview(null)
+    // setPreview(null)
   }
 
   return (
@@ -357,6 +356,7 @@ export default function Register() {
             error={errors.dob}
             placeholder="Select your date of birth"
             showTime={false}
+            showResetButton={true}
             model={model}
           />
           <BasicInput
@@ -370,60 +370,14 @@ export default function Register() {
         </div>
 
           {/* Profile Picture */}
-          <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
-          <Dropzone
+          <SingleImageInput
+            label="Profile Picture"
+            preview={preview}
             onDrop={onDrop}
-            accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'] }}
-            maxFiles={1}
-          >
-            {({ getRootProps, getInputProps }) => (
-              <div
-                {...getRootProps()}
-                className="border border-dashed border-gray-400 p-4 text-center rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
-              >
-                <input {...getInputProps()} />
-                <p className="text-sm text-gray-500">Drag & drop or click to select a profile picture</p>
-
-                {preview && (
-                  <div className="mt-2 flex flex-col items-center justify-center gap-2">
-                    <Image
-                      src={preview}
-                      alt="Preview"
-                      width={100}
-                      height={100}
-                      className="rounded-md border shadow"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        clearImage();
-                      }}
-                    >
-                      Remove Image
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </Dropzone>
-          <AnimatePresence>
-            {errors.image?.message && (
-              <motion.p
-                className="text-red-500 text-sm mt-1"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25 }}
-              >
-                {errors.image.message.toString()}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
+            clearImage={clearImage}
+            error={errors.image}
+            isRequired
+          />
 
         {/* Address */}
         <div>

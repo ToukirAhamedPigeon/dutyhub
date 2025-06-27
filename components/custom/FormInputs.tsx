@@ -13,6 +13,9 @@ import { useSelect } from "@/hooks/useSelect";
 import { capitalize } from "@/lib/helpers";
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import Image from 'next/image';
+import { DropzoneOptions, useDropzone } from 'react-dropzone';
+import { Button } from '@/components/ui/button';
 
 
 
@@ -460,6 +463,98 @@ export function CustomSelect<T extends Record<string, any>>({
   );
 }
 
+//Single Image Upload
+
+type SingleImageInputProps = {
+  label?: string;
+  preview: string | null;
+  onDrop: DropzoneOptions['onDrop'];
+  error?: { message?: string };
+  clearImage: () => void;
+  disabled?: boolean;
+  isRequired?: boolean;
+  className?: string;
+};
+
+export const SingleImageInput: React.FC<SingleImageInputProps> = ({
+  label = 'Upload Image',
+  preview,
+  onDrop,
+  error,
+  clearImage,
+  disabled = false,
+  isRequired = false,
+  className,
+}) => {
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'],
+    },
+    maxFiles: 1,
+    disabled,
+  });
+
+  return (
+    <div className={cn('space-y-1', className)}>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">
+          {label} {isRequired && <span className="text-red-500">*</span>}
+        </label>
+      )}
+
+      <div
+        {...getRootProps()}
+        className={cn(
+          'border border-dashed border-gray-400 p-4 text-center rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition',
+          disabled && 'bg-gray-100 cursor-not-allowed opacity-70'
+        )}
+      >
+        <input {...getInputProps()} />
+        <p className="text-sm text-gray-500">Drag & drop or click to select an image</p>
+
+        {preview && (
+          <div className="mt-2 flex flex-col items-center justify-center gap-2">
+            <Image
+              src={preview}
+              alt="Preview"
+              width={100}
+              height={100}
+              className="rounded-md border shadow"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                clearImage();
+              }}
+            >
+              Remove Image
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {error?.message && (
+          <motion.p
+            className="text-red-500 text-sm mt-1"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25 }}
+          >
+            {error.message}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+
 //DateTimeInput
 
 type DateTimeProps = {
@@ -475,6 +570,7 @@ type DateTimeProps = {
   disabled?: boolean;
   readOnly?: boolean;
   allowTyping?: boolean;
+  showResetButton?: boolean;   // <-- new prop
   className?: string;
   model: string;
 };
@@ -493,43 +589,64 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
       error,
       disabled,
       readOnly,
+      allowTyping = false,
+      showResetButton = false, // default off
       className,
       model,
-      allowTyping = false,
     },
     ref
   ) => {
     const t = useTranslations(model);
+
+    const handleReset = (e: React.MouseEvent) => {
+      e.stopPropagation(); // prevent popover toggle if any
+      setValue(name, null);
+    };
 
     return (
       <div className="w-full space-y-1">
         <label htmlFor={id} className="text-sm font-medium text-gray-700">
           {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
         </label>
-        <DatePicker
-          id={id}
-          selected={value}
-          onChange={(date) => setValue(name, date)}
-          showTimeSelect={showTime}
-          onKeyDown={(e) => {if(!allowTyping) e.preventDefault()}}
-          showMonthDropdown
-          showYearDropdown
-          dropdownMode="select"
-          yearDropdownItemNumber={200}
-          timeFormat={showTime ? 'HH:mm' : undefined}
-          timeIntervals={showTime ? 15 : undefined}
-          dateFormat={showTime ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd'}
-          placeholderText={placeholder || (showTime ? 'Select date & time' : 'Select date')}
-          ref={ref}
-          readOnly={readOnly}
-          className={cn(
-            'w-full border border-gray-400 rounded-lg h-[38px] px-3 py-2 bg-slate-50 focus:bg-slate-100',
-            error && 'border-red-500',
-            className
+        <div className="relative">
+          <DatePicker
+            id={id}
+            selected={value}
+            onChange={(date) => setValue(name, date)}
+            showTimeSelect={showTime}
+            onKeyDown={(e) => {
+              if (!allowTyping) e.preventDefault();
+            }}
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+            yearDropdownItemNumber={200}
+            timeFormat={showTime ? 'HH:mm' : undefined}
+            timeIntervals={showTime ? 15 : undefined}
+            dateFormat={showTime ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd'}
+            placeholderText={placeholder || (showTime ? 'Select date & time' : 'Select date')}
+            ref={ref}
+            readOnly={readOnly}
+            className={cn(
+              'w-full border border-gray-400 rounded-lg h-[38px] px-3 py-2 bg-slate-50 focus:bg-slate-100',
+              error && 'border-red-500',
+              className
+            )}
+            wrapperClassName="w-full"
+            disabled={disabled}
+          />
+          {showResetButton && value && !disabled && !readOnly && (
+            <button
+              type="button"
+              onClick={handleReset}
+              aria-label="Clear date"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              tabIndex={-1} // exclude from tab order, optional
+            >
+              <span className="text-xs text-gray-800 hover:text-red-700 cursor-pointer hover:font-bold">&#10005;</span> {/* or use an SVG icon for 'X' */}
+            </button>
           )}
-          wrapperClassName="w-full"
-          disabled={disabled}
-        />
+        </div>
         {error && <p className="text-sm text-red-500">{error.message}</p>}
       </div>
     );
@@ -538,5 +655,6 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
 
 DateTimeInput.displayName = 'DateTimeInput';
 export default DateTimeInput;
+
 
   
