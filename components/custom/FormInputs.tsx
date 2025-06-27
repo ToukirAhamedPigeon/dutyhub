@@ -41,7 +41,7 @@ export const BasicInput=({
     };
   
     return (
-      <div className="w-full">
+      <div className="w-full space-y-1 ">
         <label htmlFor={id} className="block text-sm font-medium text-gray-700">
           {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
         </label>
@@ -110,7 +110,7 @@ export const UniqueInput = ({
   }
 
   return (
-    <div className="w-full relative">
+    <div className="space-y-1 w-full relative">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
         {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
       </label>

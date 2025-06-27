@@ -157,7 +157,8 @@ export default function Register() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="p-3 w-full space-y-4">
 
-        {/* Name */}
+      {/* Name + Username */}
+      <div className="flex flex-col md:flex-row gap-4">
         <BasicInput
         id="name"
         label="Name"
@@ -167,49 +168,22 @@ export default function Register() {
         error={errors.name}
         model={model}
       />
-
-        {/* Email */}
-        <UniqueInput
-          id="email"
-          label="Email"
-          placeholder="Email"
-          model={model}
-          register={register('email')}
-          error={errors.email}
-          uniqueErrorMessage="Email already exists"
-          field="email"
-          watchValue={watch('email')}
-        />
-
-        {/* Username + BP No */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <UniqueInput
+       <UniqueInput
             id="username"
             label="Username"
             placeholder="Username"
             model={model}
+            isRequired={true}
             register={register('username')}
             error={errors.username}
             uniqueErrorMessage="Username already exists"
             field="username"
             watchValue={watch('username')}
           />
+      </div>
 
-          <UniqueInput
-            id="bp_no"
-            label="BP No"
-            placeholder="BP No"
-            model={model}
-            register={register('bp_no')}
-            error={errors.bp_no}
-            uniqueErrorMessage="BP No already exists"
-            field="bp_no"
-            watchValue={watch('bp_no') ?? ''}
-          />
-        </div>
-
-        {/* Password + Confirm Password */}
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* Password + Confirm Password */}
+      <div className="flex flex-col md:flex-row gap-4">
           <PasswordInput
             id="password"
             label="Password"
@@ -228,20 +202,48 @@ export default function Register() {
             {...register('confirmed_password')}
             error={errors.confirmed_password?.message}
           />
-        </div>
+      </div>
+
+      {/*  BP No + Email */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <UniqueInput
+            id="bp_no"
+            label="BP No"
+            placeholder="BP No"
+            model={model}
+            register={register('bp_no')}
+            error={errors.bp_no}
+            uniqueErrorMessage="BP No already exists"
+            field="bp_no"
+            watchValue={watch('bp_no') ?? ''}
+          />
+
+      <UniqueInput
+          id="email"
+          label="Email"
+          placeholder="Email"
+          model={model}
+          register={register('email')}
+          error={errors.email}
+          uniqueErrorMessage="Email already exists"
+          field="email"
+          watchValue={watch('email')}
+        />
+      </div>
 
         {/* Phone 1 + Phone 2 */}
         <div className="flex flex-col md:flex-row gap-4">
-        <BasicInput
-          id="phone_1"
-          label="Phone 1"
-          type="number"
-          placeholder="Phone 1"
-          register={register("phone_1")}
-          error={errors.phone_1}
-          model={model}
-          onWheel={(e) => e.currentTarget.blur()}
-        />
+          <BasicInput
+            id="phone_1"
+            label="Phone 1"
+            type="number"
+            isRequired={true}
+            placeholder="Phone 1"
+            register={register("phone_1")}
+            error={errors.phone_1}
+            model={model}
+            onWheel={(e) => e.currentTarget.blur()}
+          />
           <BasicInput
             id="phone_2"
             label="Phone 2"

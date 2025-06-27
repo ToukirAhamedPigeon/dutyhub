@@ -37,7 +37,8 @@
         "Roles": "Roles",
         "Permissions": "Permissions",
         "Email already exists": "Email already exists.",
-        "Username already exists": "Username already exists."
+        "Username already exists": "Username already exists.",
+        "BP No already exists": "BP No already exists."
     },
     "ErrorPages":{
         "The page you’re looking for doesn’t exist": "The page you’re looking for doesn’t exist.",
