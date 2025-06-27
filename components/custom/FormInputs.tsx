@@ -1,12 +1,18 @@
-import { useEffect, useState, InputHTMLAttributes } from "react"
+import { useEffect, useState, useRef, InputHTMLAttributes } from "react"
 import { Input } from "@/components/ui/input";
-import { FieldError, UseFormRegisterReturn } from "react-hook-form";
+import {  Path, FieldError, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from "framer-motion"
 import { checkValueExists } from "@/lib/validations"
 import { cn } from '@/lib/utils';
-import { Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Command, CommandInput, CommandItem, CommandList } from "../ui/command";
+import { useSelect } from "@/hooks/useSelect";
 
+
+//Basic Input
 interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
   type?: string;
@@ -51,6 +57,7 @@ export const BasicInput=({
     );
 }
 
+//Unique Input
 interface UniqueInputProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string
   type?: string
@@ -150,6 +157,7 @@ export const UniqueInput = ({
   )
 }
 
+//Password Input
 interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
@@ -158,11 +166,12 @@ interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement>
   inputClassName?: string;
   isRequiredStar?: boolean;
   placeholder?: string;
+  model: string;
 }
 
-export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, isRequiredStar, placeholder, ...rest }: PasswordInputProps) => {
+export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, isRequiredStar, placeholder, model, ...rest }: PasswordInputProps) => {
   const [hidden, setHidden] = useState(isHidden);
-  const t = useTranslations('SignInPage');
+  const t = useTranslations(model);
   return (
     <div className="space-y-1 w-full">
       <label className="block text-sm font-medium text-gray-700">
@@ -188,4 +197,243 @@ export const PasswordInput = ({ label, error, isHidden = true, registerProps, in
     </div>
   );
 };
+
+//Basic Select
+type Option = {
+  value: string;
+  label: string;
+  [key: string]: any;
+};
+
+
+interface BasicSelectProps<T extends Record<string, any>> {
+  id: string
+  label: string
+  isRequired?: boolean
+  placeholder?: string
+  options: Option[]
+  error?: FieldError
+  setValue: UseFormSetValue<T>
+  name: Path<T>
+  model: string
+  defaultOption?: Option
+  value?: string
+}
+
+export const BasicSelect = <T extends Record<string, any>>({
+  id,
+  label,
+  isRequired = false,
+  placeholder = 'Select an option',
+  options,
+  error,
+  setValue,
+  name,
+  model,
+  defaultOption,
+  value
+}: BasicSelectProps<T>) => {
+  const t = useTranslations(model)
+
+  return (
+    <div className="space-y-1 w-full">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
+      </label>
+
+      <Select
+        value={value ?? undefined}
+        onValueChange={(val) => setValue(name, val === '__none__' ? '' : val as any)}
+      >
+        <SelectTrigger
+          id={id}
+          className="w-full border border-gray-500"
+        >
+          <SelectValue placeholder={t(placeholder, { default: placeholder })} />
+        </SelectTrigger>
+
+        <SelectContent>
+          {!isRequired && (
+            <SelectItem value={defaultOption?.value ?? '__none__'}>
+              <span className="text-gray-400">
+                {defaultOption?.label
+                  ? t(defaultOption.label, { default: defaultOption.label })
+                  :  t('None', { default: 'None' })}
+              </span>
+            </SelectItem>
+          )}
+          {options.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {/* {t(opt.label, { default: opt.label })} */}
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {error && <p className="text-red-500 text-sm">{error.message}</p>}
+    </div>
+  )
+}
+
+interface CustomSelectProps<T extends Record<string, any>> {
+  id: string;
+  label: string;
+  name: Path<T>;
+  isRequired?: boolean;
+  placeholder?: string;
+  error?: FieldError;
+  setValue: UseFormSetValue<T>;
+  model: string;
+
+  value?: string | string[];
+
+  // Dynamic options
+  apiUrl?: string;
+  limit?: number;
+  filter?: Record<string, any>;
+  optionValueKey?: string;
+  optionLabelKeys?: string[];
+  optionLabelSeparator?: string;
+
+  // Static options
+  options?: Option[];
+
+  multiple?: boolean;
+  defaultOption?: Option;
+}
+
+export function CustomSelect<T extends Record<string, any>>({
+  id,
+  label,
+  name,
+  isRequired = false,
+  placeholder = 'Select option(s)',
+  error,
+  setValue,
+  model,
+  value,
+  options = [],
+  apiUrl,
+  defaultOption, 
+  limit = 50,
+  filter = {},
+  optionValueKey = '_id',
+  optionLabelKeys = ['name'],
+  optionLabelSeparator = ' ',
+  multiple = false,
+}: CustomSelectProps<T>) {
+  const t = useTranslations(model);
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    options: fetchedOptions,
+    loading,
+    selected,
+    setSelected,
+    getOptionLabel,
+  } = useSelect({
+    apiUrl,
+    search,
+    filter,
+    limit,
+    multiple,
+    optionValueKey,
+    optionLabelKeys,
+    optionLabelSeparator,
+    initialValue: value,
+  });
+
+  const allOptions = apiUrl
+    ? fetchedOptions
+    : defaultOption
+      ? [defaultOption, ...options]
+      : options;
+  const currentValue = apiUrl ? selected : value;
+
+  const isSelected = (val: string) =>
+    multiple
+      ? Array.isArray(currentValue) && currentValue.includes(val)
+      : currentValue === val;
+
+  const handleChange = (val: string) => {
+    if (multiple) {
+      const prev = (currentValue as string[]) ?? [];
+      const exists = prev.includes(val);
+      const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
+      setValue(name, updated as any);
+    } else {
+      setValue(name, val as any);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="space-y-1 w-full">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
+      </label>
+
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <div className="relative w-full">
+            <Input
+              readOnly
+              ref={inputRef}
+              className="text-left cursor-pointer hover:bg-slate-100 pr-10 border border-gray-500"
+              value={
+                multiple
+                  ? allOptions
+                      .filter((opt: Option) => (currentValue as string[])?.includes(opt.value))
+                      .map((opt: Option) => opt.label) // **No translation here**
+                      .join(', ')
+                  : allOptions.find((opt: Option) => opt.value === currentValue)?.label || '' // **No translation here**
+              }
+              placeholder={t(placeholder, { default: placeholder })}
+              onClick={() => setOpen(true)}
+            />
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4 pointer-events-none" />
+          </div>
+        </PopoverTrigger>
+
+        <PopoverContent
+          className="p-0 mt-[-4px] w-full max-h-[300px] overflow-auto"
+          style={{ width: inputRef.current?.offsetWidth }}
+        >
+          <Command className="w-full">
+            <CommandInput
+              placeholder={t('Search', { default: 'Search' })+'...'}
+              value={search}
+              onValueChange={setSearch}
+              className="w-full"
+            />
+            <CommandList>
+              {loading && <CommandItem disabled>{t('Loading', { default: 'Loading' })+'...'}</CommandItem>}
+              {!loading &&
+                allOptions.map((opt: Option) => (
+                  <CommandItem
+                    key={opt.value}
+                    onSelect={() => handleChange(opt.value)}
+                    className={`cursor-pointer hover:bg-blue-100 !rounded-none ${
+                      isSelected(opt.value) ? '!bg-blue-400 hover:!bg-blue-400 !text-white' : ''
+                    }`}
+                  >
+                    {opt.label} {/* No translation here */}
+                  </CommandItem>
+                ))}
+              {!loading && allOptions.length === 0 && (
+                <CommandItem disabled>{t('No options found.', { default: 'No options found.' })}</CommandItem>
+              )}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {error && <p className="text-red-500 text-sm">{error.message}</p>}
+    </div>
+  );
+}
+
   

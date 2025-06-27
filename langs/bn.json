@@ -8,7 +8,8 @@
         "Lookups": "লুকআপ",
         "Logout" : "লগ আউট",
         "Welcome to Duty Hub — Preparing your workspace": "DutyHub এ স্বাগতম — আপনার ওয়ার্কস্পেস প্রস্তুত করা হচ্ছে",
-        "Logging out — Ending your session": "লগ আউট করা হচ্ছে — আপনার সেশন শেষ হচ্ছে"
+        "Logging out — Ending your session": "লগ আউট করা হচ্ছে — আপনার সেশন শেষ হচ্ছে",
+        "Select Blood Group":"ব্লাড গ্রুপ সিলেক্ট করুন"
 
     },
     "Dashboard":{},

@@ -16,7 +16,8 @@ import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { authorizationHeader, accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
-import {BasicInput, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
+import {BasicInput, BasicSelect, CustomSelect, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
+import { bloodGroups } from '@/constants'
 
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -71,7 +72,7 @@ export default function Register() {
       nid: '',
       dob: new Date(),
       description: '',
-      current_status: 'Inactive'
+      current_status: 'Active'
     }
   })
 
@@ -192,6 +193,7 @@ export default function Register() {
             isHidden={false}
             {...register('password')}
             error={errors.password?.message}
+            model={model}
           />
           <PasswordInput
             id="confirmed_password"
@@ -201,6 +203,7 @@ export default function Register() {
             isHidden={false}
             {...register('confirmed_password')}
             error={errors.confirmed_password?.message}
+            model={model}
           />
       </div>
 
@@ -258,24 +261,35 @@ export default function Register() {
 
         {/* Blood Group + Current Status */}
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700">Blood Group</label>
-            <Select {...register('blood_group')}>
-              <option value="">Select</option>
-              <option value="A+">A+</option>
-              <option value="B+">B+</option>
-              {/* etc */}
-            </Select>
-          </div>
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700">Current Status <span className="text-red-500">*</span></label>
-            <Select {...register('current_status')}>
-              <option value="">Select</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </Select>
-            {errors.current_status && <p className="text-red-500 text-sm">{errors.current_status.message}</p>}
-          </div>
+          <CustomSelect<FormData>
+            id="current_status"
+            label="Current Status"
+            name="current_status"
+            placeholder="Select Current Status"
+            isRequired={true}
+            options={[
+              { label: "Active", value: "Active" },
+              { label: "Inactive", value: "Inactive" },
+            ]}
+            error={errors.current_status}
+            setValue={setValue}
+            value={watch("current_status")}
+            model={model}
+          />
+          <CustomSelect<FormData>
+            id="blood_group"
+            label="Blood Group"
+            name="blood_group"
+            placeholder="Select Blood Group"
+            isRequired={false}
+            options={bloodGroups}
+            error={errors.blood_group}
+            setValue={setValue}
+            model={model}
+            value={watch('blood_group')}
+            defaultOption={{ label: 'None', value: '' }} 
+            multiple={true}
+          />
         </div>
 
         {/* DOB + NID */}

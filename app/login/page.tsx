@@ -174,6 +174,7 @@ export default function SignInPage() {
                     inputClassName='bg-white'
                     {...register('password')}
                     error={errors.password?.message}
+                    model="User"
                   />
                   </div>
 

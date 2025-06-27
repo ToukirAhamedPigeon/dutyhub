@@ -38,7 +38,12 @@
         "Permissions": "Permissions",
         "Email already exists": "Email already exists.",
         "Username already exists": "Username already exists.",
-        "BP No already exists": "BP No already exists."
+        "BP No already exists": "BP No already exists.",
+        "Select Blood Group":"Select Blood Group",
+        "Select Current Status":"Select Current Status",
+        "Search":"Search",
+        "Loading":"Loading",
+        "None":"None"
     },
     "ErrorPages":{
         "The page you’re looking for doesn’t exist": "The page you’re looking for doesn’t exist.",
