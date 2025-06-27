@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, InputHTMLAttributes } from "react"
+import React,{ useEffect, useState, useRef, InputHTMLAttributes, forwardRef } from "react"
 import { Input } from "@/components/ui/input";
 import {  Path, FieldError, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
 import { useTranslations } from 'next-intl';
@@ -11,6 +11,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Command, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { useSelect } from "@/hooks/useSelect";
 import { capitalize } from "@/lib/helpers";
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+
 
 
 //Basic Input
@@ -277,6 +280,7 @@ export const BasicSelect = <T extends Record<string, any>>({
   )
 }
 
+//Custom Select
 export interface CustomSelectProps<T extends Record<string, any>> {
   id: string;
   label: string;
@@ -456,5 +460,83 @@ export function CustomSelect<T extends Record<string, any>>({
   );
 }
 
+//DateTimeInput
+
+type DateTimeProps = {
+  id: string;
+  label: string;
+  name: string;
+  value: Date | null;
+  setValue: (field: string, value: any, options?: object) => void;
+  placeholder?: string;
+  isRequired?: boolean;
+  showTime?: boolean;
+  error?: any;
+  disabled?: boolean;
+  readOnly?: boolean;
+  allowTyping?: boolean;
+  className?: string;
+  model: string;
+};
+
+const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, DateTimeProps>(
+  (
+    {
+      id,
+      label,
+      name,
+      value,
+      setValue,
+      placeholder,
+      isRequired,
+      showTime = false,
+      error,
+      disabled,
+      readOnly,
+      className,
+      model,
+      allowTyping = false,
+    },
+    ref
+  ) => {
+    const t = useTranslations(model);
+
+    return (
+      <div className="w-full space-y-1">
+        <label htmlFor={id} className="text-sm font-medium text-gray-700">
+          {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
+        </label>
+        <DatePicker
+          id={id}
+          selected={value}
+          onChange={(date) => setValue(name, date)}
+          showTimeSelect={showTime}
+          onKeyDown={(e) => {if(!allowTyping) e.preventDefault()}}
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          yearDropdownItemNumber={200}
+          timeFormat={showTime ? 'HH:mm' : undefined}
+          timeIntervals={showTime ? 15 : undefined}
+          dateFormat={showTime ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd'}
+          placeholderText={placeholder || (showTime ? 'Select date & time' : 'Select date')}
+          ref={ref}
+          readOnly={readOnly}
+          className={cn(
+            'w-full border border-gray-400 rounded-lg h-[38px] px-3 py-2 bg-slate-50 focus:bg-slate-100',
+            error && 'border-red-500',
+            className
+          )}
+          wrapperClassName="w-full"
+          disabled={disabled}
+        />
+        {error && <p className="text-sm text-red-500">{error.message}</p>}
+      </div>
+    );
+  }
+);
+
+DateTimeInput.displayName = 'DateTimeInput';
+export default DateTimeInput;
 
   

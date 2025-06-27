@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { authorizationHeader, accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
-import {BasicInput, CustomSelect, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
+import DateTimeInput,{BasicInput, CustomSelect, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -348,10 +348,17 @@ export default function Register() {
 
         {/* DOB + NID */}
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
-            <Input type="date" {...register('dob')} />
-          </div>
+          <DateTimeInput
+            id="dob"
+            label="Date of Birth"
+            name="dob"
+            value={watch('dob') ?? null}
+            setValue={(field: string, value: Date | null) => setValue(field as any, value)}
+            error={errors.dob}
+            placeholder="Select your date of birth"
+            showTime={false}
+            model={model}
+          />
           <BasicInput
             id="nid"
             label="NID"
