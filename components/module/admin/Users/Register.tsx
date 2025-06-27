@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 import api from '@/lib/axios'
 import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
-import { authorizationHeader, accessToken } from '@/lib/tokens';
+import { accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
 import DateTimeInput,{BasicInput, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
@@ -23,13 +23,13 @@ const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
-  username: z.string(),
+  username: z.string().min(1, 'Username is required'),
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmed_password: z.string().min(1, 'Confirmed password is required'),
   image: z.string().optional(),
   bp_no: z.string().optional(),
-  phone_1: z.string().optional(),
+  phone_1: z.string().min(11, 'Phone Number is required and at least 11 Digits').optional(),
   phone_2: z.string().optional(),
   address: z.string().optional(),
   blood_group: z.string().optional(),
@@ -62,6 +62,7 @@ type FormData = z.infer<typeof schema>
 
 
 export default function Register() {
+  const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model='User'
 
@@ -106,60 +107,73 @@ export default function Register() {
 
   // Form Submit
   const onSubmit = async (data: FormData) => {
-    // Check if email already exists
-    setSubmitLoading(true)
-      const usernameTaken = await checkValueExists("User", "username", data.username)
+    setSubmitLoading(true);
+  
+    try {
+      // Check if username is already taken
+      const usernameTaken = await checkValueExists("User", "username", data.username);
       if (usernameTaken) {
-        setError('username', { type: 'manual', message: 'Username already exists' })
-        setSubmitLoading(false)
-        return
+        setError("username", { type: "manual", message: "Username already exists" });
+        setSubmitLoading(false);
+        return;
       }
-
-      if(data.bp_no && data.bp_no.trim().length>0)
-      {
-        const bo_no_taken = await checkValueExists("User", "bp_no", data.bp_no)
-        if (bo_no_taken) {
-          setError('bp_no', { type: 'manual', message: 'BP No already exists' })
-          setSubmitLoading(false)
-          return
+  
+      // Check if bp_no is taken (if provided)
+      if (data.bp_no && data.bp_no.trim().length > 0) {
+        const bpNoTaken = await checkValueExists("User", "bp_no", data.bp_no);
+        if (bpNoTaken) {
+          setError("bp_no", { type: "manual", message: "BP No already exists" });
+          setSubmitLoading(false);
+          return;
         }
-      }    
+      }
   
-    // try {
-    //   const formData = new FormData()
-    //   formData.append('name', data.name)
-    //   formData.append('email', data.email)
-    //   formData.append('password', data.password)
-    //   formData.append('role', data.role)
-    //   if (data.image) {
-    //     formData.append('image', data.image)
-    //   }
-
-    //   const res = await api.post('/users/register', formData, {
-    //     headers: {
-    //       'Authorization': `Bearer ${token}`,
-    //       'Content-Type': 'multipart/form-data'
-    //     }
-    //   })
+      // Prepare data for submission
+      const formData = new FormData();
+      formData.append("name", data.name);
+      formData.append("username", data.username);
+      formData.append("email", data.email);
+      formData.append("password", data.password);
+      formData.append("confirmed_password", data.confirmed_password);
+      formData.append("current_status", data.current_status);
+      formData.append("dob", data.dob?.toISOString() ?? "");
   
-    //   const result = res.data
+      if (data.image) formData.append("image", data.image);
+      if (data.bp_no) formData.append("bp_no", data.bp_no);
+      if (data.phone_1) formData.append("phone_1", data.phone_1);
+      if (data.phone_2) formData.append("phone_2", data.phone_2);
+      if (data.address) formData.append("address", data.address);
+      if (data.blood_group) formData.append("blood_group", data.blood_group);
+      if (data.nid) formData.append("nid", data.nid);
+      if (data.description) formData.append("description", data.description);
   
-    //   if (!result) {
-    //     // Backend returns a message for display on error
-    //     throw new Error(result.message || 'Registration failed')
-    //   }
+      // Append role_ids and permission_ids as JSON
+      formData.append("role_ids", JSON.stringify(data.role_ids));
+      formData.append("permission_ids", JSON.stringify(data.permission_ids));
   
-    //   // Optionally: show toast or success message
-    //   toast.success('User registered successfully!')
+      const res = await api.post("/users/register", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`, // make sure token is available in scope
+          "Content-Type": "multipart/form-data",
+        },
+      });
   
-    //   // Reset form
-    //   //handleReset()
-    // } catch (error: any) {
-    //   toast.error(error.message || 'Something went wrong during registration')
-    // } finally {
-    //   setSubmitLoading(false)
-    // }
-  }
+      const result = res.data;
+  
+      if (!result.success) {
+        throw new Error(result.message || "Registration failed");
+      }
+  
+      toast.success("User registered successfully!");
+      reset(); // Reset form values
+  
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Something went wrong during registration");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
   
 
   // Reset Handler

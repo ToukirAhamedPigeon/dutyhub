@@ -1,5 +1,11 @@
 import { ObjectId, Types } from "mongoose";
 
+export enum EActionType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+}
+
 export enum BloodGroup {
     A_POS = 'A+',
     A_NEG = 'A-',
@@ -96,4 +102,16 @@ export enum BloodGroup {
     permission_id: ObjectId | IPermission;
     model_type?: string; // e.g., "User"
     model_id: ObjectId;
+  }
+
+  export interface ILog {
+    _id: Types.ObjectId;
+    detail?: string;
+    changes?: string;
+    actionType: EActionType;
+    collectionName: string;
+    objectId?: string;
+    createdBy: IUser;
+    createdAtId?: number;
+    createdAt: Date;
   }

@@ -19,3 +19,12 @@ export const authorizationHeader = async () => {
     Authorization: `Bearer ${token}`,
   };
 };
+
+export const getAuthenticatedUserId = async () => {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    console.warn('No user ID found in session');
+    return null;
+  }
+  return session.user.id;
+};
