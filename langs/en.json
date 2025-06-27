@@ -43,6 +43,12 @@
         "Select Current Status":"Select Current Status",
         "Search":"Search",
         "Loading":"Loading",
+        "Select option(s)":"Select option(s)",
+        "No options found":"No options found.",
+        "Select Roles":"Select Roles",
+        "Select Permissions":"Select Permissions",
+        "Register User":"Register User",
+        "Edit User":"Edit User",
         "None":"None"
     },
     "ErrorPages":{

@@ -10,6 +10,7 @@ type OptionType = {
 
 type UseSelectParams = {
   apiUrl?: string;
+  collection?: string;
   search: string;
   filter?: Record<string, any>;
   limit?: number;
@@ -22,6 +23,7 @@ type UseSelectParams = {
 
 export function useSelect({
   apiUrl,
+  collection, 
   search,
   filter = {},
   limit = 50,
@@ -37,25 +39,21 @@ export function useSelect({
     multiple ? [] : null
   );
   const debouncedSearch = useDebounce(search, 300);
+  const token = typeof window !== "undefined"
+    ? (() => {
+        try {
+          return JSON.parse(localStorage.getItem("authUser") || "{}")?.token || null;
+        } catch {
+          return null;
+        }
+      })()
+    : null;
 
-  const getToken = () => {
-    if (typeof window === "undefined") return null;
-    try {
-      const authUser = localStorage.getItem("authUser");
-      return JSON.parse(authUser || "{}").token || null;
-    } catch {
-      return null;
-    }
-  };
-
-  const token = getToken();
-
-  const getOptionLabel = (option: Record<string, any>): string => {
-    return optionLabelKeys
-      .map((key) => option?.[key])
+  const getOptionLabel = (item: Record<string, any>) =>
+    optionLabelKeys
+      .map((key) => item?.[key])
       .filter(Boolean)
       .join(optionLabelSeparator);
-  };
 
   const mapOption = (item: Record<string, any>): OptionType => ({
     ...item,
@@ -66,66 +64,73 @@ export function useSelect({
   // Fetch options based on search/filter
   useEffect(() => {
     if (!apiUrl) return;
+
     const fetchOptions = async () => {
       setLoading(true);
       try {
-        const res = await api.get(apiUrl, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-          params: { q: debouncedSearch, limit, ...filter },
-        });
-
-        const mapped = (res.data || []).map(mapOption);
-        setOptions(mapped);
+        const res = await api.post(apiUrl, {
+        collection, // <-- Add this
+        labelFields: optionLabelKeys,
+        valueFields: [optionValueKey],
+        label_con_str: optionLabelSeparator,
+        where: debouncedSearch
+          ? {
+              $or: optionLabelKeys.map((key) => ({
+                [key]: { $regex: debouncedSearch, $options: "i" },
+              })),
+              ...filter,
+            }
+          : filter,
+        limit,
+        skip: 0,
+        sortBy: optionLabelKeys[0],
+        sortOrder: "asc",
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+        // console.log('res.data',res.data);
+        // const mapped = (res.data || []).map(mapOption);
+        // console.log('mapped',mapped);
+        setOptions(res.data || []);
       } catch (err) {
-        console.error("Failed to fetch select options", err);
+        console.error("useSelect: Failed to fetch options", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchOptions();
-  }, [debouncedSearch, JSON.stringify(filter), limit, apiUrl]);
+  }, [debouncedSearch, JSON.stringify(filter), apiUrl]);
 
-  // Load initial value(s)
+  // Load initial values
   useEffect(() => {
     if (!apiUrl || !initialValue) return;
 
     const loadInitial = async () => {
-      if (multiple && Array.isArray(initialValue)) {
-        setSelected(initialValue);
-        const missing = initialValue.filter(
-          (id) => !options.some((opt) => opt.value === id)
-        );
-        if (missing.length > 0) {
-          try {
-            const res = await Promise.all(
-              missing.map((id) =>
-                api.get(`${apiUrl}/${id}`, {
-                  headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-                })
-              )
-            );
-            const fetched = res.map((r) => mapOption(r.data));
-            setOptions((prev) => [...prev, ...fetched]);
-          } catch (err) {
-            console.error("Failed to fetch initial multiple options", err);
-          }
-        }
-      } else if (!multiple && typeof initialValue === "string") {
-        setSelected(initialValue);
-        const exists = options.some((opt) => opt.value === initialValue);
-        if (!exists) {
-          try {
-            const res = await api.get(`${apiUrl}/${initialValue}`, {
-              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-            });
-            const fetched = mapOption(res.data);
-            setOptions((prev) => [...prev, fetched]);
-          } catch (err) {
-            console.error("Failed to fetch initial option", err);
-          }
-        }
+      const ids = multiple && Array.isArray(initialValue) ? initialValue : [initialValue];
+
+      setSelected(initialValue);
+
+      const missing = ids.filter((id) => !options.some((opt) => opt.value === id));
+      if (missing.length === 0) return;
+
+      try {
+        const res = await api.post(apiUrl, {
+          labelFields: optionLabelKeys,
+          valueFields: [optionValueKey],
+          label_con_str: optionLabelSeparator,
+          where: { [optionValueKey]: { $in: missing } },
+          limit: missing.length,
+        }, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+
+        const fetched = (res.data || []).map(mapOption);
+        setOptions((prev) => [...prev, ...fetched]);
+      } catch (err) {
+        console.error("useSelect: Failed to fetch initial values", err);
       }
+
     };
 
     loadInitial();

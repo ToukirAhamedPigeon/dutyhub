@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Command, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { useSelect } from "@/hooks/useSelect";
+import { capitalize } from "@/lib/helpers";
 
 
 //Basic Input
@@ -265,7 +266,7 @@ export const BasicSelect = <T extends Record<string, any>>({
           {options.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {/* {t(opt.label, { default: opt.label })} */}
-              {opt.label}
+              {capitalize(opt.label)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -276,37 +277,45 @@ export const BasicSelect = <T extends Record<string, any>>({
   )
 }
 
-interface CustomSelectProps<T extends Record<string, any>> {
+export interface CustomSelectProps<T extends Record<string, any>> {
   id: string;
   label: string;
   name: Path<T>;
+  setValue: UseFormSetValue<T>;
+  error?: FieldError;
   isRequired?: boolean;
   placeholder?: string;
-  error?: FieldError;
-  setValue: UseFormSetValue<T>;
   model: string;
-
   value?: string | string[];
+  multiple?: boolean;
 
-  // Dynamic options
+  // 🔹 Static Options
+  options?: { label: string; value: string }[];
+  defaultOption?: { label: string; value: string };
+
+  // 🔹 Dynamic/API Options (all optional)
   apiUrl?: string;
+  collection?: string;
+  labelFields?: string[];
+  valueFields?: string[];
+  label_con_str?: string;
+  value_con_str?: string;
+  where?: Record<string, any>;
   limit?: number;
+  skip?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
   filter?: Record<string, any>;
   optionValueKey?: string;
   optionLabelKeys?: string[];
   optionLabelSeparator?: string;
-
-  // Static options
-  options?: Option[];
-
-  multiple?: boolean;
-  defaultOption?: Option;
 }
 
 export function CustomSelect<T extends Record<string, any>>({
   id,
   label,
   name,
+  collection,
   isRequired = false,
   placeholder = 'Select option(s)',
   error,
@@ -315,7 +324,7 @@ export function CustomSelect<T extends Record<string, any>>({
   value,
   options = [],
   apiUrl,
-  defaultOption, 
+  defaultOption,
   limit = 50,
   filter = {},
   optionValueKey = '_id',
@@ -335,6 +344,7 @@ export function CustomSelect<T extends Record<string, any>>({
     setSelected,
     getOptionLabel,
   } = useSelect({
+    collection,
     apiUrl,
     search,
     filter,
@@ -351,6 +361,10 @@ export function CustomSelect<T extends Record<string, any>>({
     : defaultOption
       ? [defaultOption, ...options]
       : options;
+
+      // console.log('fetchedOptions',fetchedOptions)
+      // console.log('allOptions',allOptions)
+
   const currentValue = apiUrl ? selected : value;
 
   const isSelected = (val: string) =>
@@ -358,17 +372,17 @@ export function CustomSelect<T extends Record<string, any>>({
       ? Array.isArray(currentValue) && currentValue.includes(val)
       : currentValue === val;
 
-  const handleChange = (val: string) => {
-    if (multiple) {
-      const prev = (currentValue as string[]) ?? [];
-      const exists = prev.includes(val);
-      const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
-      setValue(name, updated as any);
-    } else {
-      setValue(name, val as any);
-      setOpen(false);
-    }
-  };
+    const handleChange = (val: string) => {
+      if (multiple) {
+        const prev = Array.isArray(currentValue) ? currentValue : currentValue ? [currentValue] : [];
+        const exists = prev.includes(val);
+        const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
+        setValue(name, updated as any);
+      } else {
+        setValue(name, val as any);
+        setOpen(false);
+      }
+    };
 
   return (
     <div className="space-y-1 w-full">
@@ -386,10 +400,10 @@ export function CustomSelect<T extends Record<string, any>>({
               value={
                 multiple
                   ? allOptions
-                      .filter((opt: Option) => (currentValue as string[])?.includes(opt.value))
-                      .map((opt: Option) => opt.label) // **No translation here**
+                      .filter((opt) => (currentValue as string[])?.includes(opt.value))
+                      .map((opt) => capitalize(opt.label))
                       .join(', ')
-                  : allOptions.find((opt: Option) => opt.value === currentValue)?.label || '' // **No translation here**
+                  : allOptions.find((opt) => opt.value === currentValue)?.label || ''
               }
               placeholder={t(placeholder, { default: placeholder })}
               onClick={() => setOpen(true)}
@@ -404,27 +418,33 @@ export function CustomSelect<T extends Record<string, any>>({
         >
           <Command className="w-full">
             <CommandInput
-              placeholder={t('Search', { default: 'Search' })+'...'}
+              placeholder={t('Search', { default: 'Search' }) + '...'}
               value={search}
               onValueChange={setSearch}
               className="w-full"
             />
             <CommandList>
-              {loading && <CommandItem disabled>{t('Loading', { default: 'Loading' })+'...'}</CommandItem>}
+              {loading && (
+                <CommandItem key="loading" disabled>
+                  {t('Loading', { default: 'Loading' }) + '...'}
+                </CommandItem>
+              )}
               {!loading &&
-                allOptions.map((opt: Option) => (
+                allOptions.map((opt,i) => (
                   <CommandItem
-                    key={opt.value}
+                    key={opt.value || i}
                     onSelect={() => handleChange(opt.value)}
                     className={`cursor-pointer hover:bg-blue-100 !rounded-none ${
                       isSelected(opt.value) ? '!bg-blue-400 hover:!bg-blue-400 !text-white' : ''
                     }`}
                   >
-                    {opt.label} {/* No translation here */}
+                    {capitalize(opt.label)}
                   </CommandItem>
                 ))}
               {!loading && allOptions.length === 0 && (
-                <CommandItem disabled>{t('No options found.', { default: 'No options found.' })}</CommandItem>
+                <CommandItem key="no-options" disabled>
+                  {t('No options found', { default: 'No options found.' })}
+                </CommandItem>
               )}
             </CommandList>
           </Command>
@@ -435,5 +455,6 @@ export function CustomSelect<T extends Record<string, any>>({
     </div>
   );
 }
+
 
   

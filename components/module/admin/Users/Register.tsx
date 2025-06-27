@@ -16,12 +16,14 @@ import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { authorizationHeader, accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
-import {BasicInput, BasicSelect, CustomSelect, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
+import {BasicInput, CustomSelect, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
+
+const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
-  username: z.string(), // unique check is DB-level
+  username: z.string(),
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmed_password: z.string().min(1, 'Confirmed password is required'),
@@ -35,10 +37,26 @@ export const schema = z.object({
   dob: z.coerce.date().optional(),
   description: z.string().optional(),
   current_status: z.string().min(1, 'Status is required'),
-}).refine(data => data.password === data.confirmed_password, {
-  path: ['confimed_password'],
-  message: "Passwords don't match",
-});
+  role_ids: z
+    .array(
+      z.string().regex(objectIdRegex, {
+        message: "Each role ID must be a valid ObjectId",
+      })
+    )
+    .nonempty({ message: "Please select at least one role" }),
+    permission_ids: z
+    .array(
+      z.string().regex(objectIdRegex, {
+        message: "Each permission ID must be a valid ObjectId",
+      })
+    )
+}).refine(
+  (data) => data.password === data.confirmed_password,
+  {
+    path: ['confirmed_password'],
+    message: "Passwords don't match",
+  }
+);
 
 type FormData = z.infer<typeof schema>
 
@@ -72,7 +90,9 @@ export default function Register() {
       nid: '',
       dob: new Date(),
       description: '',
-      current_status: 'Active'
+      current_status: 'Active',
+      role_ids: [],
+      permission_ids: []
     }
   })
 
@@ -277,6 +297,23 @@ export default function Register() {
             model={model}
           />
           <CustomSelect<FormData>
+            id="role_ids"
+            label="Roles"
+            name="role_ids"
+            setValue={setValue}
+            model="User"
+            apiUrl="/get-options"
+            collection="Role"
+            labelFields={["name"]}
+            valueFields={["_id"]}
+            sortOrder="asc"
+            isRequired={true}
+            placeholder="Select Roles"
+            multiple={true}
+            value={watch("role_ids")}
+            error={errors.role_ids?.[0]}
+          />
+          <CustomSelect<FormData>
             id="blood_group"
             label="Blood Group"
             name="blood_group"
@@ -287,10 +324,27 @@ export default function Register() {
             setValue={setValue}
             model={model}
             value={watch('blood_group')}
-            defaultOption={{ label: 'None', value: '' }} 
-            multiple={true}
+            defaultOption={{ label: 'None', value: '' }}
           />
         </div>
+
+        <CustomSelect<FormData>
+            id="permission_ids"
+            label="Permissions"
+            name="permission_ids"
+            setValue={setValue}
+            model="User"
+            apiUrl="/get-options"
+            collection="Permission"
+            labelFields={["name"]}
+            valueFields={["_id"]}
+            sortOrder="asc"
+            isRequired={false}
+            placeholder="Select Permissions"
+            multiple={true}
+            value={watch("permission_ids")}
+            error={errors.permission_ids?.[0]}
+          />
 
         {/* DOB + NID */}
         <div className="flex flex-col md:flex-row gap-4">
