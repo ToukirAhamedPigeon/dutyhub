@@ -12,16 +12,15 @@ import Dropzone from 'react-dropzone'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
-import { checkEmailExists } from '@/lib/validations'
+import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { authorizationHeader, accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
-import { PasswordInput } from '@/components/custom/PasswordInput'
-import FormInput from '@/components/custom/FormInput'
+import {BasicInput, PasswordInput, UniqueInput} from '@/components/custom/FormInputs'
 
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
-  username: z.string().optional(), // unique check is DB-level
+  username: z.string(), // unique check is DB-level
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmed_password: z.string().min(1, 'Confirmed password is required'),
@@ -44,10 +43,8 @@ type FormData = z.infer<typeof schema>
 
 
 export default function Register() {
-  const [emailChecking, setEmailChecking] = useState(false)
-  const [emailTaken, setEmailTaken] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
-  const translateKey='User'
+  const model='User'
 
   const {
     register,
@@ -86,35 +83,27 @@ export default function Register() {
   } = useProfilePicture(setValue, setError, 'image')
 
   const imagePic = watch('image')
-  const email = watch('email')
-
-  // Debounced email validation
-  useEffect(() => {
-    // if (!email || !email.includes('@')) {
-    //   setEmailTaken(false)
-    //   return
-    // }
-
-    const debounceTimer = setTimeout(async () => {
-      // setEmailChecking(true)
-      // const exists = await checkEmailExists(email, token)
-      // setEmailTaken(exists)
-      // setEmailChecking(false)
-    }, 500)
-
-    return () => clearTimeout(debounceTimer)
-  }, [email])
 
   // Form Submit
   const onSubmit = async (data: FormData) => {
     // Check if email already exists
-    // setSubmitLoading(true)
-    // const emailTaken = await checkEmailExists(data.email, token)
-    // if (emailTaken) {
-    //   setError('email', { type: 'manual', message: 'Email already exists' })
-    //   setSubmitLoading(false)
-    //   return
-    // }
+    setSubmitLoading(true)
+      const usernameTaken = await checkValueExists("User", "username", data.username)
+      if (usernameTaken) {
+        setError('username', { type: 'manual', message: 'Username already exists' })
+        setSubmitLoading(false)
+        return
+      }
+
+      if(data.bp_no && data.bp_no.trim().length>0)
+      {
+        const bo_no_Taken = await checkValueExists("User", "bp_no", data.bp_no)
+        if (bo_no_Taken) {
+          setError('bp_no', { type: 'manual', message: 'BP No already exists' })
+          setSubmitLoading(false)
+          return
+        }
+      }    
   
     // try {
     //   const formData = new FormData()
@@ -169,55 +158,53 @@ export default function Register() {
       <form onSubmit={handleSubmit(onSubmit)} className="p-3 w-full space-y-4">
 
         {/* Name */}
-        <FormInput
+        <BasicInput
         id="name"
         label="Name"
         isRequired
         placeholder="Name"
         register={register("name", { required: "Name is required" })}
         error={errors.name}
-        translateKey={translateKey}
+        model={model}
       />
 
         {/* Email */}
-        <div className="space-y-1">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-          <div className="relative">
-            <Input
-              id="email"
-              placeholder="Email"
-              {...register('email')}
-              className={`${emailTaken ? 'border-red-500' : ''} pr-10`}
-            />
-            {emailChecking && (
-              <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 animate-spin text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-            )}
-          </div>
-          {emailTaken && !errors.email && <p className="text-red-500 text-sm">Email already exists</p>}
-          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-        </div>
+        <UniqueInput
+          id="email"
+          label="Email"
+          placeholder="Email"
+          model={model}
+          register={register('email')}
+          error={errors.email}
+          uniqueErrorMessage="Email already exists"
+          field="email"
+          watchValue={watch('email')}
+        />
 
         {/* Username + BP No */}
         <div className="flex flex-col md:flex-row gap-4">
-          <FormInput
+          <UniqueInput
             id="username"
             label="Username"
-            isRequired
             placeholder="Username"
-            register={register("username", { required: "Username is required" })}
+            model={model}
+            register={register('username')}
             error={errors.username}
-            translateKey={translateKey}
+            uniqueErrorMessage="Username already exists"
+            field="username"
+            watchValue={watch('username')}
           />
-          <FormInput
+
+          <UniqueInput
             id="bp_no"
             label="BP No"
             placeholder="BP No"
-            register={register("bp_no")}
+            model={model}
+            register={register('bp_no')}
             error={errors.bp_no}
-            translateKey={translateKey}
+            uniqueErrorMessage="BP No already exists"
+            field="bp_no"
+            watchValue={watch('bp_no') ?? ''}
           />
         </div>
 
@@ -245,24 +232,24 @@ export default function Register() {
 
         {/* Phone 1 + Phone 2 */}
         <div className="flex flex-col md:flex-row gap-4">
-        <FormInput
+        <BasicInput
           id="phone_1"
           label="Phone 1"
           type="number"
           placeholder="Phone 1"
           register={register("phone_1")}
           error={errors.phone_1}
-          translateKey={translateKey}
+          model={model}
           onWheel={(e) => e.currentTarget.blur()}
         />
-          <FormInput
+          <BasicInput
             id="phone_2"
             label="Phone 2"
             type="number"
             placeholder="Phone 2"
             register={register("phone_2")}
             error={errors.phone_2}
-            translateKey={translateKey}
+            model={model}
             onWheel={(e) => e.currentTarget.blur()}
           />
         </div>
@@ -295,13 +282,13 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
             <Input type="date" {...register('dob')} />
           </div>
-          <FormInput
+          <BasicInput
             id="nid"
             label="NID"
             placeholder="NID"
             register={register("nid")}
             error={errors.nid}
-            translateKey={translateKey}
+            model={model}
           />
         </div>
 

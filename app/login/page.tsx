@@ -23,7 +23,7 @@ import { toast } from "sonner"
 import { initAuthUser } from '@/lib/initAuthUser';
 import LanguageSwitcher from '@/components/custom/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
-import { PasswordInput } from '@/components/custom/PasswordInput'
+import { PasswordInput } from '@/components/custom/FormInputs'
 
 
 export default function SignInPage() {

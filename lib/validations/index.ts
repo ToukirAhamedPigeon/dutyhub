@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import api from '../axios'
+import { authorizationHeader } from '@/lib/tokens'
 
 
 export const signInSchema = z.object({
@@ -14,24 +15,26 @@ export type SignInSchemaType = z.infer<typeof signInSchema>
 // export type RegisterSchemaType = z.infer<typeof registerSchema>
 
 
-export const checkEmailExists = async (
-  email: string,
-  token: string,
+export const checkValueExists = async (
+  collection: string,
+  fieldName: string,
+  fieldValue: string,
   exceptFieldValue?: string,
   exceptFieldName: string = '_id'
   ): Promise<boolean> => {
+    const headers = await authorizationHeader();
   try {
       const res = await api.post(
-      `/users/check-email`,
+      `/check-unique`,
       {
-          email,
-          exceptFieldName,
-          exceptFieldValue,
+        collection,
+        fieldName,
+        fieldValue,
+        exceptFieldName,
+        exceptFieldValue,
       },
       {
-          headers: {
-          Authorization: `Bearer ${token}`,
-          },
+          headers
       }
       )
 

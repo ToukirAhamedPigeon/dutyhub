@@ -35,7 +35,9 @@
         "NID": "NID",
         "Profile Picture": "Profile Picture",
         "Roles": "Roles",
-        "Permissions": "Permissions"
+        "Permissions": "Permissions",
+        "Email already exists": "Email already exists.",
+        "Username already exists": "Username already exists."
     },
     "ErrorPages":{
         "The page you’re looking for doesn’t exist": "The page you’re looking for doesn’t exist.",
