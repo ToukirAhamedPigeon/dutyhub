@@ -19,10 +19,7 @@ const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   username: z.string().min(1, 'Username is required'),
-  email: z.string().optional().refine(
-    (val) => !val || z.string().email().safeParse(val).success,
-    { message: "Invalid email" }
-  ),
+  email:  z.string().email({ message: "Invalid email" }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmed_password: z.string().min(1, 'Confirmed password is required'),
   image: z
@@ -64,8 +61,12 @@ export const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
+interface RegisterProps {
+  fetchData: () => Promise<void>;
+}
 
-export default function Register() {
+
+export default function Register({fetchData}:RegisterProps) {
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model='User'
@@ -136,7 +137,7 @@ export default function Register() {
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("username", data.username);
-      formData.append("email", data.email ?? "");
+      formData.append("email", data.email);
       formData.append("password", data.password);
       formData.append("confirmed_password", data.confirmed_password);
       formData.append("current_status", data.current_status);
@@ -170,6 +171,7 @@ export default function Register() {
   
       toast.success("User registered successfully!");
       reset(); // Reset form values
+      await fetchData();
   
     } catch (error: any) {
       console.error(error);
@@ -183,7 +185,7 @@ export default function Register() {
   // Reset Handler
   const handleReset = () => {
     reset()
-    // setPreview(null)
+    //setPreview(null)
   }
 
   return (
@@ -247,6 +249,18 @@ export default function Register() {
       {/*  BP No + Email */}
       <div className="flex flex-col md:flex-row gap-4">
         <UniqueInput
+            id="email"
+            label="Email"
+            placeholder="Email"
+            model={model}
+            register={register('email')}
+            error={errors.email}
+            uniqueErrorMessage="Email already exists"
+            field="email"
+            isRequired={true}
+            watchValue={watch('email')}
+        />
+        <UniqueInput
             id="bp_no"
             label="BP No"
             placeholder="BP No"
@@ -257,18 +271,6 @@ export default function Register() {
             field="bp_no"
             watchValue={watch('bp_no') ?? ''}
           />
-
-      <UniqueInput
-          id="email"
-          label="Email"
-          placeholder="Email"
-          model={model}
-          register={register('email')}
-          error={errors.email}
-          uniqueErrorMessage="Email already exists"
-          field="email"
-          watchValue={watch('email') ?? ''}
-        />
       </div>
 
         {/* Phone 1 + Phone 2 */}
@@ -394,7 +396,7 @@ export default function Register() {
             onDrop={onDrop}
             clearImage={clearImage}
             error={errors.image}
-            isRequired
+            isRequired={false}
           />
 
         {/* Address */}

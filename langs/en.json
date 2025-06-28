@@ -54,6 +54,7 @@
         "Enter a description":"Enter a description",
         "Enter a address":"Enter a address",
         "Invalid email":"Invalid email",
+        "Phone Number is required and at least 11 Digits":"Phone Number is required and at least 11 Digits",
         "None":"None"
     },
     "ErrorPages":{

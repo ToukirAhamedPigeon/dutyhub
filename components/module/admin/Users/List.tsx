@@ -30,7 +30,7 @@ export default function UserListTable() {
   //Auth Hook
 
   //Table Hook
-  const { data, totalCount, loading, globalFilter, setGlobalFilter, sorting, setSorting, pageIndex, setPageIndex, pageSize, setPageSize, fetchData,} =
+  const { data, totalCount, loading, globalFilter, setGlobalFilter, sorting, setSorting, pageIndex, setPageIndex, pageSize, setPageSize, fetchData} =
    useTable<IUser>({
     fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
       const headers = await authorizationHeader();
@@ -239,7 +239,7 @@ export default function UserListTable() {
         title="Register New User"
         titleDivClassName='success-gradient'
       >
-        <Register/>
+        <Register fetchData={fetchData}/>
       </FormHolderSheet>
 
       {/* Edit Modal */}  

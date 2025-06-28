@@ -36,8 +36,7 @@ export async function POST(req: Request) {
 
     const name = formData.get('name') as string;
     const username = formData.get('username') as string;
-    const rawEmail = formData.get('email')?.toString();
-    const email = rawEmail && rawEmail.trim() !== '' ? rawEmail : undefined;
+    const email = formData.get('email')?.toString();
     const password = formData.get('password') as string;
     const confirmed_password = formData.get('confirmed_password') as string;
     const current_status = formData.get('current_status') as string;
@@ -64,6 +63,7 @@ export async function POST(req: Request) {
 
     const userData: any = {
       name,
+      email,
       username,
       password: hashedPassword,
       decrypted_password: password,
@@ -73,7 +73,6 @@ export async function POST(req: Request) {
 
     // Optional fields
     const optionalFields = [
-      'email',
       'bp_no',
       'phone_2',
       'address',

@@ -54,12 +54,13 @@ import ModelPermission from "@/lib/database/models/modelPermission.model";
 import { logAction } from "@/lib/logger";
 import { EActionType } from "@/types";
 import { dbConnect } from "@/lib/database/mongoose";
-import { getAuthenticatedUserId } from "@/lib/tokens";
+import { getAuthenticatedUserIdServer } from "@/lib/tokens";
 
-const authenticatedUserId = await getAuthenticatedUserId();
+
 
 // Utility: Create Role
 export async function makeRole(name: string, guard_name = "User") {
+  const authenticatedUserId = await getAuthenticatedUserIdServer();
   await dbConnect();
 
   const existingRole = await Role.findOne({ name });
@@ -81,6 +82,7 @@ export async function makeRole(name: string, guard_name = "User") {
 
 // Utility: Create Permission
 export async function makePermission(name: string, guard_name = "User") {
+  const authenticatedUserId = await getAuthenticatedUserIdServer();
   await dbConnect();
 
   const existingPermission = await Permission.findOne({ name });

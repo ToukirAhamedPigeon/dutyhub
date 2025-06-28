@@ -44,7 +44,7 @@ export enum BloodGroup {
     _id: ObjectId;
     name: string;
     username: string;
-    email?: string;
+    email: string;
     password: string;
     decrypted_password: string;
     image?: string;

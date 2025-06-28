@@ -1,8 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+
 import sharp from 'sharp'
-import { v4 as uuidv4 } from 'uuid'
-import { Types } from 'mongoose'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
 
@@ -77,6 +74,7 @@ export async function uploadAndResizeImage({
 
   // Generate filename with final width and height
   const fileName = generateSafeFileName(ext, finalWidth, finalHeight, baseName);
+  console.log(fileName);
 
   // Now you can save resizedBuffer to disk or upload to your cPanel storage
 

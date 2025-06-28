@@ -2,7 +2,7 @@
 import Log from '@/lib/database/models/log.model'
 import { EActionType, ILog } from '@/types'
 import { dbConnect } from '@/lib/database/mongoose'
-import { getAuthenticatedUserId } from '@/lib/tokens'
+import { getAuthenticatedUserIdServer } from '@/lib/tokens'
 
 interface LogInput {
   detail?: string;
@@ -22,7 +22,7 @@ export async function logAction({
   try {
     await dbConnect();
 
-    const authUserId = await getAuthenticatedUserId()
+    const authUserId = await getAuthenticatedUserIdServer()
 
     const log = await Log.create({
       detail,
