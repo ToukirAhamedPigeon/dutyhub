@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       where = {},
       limit = 500,
       skip = 0,
-      sortBy = 'createdAt',
+      sortBy = 'created_at',
       sortOrder = 'asc',
     }: RequestBody = await req.json()
 

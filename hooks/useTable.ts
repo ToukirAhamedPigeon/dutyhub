@@ -14,7 +14,7 @@ type FetcherParams = {
   }
   
 
-export function useTable<T>({ fetcher, defaultSort = 'createdAt' }: {
+export function useTable<T>({ fetcher, defaultSort = 'created_at' }: {
   fetcher: (params: {
     q: string,
     page: number,

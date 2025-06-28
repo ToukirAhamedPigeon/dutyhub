@@ -36,8 +36,11 @@ const page = parseInt(searchParams.get("page") || "1", 10);
 const limit = parseInt(searchParams.get("limit") || "10", 10);
 const skip = (page - 1) * limit;
 
-const sortBy = searchParams.get("sortBy") || "createdAt";
+const sortBy = searchParams.get("sortBy") || "created_at";
 const sortOrder = searchParams.get("sortOrder") === "desc" ? -1 : 1;
+
+console.log('sortBy',sortBy)
+console.log('sortOrder',sortOrder)
 
 const searchQuery = q
   ? {
