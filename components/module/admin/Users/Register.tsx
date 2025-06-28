@@ -169,7 +169,12 @@ export default function Register({fetchData}:RegisterProps) {
         throw new Error(result.message || "Registration failed");
       }
   
-      toast.success("User registered successfully!");
+      toast.success("User registered successfully!", {
+        style: {
+          background: 'green',
+          color: 'white',
+        },
+      });
       reset(); // Reset form values
       await fetchData();
   
@@ -185,7 +190,6 @@ export default function Register({fetchData}:RegisterProps) {
   // Reset Handler
   const handleReset = () => {
     reset()
-    //setPreview(null)
   }
 
   return (
@@ -229,7 +233,7 @@ export default function Register({fetchData}:RegisterProps) {
             label="Password"
             placeholder="Password"
             isRequiredStar={true}
-            isHidden={false}
+            isHidden={true}
             {...register('password')}
             error={errors.password?.message}
             model={model}
@@ -239,7 +243,7 @@ export default function Register({fetchData}:RegisterProps) {
             label="Confirm Password"
             placeholder="Confirm Password"
             isRequiredStar={true}
-            isHidden={false}
+            isHidden={true}
             {...register('confirmed_password')}
             error={errors.confirmed_password?.message}
             model={model}

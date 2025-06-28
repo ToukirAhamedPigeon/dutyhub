@@ -7,7 +7,6 @@ import Footer from '@/components/custom/Footer'
 import Header from '@/components/module/admin/layout/Header'
 import Main from '@/components/module/admin/layout/Main'
 import RouteProgress from '@/components/module/admin/layout/RouteProgress'
-import { Toaster } from 'sonner'
 
 export default function AdminNavbarLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,7 +29,6 @@ export default function AdminNavbarLayout({ children }: { children: React.ReactN
         linkClasses="text-red-600 hover:underline"
         showVersion={true}
       />
-      <Toaster richColors position="top-right" />
       </div>
       </>
   )
