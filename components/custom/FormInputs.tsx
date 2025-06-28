@@ -16,6 +16,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import Image from 'next/image';
 import { DropzoneOptions, useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
+import { Textarea } from "@/components/ui/textarea";
 
 
 
@@ -58,7 +59,7 @@ export const BasicInput=({
         <label htmlFor={id} className="block text-sm font-medium text-gray-700">
           {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
         </label>
-        <Input type={type} id={id} placeholder={placeholder && t(placeholder, { default: placeholder })} {...register} {...rest}/>
+        <Input type={type} id={id} placeholder={placeholder && t(placeholder, { default: placeholder })} className="bg-white" {...register} {...rest}/>
         {error && <p className="text-red-500 text-sm">{getErrorMessage()}</p>}
       </div>
     );
@@ -135,7 +136,7 @@ export const UniqueInput = ({
         placeholder={placeholder && t(placeholder, { default: placeholder })}
         {...register}
         {...rest}
-        className={`${exists ? 'border-red-500' : ''} ${rest.className || ''}`}
+        className={`${exists ? 'border-red-500' : ''} ${rest.className || ''} bg-white`}
       />
 
       {checking && (
@@ -187,7 +188,7 @@ export const PasswordInput = ({ label, error, isHidden = true, registerProps, in
       <div className="relative">
         <Input
           type={hidden ? 'password' : 'text'}
-          className={cn(inputClassName,"pr-10")}
+          className={cn(inputClassName,"pr-10 bg-white")}
           placeholder={placeholder && t(placeholder)}
           {...registerProps}
           {...rest}
@@ -254,7 +255,7 @@ export const BasicSelect = <T extends Record<string, any>>({
       >
         <SelectTrigger
           id={id}
-          className="w-full border border-gray-500"
+          className="w-full border border-gray-500 bg-white"
         >
           <SelectValue placeholder={t(placeholder, { default: placeholder })} />
         </SelectTrigger>
@@ -399,7 +400,7 @@ export function CustomSelect<T extends Record<string, any>>({
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <div className="relative w-full">
+          <div className="relative w-full bg-white">
             <Input
               readOnly
               ref={inputRef}
@@ -506,7 +507,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
       <div
         {...getRootProps()}
         className={cn(
-          'border border-dashed border-gray-400 p-4 text-center rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition',
+          'border border-dashed border-gray-400 p-4 text-center rounded-md cursor-pointer bg-white hover:bg-gray-100 transition',
           disabled && 'bg-gray-100 cursor-not-allowed opacity-70'
         )}
       >
@@ -575,6 +576,50 @@ type DateTimeProps = {
   model: string;
 };
 
+// BasicTextarea
+
+interface BasicTextareaProps {
+  id: string;
+  label: string;
+  placeholder?: string;
+  register: any;
+  error?: any;
+  rows?: number;
+  model?: any;
+  isRequired?: boolean; 
+}
+
+export const BasicTextarea: React.FC<BasicTextareaProps> = ({
+  id,
+  label,
+  placeholder,
+  register,
+  error,
+  rows = 2,
+  model,
+  isRequired = false,
+}) => {
+  const t = useTranslations(model);
+  return (
+    <div className="space-y-1 w-full">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        {t(label)} {isRequired && <span className="text-red-500">*</span>}
+      </label>
+      <Textarea
+        id={id}
+        placeholder={placeholder ? t(placeholder) : ""}
+        rows={rows}
+        {...register}
+        className="w-full border border-gray-400 rounded-md p-2 text-sm bg-white"
+      />
+      {error && (
+        <p className="text-sm text-red-600 mt-1">{error.message}</p>
+      )}
+    </div>
+  );
+};
+
+
 const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, DateTimeProps>(
   (
     {
@@ -628,7 +673,7 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
             ref={ref}
             readOnly={readOnly}
             className={cn(
-              'w-full border border-gray-400 rounded-lg h-[38px] px-3 py-2 bg-slate-50 focus:bg-slate-100',
+              'w-full border border-gray-400 rounded-lg h-[38px] px-3 py-2 bg-white focus:bg-slate-100',
               error && 'border-red-500',
               className
             )}

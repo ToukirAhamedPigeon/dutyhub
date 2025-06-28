@@ -16,8 +16,9 @@ import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { accessToken } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
-import DateTimeInput,{BasicInput, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
+import DateTimeInput,{BasicInput, BasicTextarea, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
+import { Textarea } from '@/components/ui/textarea'
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
@@ -394,16 +395,25 @@ export default function Register() {
           />
 
         {/* Address */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Address</label>
-          <textarea {...register('address')} className="w-full border rounded-md p-2 text-sm" rows={2} />
-        </div>
-
+         <BasicTextarea
+          id="address"
+          label="Address"
+          placeholder="Enter a address"
+          register={register("address")}
+          error={errors.address}
+          model={model}
+        />
         {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <textarea {...register('description')} className="w-full border rounded-md p-2 text-sm" rows={2} />
-        </div>
+        <BasicTextarea
+          id="description"
+          label="Description"
+          placeholder="Enter a description"
+          register={register("description")}
+          error={errors.description}
+          model={model}
+        />
+
+        
 
         {/* Submit Actions */}
         <div className="flex justify-between gap-4 mt-4 border-t border-gray-300 pt-4">

@@ -49,6 +49,10 @@
         "Select Permissions":"Select Permissions",
         "Register User":"Register User",
         "Edit User":"Edit User",
+        "Description":"Description",
+        "Address":"Address",
+        "Enter a description":"Enter a description",
+        "Enter a address":"Enter a address",
         "None":"None"
     },
     "ErrorPages":{

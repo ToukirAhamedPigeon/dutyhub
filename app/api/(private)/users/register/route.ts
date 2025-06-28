@@ -30,29 +30,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await dbConnect()
-    const formData = await req.formData()
+    await dbConnect();
+    const formData = await req.formData();
 
-    const name = formData.get('name') as string
-    const username = formData.get('username') as string
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const confirmed_password = formData.get('confirmed_password') as string
-    const current_status = formData.get('current_status') as string
-    const role_ids = JSON.parse(formData.get('role_ids') as string) as string[]
-    const permission_ids = JSON.parse(formData.get('permission_ids') as string) as string[]
+    const name = formData.get('name') as string;
+    const username = formData.get('username') as string;
+    const email = formData.get('email')?.toString() || null; // Optional
+    const password = formData.get('password') as string;
+    const confirmed_password = formData.get('confirmed_password') as string;
+    const current_status = formData.get('current_status') as string;
+    const role_ids = JSON.parse(formData.get('role_ids') as string) as string[];
+    const permission_ids = JSON.parse(formData.get('permission_ids') as string) as string[];
+
+    const phone_1 = formData.get('phone_1')?.toString();
+    if (!phone_1) {
+      return NextResponse.json({ success: false, message: "Phone number is required" }, { status: 400 });
+    }
 
     if (password !== confirmed_password) {
-      return NextResponse.json({ success: false, message: "Passwords do not match" }, { status: 400 })
+      return NextResponse.json({ success: false, message: "Passwords do not match" }, { status: 400 });
     }
 
-    // Check for duplicate email
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] })
+    // Check for duplicate email or username
+    const query: any = { $or: [{ username }] };
+    if (email) query.$or.push({ email });
+
+    const existingUser = await User.findOne(query);
     if (existingUser) {
-      return NextResponse.json({ success: false, message: 'Email or username already exists' }, { status: 400 })
+      return NextResponse.json({ success: false, message: 'Email or username already exists' }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const userData: any = {
       name,
@@ -61,24 +69,22 @@ export async function POST(req: Request) {
       password: hashedPassword,
       decryptedPassword: password,
       current_status,
-      role_ids,
-      permission_ids,
-    }
+      phone_1,
+    };
 
     // Optional fields
     const optionalFields = [
       'bp_no',
-      'phone_1',
       'phone_2',
       'address',
       'blood_group',
       'nid',
       'dob',
       'description',
-    ]
+    ];
     for (const field of optionalFields) {
-      const val = formData.get(field)
-      if (val) userData[field] = val
+      const val = formData.get(field);
+      if (val) userData[field] = val;
     }
 
     const file = formData.get('image') as File
@@ -97,10 +103,10 @@ export async function POST(req: Request) {
           file,
           modelFolder: 'users',
           isResize: true, // or false based on use case
-          width: 1000,     // optionally set
-          // height: 600,  // optionally set if needed
+          width: 400,     // optionally set
+          height: 400,  // optionally set if needed
           // Optionally, pass custom filename
-          // customBaseName: 'profile_image_john_doe'
+          baseName: newUser.name
         })
       
         newUser.image = imageUrl  
