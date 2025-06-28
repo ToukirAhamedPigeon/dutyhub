@@ -1,4 +1,3 @@
-// hooks/useProfilePicture.ts
 import { useCallback, useState, useEffect } from 'react';
 import {
   FieldValues,
@@ -12,10 +11,29 @@ export function useProfilePicture<T extends FieldValues>(
   setValue: UseFormSetValue<T>,
   setError: UseFormSetError<T>,
   fieldName: Path<T>,
-  initialPreview?: string // optional initial image URL for edit mode
+  initialPreview?: File | string // Accepts File or URL string
 ) {
-  const [preview, setPreview] = useState<string | null>(initialPreview ?? null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [isImageDeleted, setIsImageDeleted] = useState(false);
+
+  // Handle preview setup on mount or when initialPreview changes
+  useEffect(() => {
+    if (!initialPreview) {
+      setPreview(null);
+      return;
+    }
+
+    if (typeof initialPreview === 'string') {
+      setPreview(initialPreview);
+    } else if (initialPreview instanceof File) {
+      const objectUrl = URL.createObjectURL(initialPreview);
+      setPreview(objectUrl);
+
+      return () => {
+        URL.revokeObjectURL(objectUrl);
+      };
+    }
+  }, [initialPreview]);
 
   const clearImage = useCallback(() => {
     setValue(fieldName, undefined as PathValue<T, Path<T>>);
@@ -54,20 +72,12 @@ export function useProfilePicture<T extends FieldValues>(
       }
 
       setValue(fieldName, file as PathValue<T, Path<T>>);
-      setPreview(URL.createObjectURL(file));
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
       setIsImageDeleted(false);
     },
     [setValue, setError, fieldName]
   );
-
-  // Cleanup object URLs on unmount
-  useEffect(() => {
-    return () => {
-      if (preview?.startsWith('blob:')) {
-        URL.revokeObjectURL(preview);
-      }
-    };
-  }, [preview]);
 
   return {
     preview,

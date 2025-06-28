@@ -53,6 +53,7 @@
         "Address":"Address",
         "Enter a description":"Enter a description",
         "Enter a address":"Enter a address",
+        "Invalid email":"Invalid email",
         "None":"None"
     },
     "ErrorPages":{

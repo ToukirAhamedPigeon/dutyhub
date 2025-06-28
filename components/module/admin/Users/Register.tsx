@@ -4,31 +4,34 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import { Input } from '@/components/ui/input'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import Dropzone from 'react-dropzone'
-import Image from 'next/image'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
 import { checkValueExists } from '@/lib/validations'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { accessToken } from '@/lib/tokens';
-import { useAppSelector } from '@/hooks/useRedux';
 import DateTimeInput,{BasicInput, BasicTextarea, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
-import { Textarea } from '@/components/ui/textarea'
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   username: z.string().min(1, 'Username is required'),
-  email: z.string().email('Invalid email'),
+  email: z.string().optional().refine(
+    (val) => !val || z.string().email().safeParse(val).success,
+    { message: "Invalid email" }
+  ),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmed_password: z.string().min(1, 'Confirmed password is required'),
-  image: z.string().optional(),
+  image: z
+  .instanceof(File)
+  .optional()
+  .refine(
+    (file) => !file || file.type.startsWith("image/"),
+    { message: "Only image files are allowed" }
+  ),
   bp_no: z.string().optional(),
   phone_1: z.string().min(11, 'Phone Number is required and at least 11 Digits').optional(),
   phone_2: z.string().optional(),
@@ -83,14 +86,14 @@ export default function Register() {
       email: '',
       password: '',
       confirmed_password: '',
-      image: '',
+      image: undefined,
       bp_no: '',
       phone_1: '',
       phone_2: '',
       address: '',
       blood_group: '',
       nid: '',
-      dob: new Date(),
+      dob: undefined,
       description: '',
       current_status: 'Active',
       role_ids: [],
@@ -102,7 +105,7 @@ export default function Register() {
     preview,
     clearImage,
     onDrop,
-  } = useProfilePicture(setValue, setError, 'image', watch('image') || undefined);
+  } = useProfilePicture(setValue, setError, 'image', watch('image'));
 
   // const imagePic = watch('image')
 
@@ -133,7 +136,7 @@ export default function Register() {
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("username", data.username);
-      formData.append("email", data.email);
+      formData.append("email", data.email ?? "");
       formData.append("password", data.password);
       formData.append("confirmed_password", data.confirmed_password);
       formData.append("current_status", data.current_status);
@@ -264,7 +267,7 @@ export default function Register() {
           error={errors.email}
           uniqueErrorMessage="Email already exists"
           field="email"
-          watchValue={watch('email')}
+          watchValue={watch('email') ?? ''}
         />
       </div>
 

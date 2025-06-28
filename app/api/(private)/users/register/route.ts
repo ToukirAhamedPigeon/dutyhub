@@ -10,6 +10,7 @@ import { omitFields } from '@/lib/helpers'
 import { logAction } from '@/lib/logger'
 import bcrypt from 'bcryptjs'
 import { EActionType } from '@/types'
+import { customAssignPermissionsToModelBatch, customAssignRolesToModelBatch } from '@/lib/authorization'
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get('authorization')
@@ -35,12 +36,11 @@ export async function POST(req: Request) {
 
     const name = formData.get('name') as string;
     const username = formData.get('username') as string;
-    const email = formData.get('email')?.toString() || null; // Optional
+    const rawEmail = formData.get('email')?.toString();
+    const email = rawEmail && rawEmail.trim() !== '' ? rawEmail : undefined;
     const password = formData.get('password') as string;
     const confirmed_password = formData.get('confirmed_password') as string;
     const current_status = formData.get('current_status') as string;
-    const role_ids = JSON.parse(formData.get('role_ids') as string) as string[];
-    const permission_ids = JSON.parse(formData.get('permission_ids') as string) as string[];
 
     const phone_1 = formData.get('phone_1')?.toString();
     if (!phone_1) {
@@ -65,15 +65,15 @@ export async function POST(req: Request) {
     const userData: any = {
       name,
       username,
-      email,
       password: hashedPassword,
-      decryptedPassword: password,
+      decrypted_password: password,
       current_status,
       phone_1,
     };
 
     // Optional fields
     const optionalFields = [
+      'email',
       'bp_no',
       'phone_2',
       'address',
@@ -93,9 +93,15 @@ export async function POST(req: Request) {
 
     await User.findByIdAndUpdate(
       newUser._id,
-      { dateTimeFormatId: getCreatedAtId(newUser.createdAt) },
+      { dateTimeFormatId: getCreatedAtId(newUser.created_at) },
       { new: true, strict: false }
     )
+
+    const role_ids = JSON.parse(formData.get('role_ids') as string) as string[];
+    const permission_ids = JSON.parse(formData.get('permission_ids') as string) as string[];
+
+    let newAssignedRoleInfos=customAssignRolesToModelBatch(newUser._id, role_ids, 'User')
+    let newAssignedPermissionInfos=customAssignPermissionsToModelBatch(newUser._id, permission_ids, 'User')
 
     // Handle image upload
     if (file && file.size > 0 && file.type.startsWith('image/')) {
@@ -128,7 +134,7 @@ export async function POST(req: Request) {
       objectId: newUser._id.toString(),
     })
 
-    return NextResponse.json({ success: true, user: newUser }, { status: 201 })
+    return NextResponse.json({ success: true, user: newUser, newAssignedRoleInfos, newAssignedPermissionInfos }, { status: 201 })
   } catch (err: any) {
     console.error('User Registration Error:', err)
     return NextResponse.json(
