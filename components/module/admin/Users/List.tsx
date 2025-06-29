@@ -11,7 +11,7 @@ import Modal from '@/components/custom/Modal'
 import ConfirmDialog from '@/components/custom/ConfirmDialog'
 import UserDetail from './UserDetail'
 import {RowActions,IndexCell,TableHeaderActions,TablePaginationFooter,TableLoader} from '@/components/custom/Table'
-import { formatDateTime } from '@/lib/formatDate'
+import { formatDateTime,formatDateTimeDisplay } from '@/lib/formatDate'
 import { capitalize, exportExcel } from '@/lib/helpers'
 import Fancybox from '@/components/custom/FancyBox'
 import { Badge } from '@/components/ui/badge'
@@ -43,10 +43,7 @@ export default function UserListTable() {
           sortBy: sortBy || 'created_at',
           sortOrder: sortOrder || 'desc',
         },
-      })
-
-      //console.log(res.data) // Add this line to log the response data t
-  
+      })  
       return {
         data: res.data.users as IUser[],
         total: res.data.totalCount,
@@ -93,8 +90,24 @@ export default function UserListTable() {
       accessorKey: 'name',
     },
     {
+      header: 'Username',
+      accessorKey: 'username',
+    },
+    {
+      header: 'BP No',
+      accessorKey: 'bp_no',
+    },
+    {
+      header: 'Phone 1',
+      accessorKey: 'phone_1',
+    },
+    {
       header: 'Email',
       accessorKey: 'email',
+    },
+    {
+      header: 'Address',
+      accessorKey: 'address',
     },
     ...(authroles.includes('developer')
       ? [{
@@ -116,6 +129,19 @@ export default function UserListTable() {
       header: 'Roles',
       accessorKey: 'roleNames',
       cell: ({ getValue }) => capitalize(getValue() as string),
+    },
+    {
+      header: 'Blood Group',
+      accessorKey: 'blood_group',
+    },
+    {
+      header: 'NID',
+      accessorKey: 'nid',
+    },
+    {
+      header: 'Date of Birth',
+      accessorKey: 'dob',
+      cell: ({ getValue }) => getValue() ? formatDateTimeDisplay(getValue() as string) : '-',
     },
     {
       header: 'Current Status',
@@ -169,53 +195,59 @@ export default function UserListTable() {
       />
 
       {/* Table */}
-     
-      <TableLoader loading={loading} />
-      <div className="relative overflow-auto rounded-xl shadow">
-        <table className="table-auto w-full text-left border">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="bg-gray-100">
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className={`p-2 border ${
-                      (header.column.columnDef.meta as { customClassName?: string })?.customClassName || ''
-                    }`}
-                  >
-                    <div
-                      className="flex justify-between items-center w-full cursor-pointer"
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
-                      <span className="ml-2">
-                        {header.column.getIsSorted() === 'asc' ? (
-                          <FaSortUp size={12} />
-                        ) : header.column.getIsSorted() === 'desc' ? (
-                          <FaSortDown size={12} />
-                        ) : (
-                          <FaSort size={12} />
-                        )}
-                      </span>
-                    </div>
-                  </th>
+      
+        <div className="relative rounded-sm shadow overflow-hidden bg-white">
+          <div className="max-h-[600px] min-h-[200px] overflow-y-auto">
+          {loading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-opacity-70 mt-20">
+              <TableLoader loading={true} />
+            </div>
+          )}
+            <table className="table-auto w-full text-left border border-collapse">
+              <thead className="sticky -top-1 z-10 bg-gray-100 shadow-[-2px_6px_8px_-4px_rgba(0,0,0,0.2)]">
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th
+                        key={header.id}
+                        className={`p-2 border border-gray-300 bg-gray-100 ${
+                          (header.column.columnDef.meta as { customClassName?: string })?.customClassName || ''
+                        }`}
+                      >
+                        <div
+                          className="flex justify-between items-center w-full cursor-pointer"
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                          <span className="ml-2">
+                            {header.column.getIsSorted() === 'asc' ? (
+                              <FaSortUp size={12} />
+                            ) : header.column.getIsSorted() === 'desc' ? (
+                              <FaSortDown size={12} />
+                            ) : (
+                              <FaSort size={12} />
+                            )}
+                          </span>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border-b">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="p-2">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map(row => (
+                  <tr key={row.id} className="border-b">
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="p-2 border border-gray-300">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
       {/* Pagination Footer */}
       <TablePaginationFooter
