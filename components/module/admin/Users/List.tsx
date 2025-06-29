@@ -204,13 +204,13 @@ export default function UserListTable() {
             </div>
           )}
             <table className="table-auto w-full text-left border border-collapse">
-              <thead className="sticky -top-1 z-10 bg-gray-100 shadow-[-2px_6px_8px_-4px_rgba(0,0,0,0.2)]">
+              <thead className="sticky -top-1 z-10 bg-gray-200 shadow-[-2px_6px_8px_-4px_rgba(0,0,0,0.2)]">
                 {table.getHeaderGroups().map(headerGroup => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
                       <th
                         key={header.id}
-                        className={`p-2 border border-gray-300 bg-gray-100 ${
+                        className={`p-2 border border-gray-300 bg-gray-200 ${
                           (header.column.columnDef.meta as { customClassName?: string })?.customClassName || ''
                         }`}
                       >
