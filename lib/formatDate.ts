@@ -10,8 +10,10 @@ export function formatDateTime(dateStr: string): string {
     return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
   }
 
-  export function formatDateTimeDisplay(dateStr: string): string {
-    const date = new Date(dateStr)
+  export function formatDateTimeDisplay(dateStr: string, showTime=true): string {
+    const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+
+  if (isNaN(date.getTime())) return '-'; 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const months = [
       "January", "February", "March", "April", "May", "June",
@@ -34,8 +36,53 @@ export function formatDateTime(dateStr: string): string {
 
     const ordinal = getOrdinal(day)
 
-    return `${dayName}, ${day}${ordinal} ${monthName}, ${year} ${hours}:${minutes}`
+    if(showTime){
+      return `${dayName}, ${day}${ordinal} ${monthName}, ${year} ${hours}:${minutes}`
+    }
+    else{
+      return `${dayName}, ${day}${ordinal} ${monthName}, ${year}`
+    }
+    
   }
+
+  export function getAge(dateStr: string, showDays = true, showMonths = true): string {
+    const dob = new Date(dateStr);
+    const now = new Date();
+  
+    if (isNaN(dob.getTime())) {
+      return 'Invalid date';
+    }
+  
+    let years = now.getFullYear() - dob.getFullYear();
+    let months = now.getMonth() - dob.getMonth();
+    let days = now.getDate() - dob.getDate();
+  
+    if (days < 0) {
+      months--;
+      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+  
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+  
+    const parts: string[] = [];
+  
+    if (years > 0) {
+      parts.push(`${years} year${years !== 1 ? 's' : ''}`);
+    }
+    if (showMonths && months > 0) {
+      parts.push(`${months} month${months !== 1 ? 's' : ''}`);
+    }
+    if (showDays && days > 0) {
+      parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+    }
+  
+    return parts.length > 0 ? parts.join(', ') : '0 days';
+  }
+
 
   export function getCreatedAtId(createdAt: Date): number {
     const pad = (n: number) => String(n).padStart(2, '0')

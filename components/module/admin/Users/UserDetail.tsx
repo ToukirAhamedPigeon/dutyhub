@@ -1,6 +1,6 @@
 'use client';
 
-import { formatDateTime, formatDateTimeDisplay } from '@/lib/formatDate';
+import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate';
 import Image from 'next/image';
 import React from 'react';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -48,14 +48,6 @@ export default function UserDetail({ user }: { user: any }) {
                 )}
               </TableCell>
             </TableRow>
-            <TableRow>
-              <TableCell className="font-semibold">Created At:</TableCell>
-              <TableCell>{formatDateTime(user.created_at)}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell className="font-semibold">Updated At:</TableCell>
-              <TableCell>{formatDateTime(user.updated_at)}</TableCell>
-            </TableRow>
 
             {/* Additional fields */}
             <TableRow>
@@ -88,11 +80,31 @@ export default function UserDetail({ user }: { user: any }) {
             </TableRow>
             <TableRow>
               <TableCell className="font-semibold">Date of Birth:</TableCell>
-              <TableCell>{user.dob ? formatDateTimeDisplay(user.dob) : '-'}</TableCell>
+              <TableCell className="whitespace-normal break-words">
+                {user.dob
+                  ? formatDateTimeDisplay(user.dob as string, false) 
+                  : '-'}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-semibold">Age:</TableCell>
+              <TableCell className="whitespace-normal break-words">
+                {user.dob
+                  ? getAge(user.dob as string)
+                  : '-'}
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-semibold">Description:</TableCell>
               <TableCell>{user.description || '-'}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-semibold">Created At:</TableCell>
+              <TableCell>{formatDateTime(user.created_at)}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-semibold">Updated At:</TableCell>
+              <TableCell>{formatDateTime(user.updated_at)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>

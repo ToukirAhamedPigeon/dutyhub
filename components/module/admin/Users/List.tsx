@@ -11,7 +11,7 @@ import Modal from '@/components/custom/Modal'
 import ConfirmDialog from '@/components/custom/ConfirmDialog'
 import UserDetail from './UserDetail'
 import {RowActions,IndexCell,TableHeaderActions,TablePaginationFooter,TableLoader} from '@/components/custom/Table'
-import { formatDateTime,formatDateTimeDisplay } from '@/lib/formatDate'
+import { formatDateTime,formatDateTimeDisplay, getAge } from '@/lib/formatDate'
 import { capitalize, exportExcel } from '@/lib/helpers'
 import Fancybox from '@/components/custom/FancyBox'
 import { Badge } from '@/components/ui/badge'
@@ -52,7 +52,7 @@ export default function UserListTable() {
   })
 
   //Detail Modal Hook
-  const {isModalOpen,selectedItem,fetchDetail,closeModal: closeDetailModal} = useDetailModal<IUser>('/users')
+  const {isModalOpen,selectedItem,fetchDetail,closeModal: closeDetailModal, detailLoading} = useDetailModal<IUser>('/users')
 
   //Edit Modal Hook
   // const {isOpen: isEditModalOpen,itemToEdit: userToEdit,openEdit: handleEditClick,closeEdit: closeEditModal} = useEditModal<IUser>()
@@ -141,7 +141,10 @@ export default function UserListTable() {
     {
       header: 'Date of Birth',
       accessorKey: 'dob',
-      cell: ({ getValue }) => getValue() ? formatDateTimeDisplay(getValue() as string) : '-',
+      cell: ({ getValue }) => getValue() ? formatDateTimeDisplay(getValue() as string,false)+' Age: '+getAge(getValue() as string,false,false) : '-',
+      meta: {
+        customClassName: 'text-center min-w-[300px] whitespace-nowrap',
+      },
     },
     {
       header: 'Current Status',
@@ -260,9 +263,15 @@ export default function UserListTable() {
       </div>
 
         {/* Detail Modal */}
-      <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
-        <UserDetail user={selectedItem} />
-      </Modal>
+        <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
+          {detailLoading || !selectedItem ? (
+            <div className="flex items-center justify-center min-h-[150px]">
+              <TableLoader loading={true} />
+            </div>
+          ) : (
+            <UserDetail user={selectedItem} />
+          )}
+        </Modal>
 
       {/* Add New Modal */}
       <FormHolderSheet
