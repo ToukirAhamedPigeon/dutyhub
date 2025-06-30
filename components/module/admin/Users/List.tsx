@@ -20,12 +20,21 @@ import { IUser } from '@/types'
 import { authorizationHeader } from '@/lib/tokens';
 import { useAppSelector } from '@/hooks/useRedux';
 import FormHolderSheet from "@/components/custom/FormHolderSheet";
+import { useColumnVisibilityManager } from '@/hooks/useColumnVisibilityManager'
+import ColumnSettingsModal from '@/components/custom/ColumnSettingsModal'
 import Register from './Register'
 
 export default function UserListTable() {
   //Router Hook
   const authroles = useAppSelector((state) => state.roles) as string[];
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [showColumnModal, setShowColumnModal] = useState(false)
+
+  // const {
+  //   visible, hidden,
+  //   moveToHidden, moveToVisible,
+  //   move, reset, setVisible, setHidden
+  // } = useColumnVisibilityManager<IUser>(columns)
   
   //Auth Hook
 
@@ -282,6 +291,20 @@ export default function UserListTable() {
       >
         <Register fetchData={fetchData}/>
       </FormHolderSheet>
+
+      {/* <ColumnSettingsModal
+        isOpen={showColumnModal}
+        onClose={() => setShowColumnModal(false)}
+        onSave={(cols) => setVisible(cols)}
+        visible={visible}
+        hidden={hidden}
+        moveToHidden={moveToHidden}
+        moveToVisible={moveToVisible}
+        move={move}
+        reset={reset}
+        setVisible={setVisible}
+        setHidden={setHidden}
+      /> */}
 
       {/* Edit Modal */}  
       {/*<Modal
