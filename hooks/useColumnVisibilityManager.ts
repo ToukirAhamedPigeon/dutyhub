@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 export type ColumnKey = string
@@ -25,17 +25,14 @@ export function useColumnVisibilityManager<T>(initialColumns: ColumnDef<T, any>[
   }
 
   const move = (keys: ColumnKey[], direction: 'up' | 'down' | 'top' | 'bottom') => {
-    const indexMap = new Map(visible.map((col, idx) => [col.id, idx]))
     let newOrder = [...visible]
 
     if (direction === 'top') {
-      newOrder = [...visible.filter(col => keys.includes(col.id as string)),
-                  ...visible.filter(col => !keys.includes(col.id as string))]
+      newOrder = [...visible.filter(col => keys.includes(col.id as string)), ...visible.filter(col => !keys.includes(col.id as string))]
     } else if (direction === 'bottom') {
-      newOrder = [...visible.filter(col => !keys.includes(col.id as string)),
-                  ...visible.filter(col => keys.includes(col.id as string))]
+      newOrder = [...visible.filter(col => !keys.includes(col.id as string)), ...visible.filter(col => keys.includes(col.id as string))]
     } else {
-      for (let i = (direction === 'down' ? visible.length - 1 : 0);
+      for (let i = direction === 'down' ? visible.length - 1 : 0;
            direction === 'down' ? i >= 0 : i < visible.length;
            direction === 'down' ? i-- : i++) {
         const col = visible[i]
