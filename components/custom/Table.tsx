@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { FaEye, FaEdit, FaTrash, FaPlus, FaPrint, FaFileExcel, FaSlidersH } from 'react-icons/fa'
+import { ArrowBigDown, ArrowBigUp, ArrowDown, ArrowUp } from 'lucide-react'
 
 /** --- RowActions Component --- **/
 interface RowActionsProps<T> {
@@ -228,7 +229,7 @@ export function ColumnSettingsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-auto">
+      <DialogContent className="w-full max-w-[95vw] sm:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>Column Settings</DialogTitle>
         </DialogHeader>
@@ -237,8 +238,9 @@ export function ColumnSettingsModal({
           {/* Visible Columns */}
           <div>
             <h3 className="font-bold mb-2">Display</h3>
-            <ScrollArea className="border rounded h-64 p-2 space-y-1">
-              {visible.map((col, index) => (
+            <ScrollArea className="border border-gray-600 rounded h-64 space-y-1">
+            {visible.map((col, index) => (
+              <div className='border-b border-gray-300'>
                 <div
                   key={col.id ?? col.accessorKey ?? `visible-${index}`}
                   onDoubleClick={() => moveToHidden([col.id as string])}
@@ -249,29 +251,27 @@ export function ColumnSettingsModal({
                         : [...prev, col.id as string],
                     )
                   }
-                  className={`p-2 cursor-pointer rounded ${
+                  className={`w-full p-2 cursor-pointer ${
                     selectedVisible.includes(col.id) ? 'bg-blue-200' : ''
                   }`}
                 >
                   {col.header}
                 </div>
-              ))}
-            </ScrollArea>
-            <div className="flex flex-wrap gap-1 mt-2">
-              <Button size="sm" onClick={() => move(selectedVisible, 'up')}>
-                ⬆️ Up
+              </div>
+            ))}
+          </ScrollArea>
+            <div className="flex flex-wrap gap-1 mt-2 items-center justify-center">
+              <Button className='bg-slate-200 hover:bg-slate-300 text-black border border-slate-500' title="Up" size="sm" onClick={() => move(selectedVisible, 'up')}>
+                <ArrowUp />
               </Button>
-              <Button size="sm" onClick={() => move(selectedVisible, 'down')}>
-                ⬇️ Down
+              <Button className='bg-slate-200 hover:bg-slate-300 text-black border border-slate-500' title="Down" size="sm" onClick={() => move(selectedVisible, 'down')}>
+                <ArrowDown />
               </Button>
-              <Button size="sm" onClick={() => move(selectedVisible, 'top')}>
-                ⏫ Top
+              <Button className='bg-slate-200 hover:bg-slate-300 text-black border border-slate-500' title="Top" size="sm" onClick={() => move(selectedVisible, 'top')}>
+                <ArrowBigUp />
               </Button>
-              <Button size="sm" onClick={() => move(selectedVisible, 'bottom')}>
-                ⏬ Bottom
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => moveToHidden(selectedVisible)}>
-                Hide
+              <Button className='bg-slate-200 hover:bg-slate-300 text-black border border-slate-500' title="Bottom" size="sm" onClick={() => move(selectedVisible, 'bottom')}>
+                <ArrowBigDown />
               </Button>
             </div>
           </div>
@@ -289,35 +289,34 @@ export function ColumnSettingsModal({
           {/* Hidden Columns */}
           <div>
             <h3 className="font-bold mb-2">Do Not Display</h3>
+            <ScrollArea className="border border-gray-600 rounded h-64 space-y-1">
+              {filteredHidden.map((col, index) => (
+                <div className='border-b border-gray-300'>
+                  <div
+                    key={col.id ?? col.accessorKey ?? `hidden-${index}`}
+                    onDoubleClick={() => moveToVisible([col.id as string])}
+                    onClick={() =>
+                      setSelectedHidden((prev) =>
+                        prev.includes(col.id as string)
+                          ? prev.filter((i) => i !== col.id)
+                          : [...prev, col.id as string],
+                      )
+                    }
+                    className={`p-2 cursor-pointer rounded ${
+                      selectedHidden.includes(col.id) ? 'bg-green-200' : ''
+                    }`}
+                  >
+                    {col.header}
+                  </div>
+                </div>
+              ))}
+            </ScrollArea>
             <Input
               placeholder="Search headers..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="mb-2"
+              className="mt-2"
             />
-            <ScrollArea className="border rounded h-64 p-2 space-y-1">
-              {filteredHidden.map((col, index) => (
-                <div
-                  key={col.id ?? col.accessorKey ?? `hidden-${index}`}
-                  onDoubleClick={() => moveToVisible([col.id as string])}
-                  onClick={() =>
-                    setSelectedHidden((prev) =>
-                      prev.includes(col.id as string)
-                        ? prev.filter((i) => i !== col.id)
-                        : [...prev, col.id as string],
-                    )
-                  }
-                  className={`p-2 cursor-pointer rounded ${
-                    selectedHidden.includes(col.id) ? 'bg-green-200' : ''
-                  }`}
-                >
-                  {col.header}
-                </div>
-              ))}
-            </ScrollArea>
-            <Button size="sm" className="mt-2" onClick={() => moveToVisible(selectedHidden)}>
-              Show Selected
-            </Button>
           </div>
         </div>
 
