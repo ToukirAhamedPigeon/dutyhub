@@ -17,7 +17,7 @@ import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'
 import { useTable } from '@/hooks/useTable'
 import { useDetailModal } from '@/hooks/useDetailModal'
 import { useAppSelector } from '@/hooks/useRedux'
-import { useColumnVisibilityManager } from '@/hooks/useColumnVisibilityManager'
+
 import Modal from '@/components/custom/Modal'
 import FormHolderSheet from '@/components/custom/FormHolderSheet'
 import Fancybox from '@/components/custom/FancyBox'
@@ -26,12 +26,10 @@ import {
   TableHeaderActions,
   TablePaginationFooter,
   RowActions,
-  IndexCell,
-  ColumnSettingsModal
+  IndexCell
 } from '@/components/custom/Table'
 
 import { Badge } from '@/components/ui/badge'
-
 import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate'
 import { capitalize, exportExcel } from '@/lib/helpers'
 import api from '@/lib/axios'
@@ -39,8 +37,10 @@ import { authorizationHeader } from '@/lib/tokens'
 
 import Register from './Register'
 import UserDetail from './UserDetail'
-
 import { IUser } from '@/types'
+
+// Import the new ColumnVisibilityManager
+import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
@@ -56,6 +56,7 @@ const getAllColumns = ({
 }): ColumnDef<IUser>[] => [
   {
     header: 'SL',
+    id:'sl',
     cell: ({ row }) => (
       <IndexCell rowIndex={row.index} pageIndex={pageIndex} pageSize={pageSize} />
     ),
@@ -63,6 +64,7 @@ const getAllColumns = ({
   },
   {
     header: 'Action',
+    id:'action',
     cell: ({ row }) => (
       <RowActions
         row={row.original}
@@ -70,17 +72,18 @@ const getAllColumns = ({
       />
     ),
   },
-  { header: 'Name', accessorKey: 'name' },
-  { header: 'Username', accessorKey: 'username' },
-  { header: 'BP No', accessorKey: 'bp_no' },
-  { header: 'Phone 1', accessorKey: 'phone_1' },
-  { header: 'Email', accessorKey: 'email' },
-  { header: 'Address', accessorKey: 'address' },
+  { header: 'Name', id:'name', accessorKey: 'name' },
+  { header: 'Username', id:'username', accessorKey: 'username' },
+  { header: 'BP No', id:'bp_no', accessorKey: 'bp_no' },
+  { header: 'Phone 1', id:'phone_1', accessorKey: 'phone_1' },
+  { header: 'Email', id:'email', accessorKey: 'email' },
+  { header: 'Address', id:'address', accessorKey: 'address' },
   ...(authroles.includes('developer')
-    ? [{ header: 'Decrypted Password', accessorKey: 'decrypted_password' }]
+    ? [{ header: 'Decrypted Password', id:'decrypted_password', accessorKey: 'decrypted_password' }]
     : []),
   {
     header: 'Profile Picture',
+    id:'profile_picture',
     cell: ({ row }) => (
       <Fancybox
         src={row.original.image || '/policeman.png'}
@@ -91,20 +94,20 @@ const getAllColumns = ({
   },
   {
     header: 'Roles',
+    id:'roles',
     accessorKey: 'roleNames',
     cell: ({ getValue }) => capitalize(getValue() as string),
   },
-  { header: 'Blood Group', accessorKey: 'blood_group' },
-  { header: 'NID', accessorKey: 'nid' },
+  { header: 'Blood Group', id:'blood_group', accessorKey: 'blood_group' },
+  { header: 'NID', id:'nid', accessorKey: 'nid' },
   {
     header: 'Date of Birth',
     accessorKey: 'dob',
+    id:'dob',
     cell: ({ getValue }) =>
       getValue()
         ? `${formatDateTimeDisplay(getValue() as string, false)} Age: ${getAge(
-            getValue() as string,
-            false,
-            false
+            getValue() as string
           )}`
         : '-',
     meta: {
@@ -114,6 +117,7 @@ const getAllColumns = ({
   {
     header: 'Current Status',
     accessorKey: 'current_status',
+    id:'current_status',
     cell: ({ getValue }) => (
       <Badge variant={getValue() ? 'success' : 'destructive'}>
         {getValue() ? 'Active' : 'Inactive'}
@@ -123,21 +127,23 @@ const getAllColumns = ({
   {
     header: 'Created At',
     accessorKey: 'created_at',
+    id:'created_at',
     cell: ({ getValue }) => formatDateTime(getValue() as string),
   },
   {
     header: 'Updated At',
     accessorKey: 'updated_at',
+    id:'updated_at',
     cell: ({ getValue }) => formatDateTime(getValue() as string),
   },
 ]
 
 export default function UserListTable() {
   const authroles = useAppSelector((state) => state.roles) as string[]
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const [showColumnModal, setShowColumnModal] = useState(false)
 
-  // 1. Detail modal (needs to come before fetchDetail usage)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+
+  // Detail Modal
   const {
     isModalOpen,
     selectedItem,
@@ -146,7 +152,7 @@ export default function UserListTable() {
     detailLoading,
   } = useDetailModal<IUser>('/users')
 
-  // 2. Table
+  // Table State
   const {
     data,
     totalCount,
@@ -174,16 +180,16 @@ export default function UserListTable() {
         },
       })
       return {
-        data: res.data.users as IUser[],
+        data: res.data.users,
         total: res.data.totalCount,
       }
     },
-    initialColumns: [], // placeholder, will replace after memo
+    initialColumns: [],
     defaultSort: 'created_at',
   })
 
-  // 3. Memoize columns now that dependencies exist
-  const allColumns: ColumnDef<IUser>[] = useMemo(
+  // Columns & Visibility State
+  const allColumns = useMemo(
     () =>
       getAllColumns({
         pageIndex,
@@ -194,21 +200,22 @@ export default function UserListTable() {
     [pageIndex, pageSize, fetchDetail, authroles]
   )
 
-  // 4. Apply column visibility manager
-  const {
-    visible,
-    hidden,
-    moveToHidden,
-    moveToVisible,
-    move,
-    reset,
-    setVisible,
-    setHidden,
-  } = useColumnVisibilityManager<IUser>(allColumns)
+  // Visible columns state, initialized with all columns
+  const [visible, setVisible] = useState<ColumnDef<IUser>[]>(allColumns)
 
+  // State to control the ColumnVisibilityManager modal visibility
+  const [showColumnModal, setShowColumnModal] = useState(false)
+
+  // When columns change inside the visibility manager, update the visible columns here
+  const handleColumnChange = (cols: ColumnDef<IUser>[]) => {
+    setVisible(cols)
+    setShowColumnModal(false)
+  }
+
+  // Table instance
   const table = useReactTable({
     data,
-    columns: visible as ColumnDef<any>[],
+    columns: visible,
     state: { sorting, pagination: { pageIndex, pageSize } },
     onSortingChange: setSorting as OnChangeFn<SortingState>,
     manualPagination: true,
@@ -258,10 +265,7 @@ export default function UserListTable() {
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           <span>
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            {flexRender(header.column.columnDef.header, header.getContext())}
                           </span>
                           <span className="ml-2">
                             {header.column.getIsSorted() === 'asc' ? (
@@ -302,7 +306,6 @@ export default function UserListTable() {
         />
       </div>
 
-      {/* Detail Modal */}
       <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
         {detailLoading || !selectedItem ? (
           <div className="flex items-center justify-center min-h-[150px]">
@@ -313,7 +316,6 @@ export default function UserListTable() {
         )}
       </Modal>
 
-      {/* Register New User Drawer */}
       <FormHolderSheet
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
@@ -323,20 +325,15 @@ export default function UserListTable() {
         <Register fetchData={fetchData} />
       </FormHolderSheet>
 
-      {/* Column Settings Modal */}
-      <ColumnSettingsModal
-        isOpen={showColumnModal}
-        onClose={() => setShowColumnModal(false)}
-        onSave={(cols) => setVisible(cols)}
-        visible={visible}
-        hidden={hidden}
-        moveToHidden={moveToHidden}
-        moveToVisible={moveToVisible}
-        move={move}
-        reset={reset}
-        setVisible={setVisible}
-        setHidden={setHidden}
-      />
+      {/* Column Visibility Manager Modal */}
+      {showColumnModal && 
+        <ColumnVisibilityManager
+          open={showColumnModal}
+          onClose={() => setShowColumnModal(false)}
+          initialColumns={allColumns}
+          onChange={handleColumnChange}
+        />
+      }
     </motion.div>
   )
 }

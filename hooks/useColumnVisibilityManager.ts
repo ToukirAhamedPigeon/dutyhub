@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 export type ColumnKey = string
@@ -12,41 +12,68 @@ export function useColumnVisibilityManager<T>(initialColumns: ColumnDef<T, any>[
     setHidden([])
   }
 
+  function getColumnId(col: ColumnDef<T>): string {
+    return (
+      col.id ??
+      (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : undefined) ??
+      crypto.randomUUID() // fallback to something guaranteed unique
+    )
+  }
+
   const moveToHidden = (keys: ColumnKey[]) => {
-    const toHide = visible.filter(col => keys.includes(col.id as string))
-    setHidden(prev => [...prev, ...toHide].sort((a, b) => String(a.header).localeCompare(String(b.header))))
-    setVisible(prev => prev.filter(col => !keys.includes(col.id as string)))
+    const toHide = visible.filter(col => keys.includes(getColumnId(col)))
+    setHidden(prev =>
+      [...prev, ...toHide].sort((a, b) =>
+        String(a.header).localeCompare(String(b.header))
+      )
+    )
+    setVisible(prev => prev.filter(col => !keys.includes(getColumnId(col))))
   }
 
   const moveToVisible = (keys: ColumnKey[]) => {
-    const toShow = hidden.filter(col => keys.includes(col.id as string))
+    const toShow = hidden.filter(col => keys.includes(getColumnId(col)))
     setVisible(prev => [...prev, ...toShow])
-    setHidden(prev => prev.filter(col => !keys.includes(col.id as string)))
+    setHidden(prev => prev.filter(col => !keys.includes(getColumnId(col))))
   }
 
   const move = (keys: ColumnKey[], direction: 'up' | 'down' | 'top' | 'bottom') => {
-    let newOrder = [...visible]
+    let current = [...visible]
+    const getId = (col: ColumnDef<T>) => getColumnId(col)
 
     if (direction === 'top') {
-      newOrder = [...visible.filter(col => keys.includes(col.id as string)), ...visible.filter(col => !keys.includes(col.id as string))]
+      const toMove = current.filter(col => keys.includes(getId(col)))
+      const rest = current.filter(col => !keys.includes(getId(col)))
+      setVisible([...toMove, ...rest])
     } else if (direction === 'bottom') {
-      newOrder = [...visible.filter(col => !keys.includes(col.id as string)), ...visible.filter(col => keys.includes(col.id as string))]
+      const toMove = current.filter(col => keys.includes(getId(col)))
+      const rest = current.filter(col => !keys.includes(getId(col)))
+      setVisible([...rest, ...toMove])
     } else {
-      for (let i = direction === 'down' ? visible.length - 1 : 0;
-           direction === 'down' ? i >= 0 : i < visible.length;
-           direction === 'down' ? i-- : i++) {
-        const col = visible[i]
-        if (keys.includes(col.id as string)) {
-          const swapIdx = direction === 'up' ? i - 1 : i + 1
-          if (swapIdx >= 0 && swapIdx < visible.length) {
-            [newOrder[i], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[i]]
-          }
+      const getIndex = (id: string) => current.findIndex(col => getId(col) === id)
+
+      for (const id of direction === 'down' ? [...keys].reverse() : keys) {
+        const i = getIndex(id)
+        const swapWith = direction === 'up' ? i - 1 : i + 1
+        if (i >= 0 && swapWith >= 0 && swapWith < current.length) {
+          const temp = current[i]
+          current[i] = current[swapWith]
+          current[swapWith] = temp
         }
       }
+      setVisible(current)
     }
-
-    setVisible(newOrder)
   }
+
+  const onSave = useCallback(
+    (cols: ColumnDef<T>[]) => {
+      setVisible(cols)
+      const remaining = hidden.filter(
+        col => !cols.some(c => getColumnId(c) === getColumnId(col))
+      )
+      setHidden(remaining)
+    },
+    [hidden]
+  )
 
   return {
     visible,
@@ -57,5 +84,6 @@ export function useColumnVisibilityManager<T>(initialColumns: ColumnDef<T, any>[
     moveToVisible,
     move,
     reset,
+    onSave,
   }
 }
