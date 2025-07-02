@@ -33,7 +33,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate'
 import { capitalize, exportExcel } from '@/lib/helpers'
 import api from '@/lib/axios'
-import { authorizationHeader } from '@/lib/tokens'
+import { authorizationHeader, getAuthenticatedUserId } from '@/lib/tokens'
 
 import Register from './Register'
 import UserDetail from './UserDetail'
@@ -137,10 +137,8 @@ const getAllColumns = ({
     cell: ({ getValue }) => formatDateTime(getValue() as string),
   },
 ]
-
 export default function UserListTable() {
   const authroles = useAppSelector((state) => state.roles) as string[]
-
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
   // Detail Modal
@@ -188,6 +186,10 @@ export default function UserListTable() {
     defaultSort: 'created_at',
   })
 
+  const handleColumnChange = (cols: ColumnDef<IUser>[]) => {
+    setVisible(cols)
+    setShowColumnModal(false)
+  }
   // Columns & Visibility State
   const allColumns = useMemo(
     () =>
@@ -200,6 +202,10 @@ export default function UserListTable() {
     [pageIndex, pageSize, fetchDetail, authroles]
   )
 
+  // useEffect(() => {
+  //   setVisible(allColumns);
+  // }, [allColumns]);
+
   // Visible columns state, initialized with all columns
   const [visible, setVisible] = useState<ColumnDef<IUser>[]>(allColumns)
 
@@ -207,10 +213,7 @@ export default function UserListTable() {
   const [showColumnModal, setShowColumnModal] = useState(false)
 
   // When columns change inside the visibility manager, update the visible columns here
-  const handleColumnChange = (cols: ColumnDef<IUser>[]) => {
-    setVisible(cols)
-    setShowColumnModal(false)
-  }
+
 
   // Table instance
   const table = useReactTable({
@@ -225,6 +228,7 @@ export default function UserListTable() {
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
+
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -326,14 +330,15 @@ export default function UserListTable() {
       </FormHolderSheet>
 
       {/* Column Visibility Manager Modal */}
-      {showColumnModal && 
+      {showColumnModal && (
         <ColumnVisibilityManager
+          tableId="userTable"
           open={showColumnModal}
           onClose={() => setShowColumnModal(false)}
           initialColumns={allColumns}
           onChange={handleColumnChange}
         />
-      }
+      )}
     </motion.div>
   )
 }

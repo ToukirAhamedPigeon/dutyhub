@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import {
@@ -11,113 +13,136 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-  ArrowUp,
-  ArrowDown,
-  ArrowBigUp,
-  ArrowBigDown,
-  ArrowRight,
-  ArrowLeft,
-  ArrowBigLeft,
-  ArrowBigRight
+  ArrowUp, ArrowDown, ArrowBigUp, ArrowBigDown,
+  ArrowRight, ArrowLeft, ArrowBigLeft, ArrowBigRight, RotateCw
 } from 'lucide-react'
+import api from '@/lib/axios'
+import { authorizationHeader } from '@/lib/tokens'
+import { toast } from 'sonner'
+import { formatLabel } from '@/lib/helpers'
 
 export type ColumnKey = string
 
 interface ColumnVisibilityManagerProps<T> {
+  tableId: string
   initialColumns: ColumnDef<T, any>[]
   open: boolean
   onClose: () => void
   onChange?: (visibleColumns: ColumnDef<T, any>[]) => void
+  // authUserId removed
 }
 
 export function ColumnVisibilityManager<T>({
+  tableId,
   initialColumns,
   open,
   onClose,
   onChange,
 }: ColumnVisibilityManagerProps<T>) {
-  const [visible, setVisible] = useState<ColumnDef<T>[]>(initialColumns)
-  const [hidden, setHidden] = useState<ColumnDef<T>[]>([])
+
+  const [visible, setVisible] = useState<ColumnDef<T>[]>([])
+  const [selectedVisible, setSelectedVisible] = useState<string[]>([])
+  const [selectedHidden, setSelectedHidden] = useState<string[]>([])
+  const [search, setSearch] = useState('')
+
+  const LOCAL_KEY = `columnConfig:${tableId}`
+
+  const getColumnId = (col: ColumnDef<T>): string =>
+    col.id ??
+    (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : undefined) ??
+    crypto.randomUUID()
+
+  const refreshFromDB = async () => {
+    try {
+      const headers = await authorizationHeader()
+      const res = await api.get('/user-table-combination', {
+        params: {
+          tableId,
+          // userId removed
+        },
+        headers,
+      })
+
+      const data = res.data
+      const visibleIds: string[] = data?.showColumnCombinations ?? []
+
+      const matched = initialColumns.filter(col => visibleIds.includes(getColumnId(col)))
+      setVisible(matched)
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(visibleIds))
+      onChange?.(matched)
+
+      toast.success('Column settings refreshed from database')
+    } catch (err) {
+      console.warn('Failed to refresh column settings from DB:', err)
+      toast.error('Failed to refresh column settings from database')
+    }
+  }
 
   useEffect(() => {
-    if (open) {
-      setVisible(initialColumns)
-      setHidden([])
-    }
-  }, [open, initialColumns])
+    if (!open) return
+  
+    const timeout = setTimeout(() => {
+      const loadSettings = async () => {
+        const stored = localStorage.getItem(LOCAL_KEY)
+        if (stored) {
+          const visibleIds: string[] = JSON.parse(stored)
+          const matched = initialColumns.filter(col => visibleIds.includes(getColumnId(col)))
+          setVisible(matched)
+          onChange?.(matched)
+        } else {
+          await refreshFromDB()
+        }
+      }
+  
+      loadSettings()
+      setSelectedVisible([])
+      setSelectedHidden([])
+      setSearch('')
+    }, 0)
+  
+    return () => clearTimeout(timeout)
+  }, [open, LOCAL_KEY])
 
-  const reset = () => {
-    setVisible(initialColumns)
-    setHidden([])
-  }
-
-  function getColumnId(col: ColumnDef<T>): string {
-    return (
-      col.id ??
-      (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : undefined) ??
-      crypto.randomUUID()
-    )
-  }
+  const allIds = initialColumns.map(getColumnId)
+  const visibleIds = visible.map(getColumnId)
+  const hidden = initialColumns
+    .filter(col => !visibleIds.includes(getColumnId(col)))
+    .sort((a, b) => String(a.header).localeCompare(String(b.header)))
 
   const moveToHidden = (keys: ColumnKey[]) => {
-    const toHide = visible.filter(col => keys.includes(getColumnId(col)))
-    setHidden(prev =>
-      [...prev, ...toHide].sort((a, b) =>
-        String(a.header).localeCompare(String(b.header))
-      )
-    )
     setVisible(prev => prev.filter(col => !keys.includes(getColumnId(col))))
   }
 
   const moveToVisible = (keys: ColumnKey[]) => {
-    const toShow = hidden.filter(col => keys.includes(getColumnId(col)))
+    const toShow = initialColumns.filter(
+      col => keys.includes(getColumnId(col)) && !visibleIds.includes(getColumnId(col))
+    )
     setVisible(prev => [...prev, ...toShow])
-    setHidden(prev => prev.filter(col => !keys.includes(getColumnId(col))))
   }
 
   const move = (keys: ColumnKey[], direction: 'up' | 'down' | 'top' | 'bottom') => {
     let current = [...visible]
     const getId = (col: ColumnDef<T>) => getColumnId(col)
 
-    if (direction === 'top') {
+    if (direction === 'top' || direction === 'bottom') {
       const toMove = current.filter(col => keys.includes(getId(col)))
       const rest = current.filter(col => !keys.includes(getId(col)))
-      setVisible([...toMove, ...rest])
-    } else if (direction === 'bottom') {
-      const toMove = current.filter(col => keys.includes(getId(col)))
-      const rest = current.filter(col => !keys.includes(getId(col)))
-      setVisible([...rest, ...toMove])
-    } else {
-      const getIndex = (id: string) => current.findIndex(col => getId(col) === id)
+      setVisible(direction === 'top' ? [...toMove, ...rest] : [...rest, ...toMove])
+      return
+    }
 
-      for (const id of direction === 'down' ? [...keys].reverse() : keys) {
-        const i = getIndex(id)
-        const swapWith = direction === 'up' ? i - 1 : i + 1
-        if (i >= 0 && swapWith >= 0 && swapWith < current.length) {
-          const temp = current[i]
-          current[i] = current[swapWith]
-          current[swapWith] = temp
-        }
+    const getIndex = (id: string) => current.findIndex(col => getId(col) === id)
+    const keyList = direction === 'down' ? [...keys].reverse() : keys
+
+    for (const id of keyList) {
+      const i = getIndex(id)
+      const j = direction === 'up' ? i - 1 : i + 1
+      if (i >= 0 && j >= 0 && j < current.length) {
+        [current[i], current[j]] = [current[j], current[i]]
       }
-      setVisible(current)
     }
+    setVisible(current)
   }
-
-  const [selectedVisible, setSelectedVisible] = useState<string[]>([])
-  const [selectedHidden, setSelectedHidden] = useState<string[]>([])
-  const [search, setSearch] = useState('')
-
-  useEffect(() => {
-    if (open) {
-      setSelectedVisible([])
-      setSelectedHidden([])
-      setSearch('')
-    }
-  }, [open])
-
-  const filteredHidden = hidden.filter(col =>
-    (String(col.header) || '').toLowerCase().includes(search.toLowerCase())
-  )
 
   const handleSelect = (
     id: string,
@@ -132,33 +157,74 @@ export function ColumnVisibilityManager<T>({
     }
   }
 
-  const onSave = () => {
+  const onSave = async () => {
+    const visibleColumnIds = visible.map(getColumnId)
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(visibleColumnIds))
     onChange?.(visible)
     onClose()
+
+    try {
+      const headers = await authorizationHeader()
+      const res = await api.put(
+        '/user-table-combination',
+        {
+          tableId,
+          showColumnCombinations: visibleColumnIds,
+          // userId removed
+        },
+        { headers }
+      )
+
+      const formattedTable = formatLabel(tableId, 'sentence')
+      if (res.status === 200 && res.data?.success) {
+        toast.success(`Saved column settings for ${formattedTable}`, {
+          style: { background: 'green', color: 'white' },
+        })
+      } else {
+        toast.error(`Failed to save settings for ${formattedTable}`, {
+          style: { background: 'red', color: 'white' },
+        })
+      }
+    } catch (err) {
+      console.warn('Save error:', err)
+      toast.error(`Error saving settings for ${formatLabel(tableId, 'sentence')}`, {
+        style: { background: 'red', color: 'white' },
+      })
+    }
   }
 
+  const reset = () => {
+    setVisible(initialColumns)
+    setSelectedVisible([])
+    setSelectedHidden([])
+    setSearch('')
+    localStorage.removeItem(LOCAL_KEY)
+  }
+
+  const filteredHidden = hidden.filter(col =>
+    (String(col.header) || '').toLowerCase().includes(search.toLowerCase())
+  )
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) onClose()
+    }}>
       <DialogContent className="w-full max-w-[95vw] sm:max-w-3xl lg:max-w-4xl min-h-[95vh] overflow-auto [&>[data-radix-dialog-close]]:hidden">
         <DialogHeader>
           <DialogTitle>Column Settings</DialogTitle>
         </DialogHeader>
-
         <div className="grid grid-cols-[42%_8%_42%] gap-4">
           {/* Visible Columns */}
           <div>
             <h3 className="font-bold mb-2">Display</h3>
             <ScrollArea className="border border-gray-600 rounded h-120 space-y-1">
-              {visible.map((col) => {
+              {visible.map(col => {
                 const colId = getColumnId(col)
                 return (
                   <div key={colId} className="border-b border-gray-300">
                     <div
                       onDoubleClick={() => moveToHidden([colId])}
                       onClick={e => handleSelect(colId, selectedVisible, setSelectedVisible, e)}
-                      className={`w-full py-1 px-2 cursor-pointer ${
-                        selectedVisible.includes(colId) ? 'bg-blue-200' : ''
-                      }`}
+                      className={`w-full py-1 px-2 cursor-pointer ${selectedVisible.includes(colId) ? 'bg-blue-200' : ''}`}
                     >
                       {String(col.header)}
                     </div>
@@ -166,69 +232,34 @@ export function ColumnVisibilityManager<T>({
                 )
               })}
             </ScrollArea>
-
             <div className="flex flex-wrap gap-1 mt-2 items-center justify-center">
-              <Button title="Move Up" size="xs" onClick={() => move(selectedVisible, 'up')}>
-                <ArrowUp />
-              </Button>
-              <Button title="Move Down" size="xs" onClick={() => move(selectedVisible, 'down')}>
-                <ArrowDown />
-              </Button>
-              <Button title="Move to Top" size="xs" onClick={() => move(selectedVisible, 'top')}>
-                <ArrowBigUp />
-              </Button>
-              <Button title="Move to Bottom" size="xs" onClick={() => move(selectedVisible, 'bottom')}>
-                <ArrowBigDown />
-              </Button>
+              <Button title="Move Up" size="xs" onClick={() => move(selectedVisible, 'up')}><ArrowUp /></Button>
+              <Button title="Move Down" size="xs" onClick={() => move(selectedVisible, 'down')}><ArrowDown /></Button>
+              <Button title="Move to Top" size="xs" onClick={() => move(selectedVisible, 'top')}><ArrowBigUp /></Button>
+              <Button title="Move to Bottom" size="xs" onClick={() => move(selectedVisible, 'bottom')}><ArrowBigDown /></Button>
             </div>
           </div>
 
           {/* Controls */}
           <div className="flex flex-col justify-center items-center gap-2">
-            <Button
-              title="Move to Do not Display"
-              size="xs"
-              onClick={() => moveToHidden(selectedVisible)}
-            >
-              <ArrowRight />
-            </Button>
-            <Button
-              title="Move to Display"
-              size="xs"
-              onClick={() => moveToVisible(selectedHidden)}
-            >
-              <ArrowLeft />
-            </Button>
-            <Button
-              title="Hide All"
-              size="xs"
-              onClick={() => moveToHidden(visible.map(getColumnId))}
-            >
-              <ArrowBigRight />
-            </Button>
-            <Button
-              title="Show All"
-              size="xs"
-              onClick={() => moveToVisible(hidden.map(getColumnId))}
-            >
-              <ArrowBigLeft />
-            </Button>
+            <Button title="Move to Do not Display" size="xs" onClick={() => moveToHidden(selectedVisible)}><ArrowRight /></Button>
+            <Button title="Move to Display" size="xs" onClick={() => moveToVisible(selectedHidden)}><ArrowLeft /></Button>
+            <Button title="Hide All" size="xs" onClick={() => moveToHidden(visible.map(getColumnId))}><ArrowBigRight /></Button>
+            <Button title="Show All" size="xs" onClick={() => moveToVisible(hidden.map(getColumnId))}><ArrowBigLeft /></Button>
           </div>
 
           {/* Hidden Columns */}
           <div>
             <h3 className="font-bold mb-2">Do Not Display</h3>
             <ScrollArea className="border border-gray-600 rounded h-120 space-y-1">
-              {filteredHidden.map((col) => {
+              {filteredHidden.map(col => {
                 const colId = getColumnId(col)
                 return (
                   <div key={colId} className="border-b border-gray-300">
                     <div
                       onDoubleClick={() => moveToVisible([colId])}
                       onClick={e => handleSelect(colId, selectedHidden, setSelectedHidden, e)}
-                      className={`px-2 py-1 cursor-pointer rounded ${
-                        selectedHidden.includes(colId) ? 'bg-green-200' : ''
-                      }`}
+                      className={`w-full py-1 px-2 cursor-pointer ${selectedHidden.includes(colId) ? 'bg-blue-200' : ''}`}
                     >
                       {String(col.header)}
                     </div>
@@ -237,22 +268,42 @@ export function ColumnVisibilityManager<T>({
               })}
             </ScrollArea>
             <Input
-              placeholder="Search"
+              placeholder="Filter columns..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="mt-2"
             />
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2"
+              onClick={reset}
+              title="Reset to default (show all)"
+            >
+              <RotateCw className="mr-2 h-4 w-4" />
+              Reset
+            </Button>
           </div>
         </div>
 
-        <DialogFooter className="flex justify-end mt-4 gap-2">
-          <Button variant="secondary" onClick={reset}>
-            Reset
+        <DialogFooter className="flex justify-between mt-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onClose()
+            }}
+          >
+            Cancel
           </Button>
-          <Button variant="outline" onClick={onClose}>
-            Close
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onSave}
+            disabled={visible.length === 0}
+          >
+            Save
           </Button>
-          <Button onClick={onSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

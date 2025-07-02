@@ -63,19 +63,6 @@ export async function POST(req: NextRequest) {
       sortOrder = 'asc',
     }: RequestBody = await req.json()
 
-    // console.log('API request:', {
-    //   collection,
-    //   labelFields,
-    //   valueFields,
-    //   label_con_str,
-    //   value_con_str,
-    //   where,
-    //   limit,
-    //   skip,
-    //   sortBy,
-    //   sortOrder,
-    // })
-
     if (!modelMap[collection]) {
       return NextResponse.json({ error: 'Invalid collection' }, { status: 400 })
     }
