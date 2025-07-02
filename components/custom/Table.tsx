@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { FaEye, FaEdit, FaTrash, FaPlus, FaPrint, FaFileExcel } from 'react-icons/fa'
+import { FaEye, FaEdit, FaTrash, FaPlus, FaPrint, FaFileExcel, FaSlidersH } from 'react-icons/fa'
 
 /** --- RowActions Component --- **/
 interface RowActionsProps<T> {
@@ -68,6 +68,7 @@ interface TableHeaderActionsProps {
   searchValue: string
   onSearchChange: (value: string) => void
   onAddNew?: () => void
+  onColumnSettings?: () => void
   onPrint?: () => void
   onExport?: () => void
   addButtonLabel?: string
@@ -79,8 +80,11 @@ export function TableHeaderActions({
   onAddNew,
   onPrint,
   onExport,
+  onColumnSettings,
   addButtonLabel = 'Add New',
-}: TableHeaderActionsProps) {
+}: TableHeaderActionsProps & {
+  onColumnSettings?: () => void;
+}) {
   return (
     <div className="flex justify-between items-center mb-4">
       <Input
@@ -95,14 +99,19 @@ export function TableHeaderActions({
             <FaPlus /> <span className="hidden md:block">{addButtonLabel}</span>
           </Button>
         )}
+        {onColumnSettings && (
+          <Button variant="info" onClick={onColumnSettings}>
+            <FaSlidersH /> <span className="hidden md:block">Columns</span>
+          </Button>
+        )}
         {onPrint && (
-          <Button variant="info" onClick={onPrint}>
+          <Button variant="info" onClick={onPrint} className='bg-gray-800'>
             <FaPrint /> <span className="hidden md:block">Print</span>
           </Button>
         )}
         {onExport && (
-          <Button variant="success" onClick={onExport}>
-            <FaFileExcel /> <span className="hidden md:block">Export Excel</span>
+          <Button variant="success" onClick={onExport} className='bg-green-800'>
+            <FaFileExcel /> <span className="hidden md:block">Excel</span>
           </Button>
         )}
       </div>

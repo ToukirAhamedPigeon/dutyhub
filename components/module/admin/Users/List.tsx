@@ -226,21 +226,13 @@ export default function UserListTable() {
           searchValue={globalFilter}
           onSearchChange={setGlobalFilter}
           onAddNew={() => setIsSheetOpen(true)}
+          onColumnSettings={() => setShowColumnModal(true)}
           onPrint={() => window.print()}
           onExport={() =>
             exportExcel({ data, fileName: 'Users', sheetName: 'Users' })
           }
           addButtonLabel="Register New User"
         />
-
-        <div className="flex justify-end mb-2">
-          <button
-            onClick={() => setShowColumnModal(true)}
-            className="bg-gray-100 border border-gray-300 hover:bg-gray-200 px-3 py-1 text-sm rounded"
-          >
-            ⚙️ Column Settings
-          </button>
-        </div>
 
         <div className="relative rounded-sm shadow overflow-hidden bg-white">
           <div className="max-h-[600px] min-h-[200px] overflow-y-auto">
