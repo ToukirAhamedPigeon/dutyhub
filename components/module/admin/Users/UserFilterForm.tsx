@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { BasicInput, CustomSelect } from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
@@ -23,11 +23,14 @@ interface UserFilterFormProps {
   onClose: () => void
 }
 
+const LOCAL_STORAGE_KEY = 'userFilters'
+
 export function UserFilterForm({
   filterValues,
   setFilterValues,
-  onClose,
 }: UserFilterFormProps) {
+  const initialized = useRef(false)
+
   const {
     register,
     watch,
@@ -40,31 +43,41 @@ export function UserFilterForm({
 
   const model = 'User'
 
+  // Load from localStorage on first mount and merge with filterValues
   useEffect(() => {
-    const currentValues = watch()
-    const valuesChanged =
-      JSON.stringify(currentValues) !== JSON.stringify(filterValues)
+    if (initialized.current) return
+    initialized.current = true
 
-    if (valuesChanged) {
-      reset(filterValues)
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
+      if (saved) {
+        const savedValues = JSON.parse(saved) as UserFilters
+        const merged = { ...filterValues, ...savedValues }
+        reset(merged)
+        setFilterValues(merged)
+      } else {
+        reset(filterValues)
+      }
+    } catch (err) {
+      console.error('Failed to load filter values from localStorage:', err)
     }
-  }, [filterValues, reset, watch])
+  }, [filterValues, reset, setFilterValues])
 
+  // Sync form values with parent state and save to localStorage
   useEffect(() => {
     const subscription = watch((values) => {
-      setFilterValues((prev) => {
-        const cleanedValues: UserFilters = {
-          ...values,
-          role_ids: values.role_ids?.filter(
-            (id): id is string => typeof id === 'string'
-          ),
-          blood_group: values.blood_group?.filter(
-            (id): id is string => typeof id === 'string'
-          ),
-        }
+      const cleanedValues: UserFilters = {
+        ...values,
+        role_ids: values.role_ids?.filter((id): id is string => typeof id === 'string'),
+        blood_group: values.blood_group?.filter((id): id is string => typeof id === 'string'),
+      }
 
-        if (JSON.stringify(prev) === JSON.stringify(cleanedValues)) return prev
-        return cleanedValues
+      setFilterValues((prev) => {
+        if (JSON.stringify(prev) !== JSON.stringify(cleanedValues)) {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanedValues))
+          return cleanedValues
+        }
+        return prev
       })
     })
 
@@ -72,7 +85,7 @@ export function UserFilterForm({
   }, [watch, setFilterValues])
 
   return (
-    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
       <div className="flex flex-col md:flex-row gap-4">
         <BasicInput
           id="name"
@@ -90,7 +103,6 @@ export function UserFilterForm({
           register={register('username')}
           model={model}
         />
-
         <BasicInput
           id="email"
           label="Email"
@@ -101,7 +113,7 @@ export function UserFilterForm({
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="flex flex-col md:flex-row gap-4">
         <BasicInput
           id="phone"
           label="Phone"
@@ -151,7 +163,7 @@ export function UserFilterForm({
           label="Roles"
           name="role_ids"
           setValue={setValue}
-          model="User"
+          model={model}
           apiUrl="/get-options"
           collection="Role"
           labelFields={['name']}

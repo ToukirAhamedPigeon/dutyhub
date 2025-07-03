@@ -134,6 +134,18 @@ const getAllColumns = ({
   },
 ]
 
+const initialFilters: UserFilters = {
+  name: '',
+  email: '',
+  username: '',
+  phone: '',
+  bp_no: '',
+  nid: '',
+  current_status: '',
+  role_ids: [],
+  blood_group: [],
+}
+
 export default function UserListTable() {
   const authroles = useAppSelector((state) => state.roles) as string[]
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -147,17 +159,6 @@ export default function UserListTable() {
   } = useDetailModal<IUser>('/users')
 
   // New filter state and modal control
-  const initialFilters: UserFilters = {
-    name: '',
-    email: '',
-    username: '',
-    phone: '',
-    bp_no: '',
-    nid: '',
-    current_status: '',
-    role_ids: [],
-    blood_group: [],
-  }
 const [filters, setFilters] = useState<UserFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
 
@@ -204,6 +205,16 @@ const {
   initialColumns: [],
   defaultSort: 'created_at',
 })
+
+const isFilterActive = useMemo(() => {
+  return Object.entries(filters).some(([key, value]) => {
+    console.log('key, value', key, value)
+    if (Array.isArray(value)) console.log(value.length > 0)
+    if (Array.isArray(value)) return value.length > 0
+    console.log(value !== '')
+    return value !== ''
+  })
+}, [filters])
 
   const allColumns = useMemo(
     () =>
@@ -264,6 +275,8 @@ const {
     getPaginationRowModel: getPaginationRowModel(),
   })
 
+  console.log('isFilterActive',isFilterActive)
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
       <div className="table-container relative space-y-2">
@@ -284,7 +297,7 @@ const {
         }
         addButtonLabel="Register New User"
         onFilter={() => setFilterModalOpen(true)}
-        isFilterActive={JSON.stringify(filters) !== JSON.stringify(initialFilters)}
+        isFilterActive={isFilterActive}
       />
 
         <div className="relative rounded-sm shadow overflow-hidden bg-white" id="printable-user-table">

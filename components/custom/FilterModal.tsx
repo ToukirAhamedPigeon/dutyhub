@@ -51,6 +51,8 @@ export function FilterModal<T>({
     }
   }, [open, initialFilters])
 
+  
+
   const isFilterApplied = () =>
     JSON.stringify(filterValues) !== JSON.stringify(initialFilters)
 
@@ -68,13 +70,13 @@ export function FilterModal<T>({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
-        className="min-w-[95%] max-h-[80%] sm:min-w-1/2 shadow-[0_0_10px_rgba(0,0,0,0.25)] sm:shadow-[-10px_0_20px_-10px_rgba(0,0,0,0.25)] bg-gradient-to-br from-white via-gray-100 to-white"
+        className="min-w-[95%] max-h-[80%] sm:min-w-[60%] shadow-[0_0_10px_rgba(0,0,0,0.25)] sm:shadow-[-10px_0_20px_-10px_rgba(0,0,0,0.25)] bg-gradient-to-br from-white via-gray-100 to-white"
       >
         <DialogHeader>
           <DialogTitle>Filter Users</DialogTitle>
         </DialogHeader>
 
-        <div className="py-4 max-h-[400px] overflow-y-auto">{renderForm(filterValues, setFilterValues)}</div>
+        <div className="py-4 px-2 max-h-[400px] overflow-y-auto">{renderForm(filterValues, setFilterValues)}</div>
 
         <DialogFooter className="flex flex-row justify-center sm:justify-end gap-2">
           <Button variant="outline" onClick={handleReset}>
