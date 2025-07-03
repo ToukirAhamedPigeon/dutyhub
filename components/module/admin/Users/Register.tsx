@@ -213,17 +213,17 @@ export default function Register({fetchData}:RegisterProps) {
         model={model}
       />
        <UniqueInput
-            id="username"
-            label="Username"
-            placeholder="Username"
-            model={model}
-            isRequired={true}
-            register={register('username')}
-            error={errors.username}
-            uniqueErrorMessage="Username already exists"
-            field="username"
-            watchValue={watch('username')}
-          />
+          id="username"
+          label="Username"
+          placeholder="Username"
+          model={model}
+          isRequired={true}
+          register={register('username')}
+          error={errors.username}
+          uniqueErrorMessage="Username already exists"
+          field="username"
+          watchValue={watch('username')}
+        />
       </div>
 
       {/* Password + Confirm Password */}

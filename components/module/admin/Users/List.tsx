@@ -13,11 +13,9 @@ import {
 } from '@tanstack/react-table'
 import { motion } from 'framer-motion'
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'
-
 import { useTable } from '@/hooks/useTable'
 import { useDetailModal } from '@/hooks/useDetailModal'
 import { useAppSelector } from '@/hooks/useRedux'
-
 import Modal from '@/components/custom/Modal'
 import FormHolderSheet from '@/components/custom/FormHolderSheet'
 import Fancybox from '@/components/custom/FancyBox'
@@ -26,23 +24,22 @@ import {
   TableHeaderActions,
   TablePaginationFooter,
   RowActions,
-  IndexCell
+  IndexCell,
 } from '@/components/custom/Table'
-
 import { Badge } from '@/components/ui/badge'
 import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate'
 import { capitalize } from '@/lib/helpers'
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
-
 import Register from './Register'
 import UserDetail from './UserDetail'
 import { IUser } from '@/types'
-
 import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
 import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
 import { printTableById } from '@/lib/printTable'
 import { exportVisibleTableToExcel } from '@/lib/exportTable'
+import { FilterModal } from '@/components/custom/FilterModal'
+import { UserFilterForm, UserFilters } from './UserFilterForm'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
@@ -149,40 +146,64 @@ export default function UserListTable() {
     detailLoading,
   } = useDetailModal<IUser>('/users')
 
-  const {
-    data,
-    totalCount,
-    loading,
-    globalFilter,
-    setGlobalFilter,
-    sorting,
-    setSorting,
-    pageIndex,
-    setPageIndex,
-    pageSize,
-    setPageSize,
-    fetchData,
-  } = useTable<IUser>({
-    fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
-      const headers = await authorizationHeader()
-      const res = await api.get('/users', {
-        headers,
-        params: {
-          q,
-          page,
-          limit,
-          sortBy: sortBy || 'created_at',
-          sortOrder: sortOrder || 'desc',
-        },
-      })
-      return {
-        data: res.data.users,
-        total: res.data.totalCount,
-      }
-    },
-    initialColumns: [],
-    defaultSort: 'created_at',
-  })
+  // New filter state and modal control
+  const initialFilters: UserFilters = {
+    name: '',
+    email: '',
+    username: '',
+    phone: '',
+    bp_no: '',
+    nid: '',
+    current_status: '',
+    role_ids: [],
+    blood_group: [],
+  }
+const [filters, setFilters] = useState<UserFilters>(initialFilters)
+const [filterModalOpen, setFilterModalOpen] = useState(false)
+
+const {
+  data,
+  totalCount,
+  loading,
+  globalFilter,
+  setGlobalFilter,
+  sorting,
+  setSorting,
+  pageIndex,
+  setPageIndex,
+  pageSize,
+  setPageSize,
+  fetchData,
+} = useTable<IUser>({
+  fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
+    const headers = await authorizationHeader()
+    const res = await api.get('/users', {
+      headers,
+      params: {
+        q,
+        page,
+        limit,
+        sortBy: sortBy || 'created_at',
+        sortOrder: sortOrder || 'desc',
+        ...(filters.name && { name: filters.name }),
+        ...(filters.email && { email: filters.email }),
+        ...(filters.username && { username: filters.username }),
+        ...(filters.phone && { phone: filters.phone }),
+        ...(filters.bp_no && { bp_no: filters.bp_no }),
+        ...(filters.nid && { nid: filters.nid }),
+        ...(filters.current_status && { current_status: filters.current_status }),
+        ...(filters.blood_group && { blood_group: filters.blood_group }),
+        ...(filters.role_ids?.length && { role_ids: filters.role_ids }),
+      },
+    })
+    return {
+      data: res.data.users,
+      total: res.data.totalCount,
+    }
+  },
+  initialColumns: [],
+  defaultSort: 'created_at',
+})
 
   const allColumns = useMemo(
     () =>
@@ -210,9 +231,24 @@ export default function UserListTable() {
     setShowColumnModal(false)
   }
 
+  // Load saved filters from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('userFilters')
+    if (saved) setFilters(JSON.parse(saved))
+  }, [])
+
+  // Refetch data & save filters when filters change
+  useEffect(() => {
+    fetchData()
+    setPageIndex(0) // Reset page on filter change
+    localStorage.setItem('userFilters', JSON.stringify(filters))
+  }, [filters])
+
   // ✅ Correct visible column IDs for export
   const visibleIds = visible.map(
-    (col) => col.id ?? (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : '')
+    (col) =>
+      col.id ??
+      (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : '')
   )
 
   const table = useReactTable({
@@ -231,23 +267,25 @@ export default function UserListTable() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
       <div className="table-container relative space-y-2">
-        <TableHeaderActions
-          searchValue={globalFilter}
-          onSearchChange={setGlobalFilter}
-          onAddNew={() => setIsSheetOpen(true)}
-          onColumnSettings={() => setShowColumnModal(true)}
-          onPrint={() => printTableById('printable-user-table', 'User Table')}
-          onExport={() =>
-            exportVisibleTableToExcel({
-              data,
-              columns: allColumns,
-              visibleColumnIds: visibleIds,
-              fileName: 'Users',
-              sheetName: 'Users',
-            })
-          }
-          addButtonLabel="Register New User"
-        />
+      <TableHeaderActions
+        searchValue={globalFilter}
+        onSearchChange={setGlobalFilter}
+        onAddNew={() => setIsSheetOpen(true)}
+        onColumnSettings={() => setShowColumnModal(true)}
+        onPrint={() => printTableById('printable-user-table', 'User Table')}
+        onExport={() =>
+          exportVisibleTableToExcel({
+            data,
+            columns: allColumns,
+            visibleColumnIds: visibleIds,
+            fileName: 'Users',
+            sheetName: 'Users',
+          })
+        }
+        addButtonLabel="Register New User"
+        onFilter={() => setFilterModalOpen(true)}
+        isFilterActive={JSON.stringify(filters) !== JSON.stringify(initialFilters)}
+      />
 
         <div className="relative rounded-sm shadow overflow-hidden bg-white" id="printable-user-table">
           <div className="max-h-[600px] min-h-[200px] overflow-y-auto">
@@ -340,6 +378,25 @@ export default function UserListTable() {
           onChange={handleColumnChange}
         />
       )}
+
+      <FilterModal
+        tableId="userTable"
+        open={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        onApply={(newFilters) => {
+          setFilters(newFilters)
+          setFilterModalOpen(false)
+        }}
+        initialFilters={initialFilters}
+        renderForm={(filterValues, setFilterValues) => (
+          <UserFilterForm
+            filterValues={filterValues}             // ✅ MATCHES expected prop
+            setFilterValues={setFilterValues}       // ✅ MATCHES expected prop
+            onClose={() => setFilterModalOpen(false)}
+          />
+        )}
+      />
+
     </motion.div>
   )
 }

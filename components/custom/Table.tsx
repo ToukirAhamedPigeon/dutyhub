@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ColumnDef } from '@tanstack/react-table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { FaEye, FaEdit, FaTrash, FaPlus, FaPrint, FaFileExcel, FaSlidersH } from 'react-icons/fa'
+import { FaEye, FaEdit, FaTrash, FaPlus, FaPrint, FaFileExcel, FaSlidersH, FaFilter } from 'react-icons/fa'
 import { ArrowBigDown, ArrowBigLeft, ArrowBigRight, ArrowBigUp, ArrowDown, ArrowLeft, ArrowRight, ArrowUp } from 'lucide-react'
 
 /** --- RowActions Component --- **/
@@ -66,13 +66,16 @@ export function IndexCell({ rowIndex, pageIndex, pageSize }: IndexCellProps) {
 }
 
 /** --- TableHeaderActions Component --- **/
+
 interface TableHeaderActionsProps {
   searchValue: string
   onSearchChange: (value: string) => void
   onAddNew?: () => void
-  onColumnSettings?: () => void
   onPrint?: () => void
   onExport?: () => void
+  onColumnSettings?: () => void
+  onFilter?: () => void
+  isFilterActive?: boolean // NEW: filter active indicator
   addButtonLabel?: string
 }
 
@@ -83,37 +86,72 @@ export function TableHeaderActions({
   onPrint,
   onExport,
   onColumnSettings,
+  onFilter,
+  isFilterActive = false,
   addButtonLabel = 'Add New',
-}: TableHeaderActionsProps & {
-  onColumnSettings?: () => void;
-}) {
+}: TableHeaderActionsProps) {
   return (
     <div className="flex justify-between items-center mb-4">
       <Input
+        aria-label="Search"
         placeholder="Search..."
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
         className="w-[150px] md:w-1/3"
       />
-      <div className="flex gap-2">
+      <div className="flex gap-2 relative">
         {onAddNew && (
-          <Button variant="success" onClick={onAddNew}>
-            <FaPlus /> <span className="hidden md:block">{addButtonLabel}</span>
+          <Button variant="success" onClick={onAddNew} aria-label="Add new item">
+            <FaPlus />
+            <span className="hidden lg:block ml-1">{addButtonLabel}</span>
           </Button>
         )}
+
+        {onFilter && (
+          <Button
+            onClick={onFilter}
+            aria-label="Open filter modal"
+            className="relative bg-blue-900 hover:bg-blue-800"
+          >
+            <FaFilter />
+            <span className="hidden lg:block ml-1">Filter</span>
+
+            {/* Indicator dot */}
+            {isFilterActive && (
+              <span
+                className="absolute top-1 right-1 w-1 h-1 rounded-full bg-red-500"
+                aria-hidden="true"
+              />
+            )}
+          </Button>
+        )}
+
         {onColumnSettings && (
-          <Button variant="info" onClick={onColumnSettings}>
-            <FaSlidersH /> <span className="hidden md:block">Columns</span>
+          <Button onClick={onColumnSettings} aria-label="Open column settings">
+            <FaSlidersH />
+            <span className="hidden lg:block ml-1">Columns</span>
           </Button>
         )}
         {onPrint && (
-          <Button variant="info" onClick={onPrint} className='bg-gray-800 hover:bg-gray-700'>
-            <FaPrint /> <span className="hidden md:block">Print</span>
+          <Button
+            variant="info"
+            onClick={onPrint}
+            className=""
+            aria-label="Print table"
+          >
+            <FaPrint />
+            <span className="hidden lg:block ml-1">Print</span>
           </Button>
         )}
         {onExport && (
-          <Button variant="success" onClick={onExport} className='bg-green-800'>
-            <FaFileExcel /> <span className="hidden md:block">Excel</span>
+          <Button
+            variant="success"
+            onClick={onExport}
+            className="bg-green-800"
+            aria-label="Export table to Excel"
+          >
+            <FaFileExcel />
+            <span className="hidden lg:block ml-1">Excel</span>
           </Button>
         )}
       </div>
