@@ -177,10 +177,10 @@ const {
   fetchData,
 } = useTable<IUser>({
   fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
-    const headers = await authorizationHeader()
-    const res = await api.get('/users', {
-      headers,
-      params: {
+    const headers = await authorizationHeader();
+    const res = await api.post(
+      '/users',
+      {
         q,
         page,
         limit,
@@ -193,18 +193,20 @@ const {
         ...(filters.bp_no && { bp_no: filters.bp_no }),
         ...(filters.nid && { nid: filters.nid }),
         ...(filters.current_status && { current_status: filters.current_status }),
-        ...(filters.blood_group && { blood_group: filters.blood_group }),
-        ...(filters.role_ids?.length && { role_ids: filters.role_ids }),
+        ...(filters.blood_group && filters.blood_group.length > 0 && { blood_group: filters.blood_group }),
+        ...(filters.role_ids && filters.role_ids.length > 0 && { role_ids: filters.role_ids }),
       },
-    })
+      { headers }
+    );
+
     return {
       data: res.data.users,
       total: res.data.totalCount,
-    }
+    };
   },
   initialColumns: [],
   defaultSort: 'created_at',
-})
+});
 
 const isFilterActive = useMemo(() => {
   return Object.entries(filters).some(([key, value]) => {
