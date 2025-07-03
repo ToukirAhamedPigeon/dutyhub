@@ -107,7 +107,7 @@ export function TableHeaderActions({
           </Button>
         )}
         {onPrint && (
-          <Button variant="info" onClick={onPrint} className='bg-gray-800'>
+          <Button variant="info" onClick={onPrint} className='bg-gray-800 hover:bg-gray-700'>
             <FaPrint /> <span className="hidden md:block">Print</span>
           </Button>
         )}

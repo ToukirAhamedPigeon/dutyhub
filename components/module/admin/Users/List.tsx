@@ -31,7 +31,7 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate'
-import { capitalize, exportExcel } from '@/lib/helpers'
+import { capitalize } from '@/lib/helpers'
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
 
@@ -41,6 +41,8 @@ import { IUser } from '@/types'
 
 import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
 import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
+import { printTableById } from '@/lib/printTable'
+import { exportVisibleTableToExcel } from '@/lib/exportTable'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
@@ -56,7 +58,7 @@ const getAllColumns = ({
 }): ColumnDef<IUser>[] => [
   {
     header: 'SL',
-    id:'sl',
+    id: 'sl',
     cell: ({ row }) => (
       <IndexCell rowIndex={row.index} pageIndex={pageIndex} pageSize={pageSize} />
     ),
@@ -64,7 +66,7 @@ const getAllColumns = ({
   },
   {
     header: 'Action',
-    id:'action',
+    id: 'action',
     cell: ({ row }) => (
       <RowActions
         row={row.original}
@@ -72,18 +74,15 @@ const getAllColumns = ({
       />
     ),
   },
-  { header: 'Name', id:'name', accessorKey: 'name' },
-  { header: 'Username', id:'username', accessorKey: 'username' },
-  { header: 'BP No', id:'bp_no', accessorKey: 'bp_no' },
-  { header: 'Phone 1', id:'phone_1', accessorKey: 'phone_1' },
-  { header: 'Email', id:'email', accessorKey: 'email' },
-  { header: 'Address', id:'address', accessorKey: 'address' },
-  // ...(authroles.includes('developer')
-  //   ? [{ header: 'Decrypted Password', id:'decrypted_password', accessorKey: 'decrypted_password' }]
-  //   : []),
+  { header: 'Name', id: 'name', accessorKey: 'name' },
+  { header: 'Username', id: 'username', accessorKey: 'username' },
+  { header: 'BP No', id: 'bp_no', accessorKey: 'bp_no' },
+  { header: 'Phone 1', id: 'phone_1', accessorKey: 'phone_1' },
+  { header: 'Email', id: 'email', accessorKey: 'email' },
+  { header: 'Address', id: 'address', accessorKey: 'address' },
   {
     header: 'Profile Picture',
-    id:'profile_picture',
+    id: 'profile_picture',
     cell: ({ row }) => (
       <Fancybox
         src={row.original.image || '/policeman.png'}
@@ -94,16 +93,16 @@ const getAllColumns = ({
   },
   {
     header: 'Roles',
-    id:'roles',
+    id: 'roles',
     accessorKey: 'roleNames',
     cell: ({ getValue }) => capitalize(getValue() as string),
   },
-  { header: 'Blood Group', id:'blood_group', accessorKey: 'blood_group' },
-  { header: 'NID', id:'nid', accessorKey: 'nid' },
+  { header: 'Blood Group', id: 'blood_group', accessorKey: 'blood_group' },
+  { header: 'NID', id: 'nid', accessorKey: 'nid' },
   {
     header: 'Date of Birth',
     accessorKey: 'dob',
-    id:'dob',
+    id: 'dob',
     cell: ({ getValue }) =>
       getValue()
         ? `${formatDateTimeDisplay(getValue() as string, false)} Age: ${getAge(
@@ -117,7 +116,7 @@ const getAllColumns = ({
   {
     header: 'Current Status',
     accessorKey: 'current_status',
-    id:'current_status',
+    id: 'current_status',
     cell: ({ getValue }) => (
       <Badge variant={getValue() ? 'success' : 'destructive'}>
         {getValue() ? 'Active' : 'Inactive'}
@@ -127,13 +126,13 @@ const getAllColumns = ({
   {
     header: 'Created At',
     accessorKey: 'created_at',
-    id:'created_at',
+    id: 'created_at',
     cell: ({ getValue }) => formatDateTime(getValue() as string),
   },
   {
     header: 'Updated At',
     accessorKey: 'updated_at',
-    id:'updated_at',
+    id: 'updated_at',
     cell: ({ getValue }) => formatDateTime(getValue() as string),
   },
 ]
@@ -142,7 +141,6 @@ export default function UserListTable() {
   const authroles = useAppSelector((state) => state.roles) as string[]
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
-  // Detail Modal
   const {
     isModalOpen,
     selectedItem,
@@ -151,7 +149,6 @@ export default function UserListTable() {
     detailLoading,
   } = useDetailModal<IUser>('/users')
 
-  // Table State
   const {
     data,
     totalCount,
@@ -187,7 +184,6 @@ export default function UserListTable() {
     defaultSort: 'created_at',
   })
 
-  // Columns & Visibility State
   const allColumns = useMemo(
     () =>
       getAllColumns({
@@ -199,13 +195,9 @@ export default function UserListTable() {
     [pageIndex, pageSize, fetchDetail, authroles]
   )
 
-  // Visible columns state, initialized empty and will be loaded from refreshColumnSettings
   const [visible, setVisible] = useState<ColumnDef<IUser>[]>([])
-
-  // State to control the ColumnVisibilityManager modal visibility
   const [showColumnModal, setShowColumnModal] = useState(false)
 
-  // On mount, load saved column visibility with refreshColumnSettings
   useEffect(() => {
     (async () => {
       const refreshedColumns = await refreshColumnSettings<IUser>('userTable', allColumns)
@@ -213,14 +205,16 @@ export default function UserListTable() {
     })()
   }, [])
 
-  // When columns change inside the visibility manager, update the visible columns and persist settings
   const handleColumnChange = (cols: ColumnDef<IUser>[]) => {
     setVisible(cols)
     setShowColumnModal(false)
-    // Optionally, save the columns visibility to localStorage or backend here if refreshColumnSettings doesn't do it automatically
   }
 
-  // Table instance
+  // ✅ Correct visible column IDs for export
+  const visibleIds = visible.map(
+    (col) => col.id ?? (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : '')
+  )
+
   const table = useReactTable({
     data,
     columns: visible,
@@ -242,14 +236,20 @@ export default function UserListTable() {
           onSearchChange={setGlobalFilter}
           onAddNew={() => setIsSheetOpen(true)}
           onColumnSettings={() => setShowColumnModal(true)}
-          onPrint={() => window.print()}
+          onPrint={() => printTableById('printable-user-table', 'User Table')}
           onExport={() =>
-            exportExcel({ data, fileName: 'Users', sheetName: 'Users' })
+            exportVisibleTableToExcel({
+              data,
+              columns: allColumns,
+              visibleColumnIds: visibleIds,
+              fileName: 'Users',
+              sheetName: 'Users',
+            })
           }
           addButtonLabel="Register New User"
         />
 
-        <div className="relative rounded-sm shadow overflow-hidden bg-white">
+        <div className="relative rounded-sm shadow overflow-hidden bg-white" id="printable-user-table">
           <div className="max-h-[600px] min-h-[200px] overflow-y-auto">
             {loading && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-opacity-70 mt-20">
@@ -272,9 +272,7 @@ export default function UserListTable() {
                           className="flex justify-between items-center w-full cursor-pointer"
                           onClick={header.column.getToggleSortingHandler()}
                         >
-                          <span>
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                          </span>
+                          <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
                           <span className="ml-2">
                             {header.column.getIsSorted() === 'asc' ? (
                               <FaSortUp size={12} />
@@ -333,7 +331,6 @@ export default function UserListTable() {
         <Register fetchData={fetchData} />
       </FormHolderSheet>
 
-      {/* Column Visibility Manager Modal */}
       {showColumnModal && (
         <ColumnVisibilityManager<IUser>
           tableId="userTable"
