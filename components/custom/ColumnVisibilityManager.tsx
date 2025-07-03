@@ -1,6 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, {
+  useEffect,
+  useState,
+  type MouseEvent
+} from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import {
   Dialog,
@@ -29,7 +33,6 @@ interface ColumnVisibilityManagerProps<T> {
   open: boolean
   onClose: () => void
   onChange?: (visibleColumns: ColumnDef<T, any>[]) => void
-  // authUserId removed
 }
 
 export function ColumnVisibilityManager<T>({
@@ -37,9 +40,8 @@ export function ColumnVisibilityManager<T>({
   initialColumns,
   open,
   onClose,
-  onChange,
+  onChange
 }: ColumnVisibilityManagerProps<T>) {
-
   const [visible, setVisible] = useState<ColumnDef<T>[]>([])
   const [selectedVisible, setSelectedVisible] = useState<string[]>([])
   const [selectedHidden, setSelectedHidden] = useState<string[]>([])
@@ -48,60 +50,73 @@ export function ColumnVisibilityManager<T>({
   const LOCAL_KEY = `columnConfig:${tableId}`
 
   const getColumnId = (col: ColumnDef<T>): string =>
-    col.id ??
-    (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : undefined) ??
-    crypto.randomUUID()
+    col.id ?? (typeof (col as any).accessorKey === 'string'
+      ? (col as any).accessorKey
+      : undefined) ?? crypto.randomUUID()
 
-  const refreshFromDB = async () => {
-    try {
-      const headers = await authorizationHeader()
-      const res = await api.get('/user-table-combination', {
-        params: {
-          tableId,
-          // userId removed
-        },
-        headers,
-      })
-
-      const data = res.data
-      const visibleIds: string[] = data?.showColumnCombinations ?? []
-
-      const matched = initialColumns.filter(col => visibleIds.includes(getColumnId(col)))
-      setVisible(matched)
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(visibleIds))
-      onChange?.(matched)
-
-      toast.success('Column settings refreshed from database')
-    } catch (err) {
-      console.warn('Failed to refresh column settings from DB:', err)
-      toast.error('Failed to refresh column settings from database')
-    }
-  }
-
-  useEffect(() => {
-    if (!open) return
-  
-    const timeout = setTimeout(() => {
-      const loadSettings = async () => {
-        const stored = localStorage.getItem(LOCAL_KEY)
-        if (stored) {
-          const visibleIds: string[] = JSON.parse(stored)
-          const matched = initialColumns.filter(col => visibleIds.includes(getColumnId(col)))
+      const refreshFromDB = async () => {
+        try {
+          const headers = await authorizationHeader()
+          const res = await api.get('/user-table-combination', {
+            params: { tableId },
+            headers,
+          })
+      
+          const data = res.data
+          const visibleIds: string[] = data?.showColumnCombinations ?? []
+      
+          // Create a lookup map for fast access
+          const columnMap: Record<string, ColumnDef<T>> = {}
+          for (const col of initialColumns) {
+            columnMap[getColumnId(col)] = col
+          }
+      
+          // Map over visibleIds to preserve order, filter out any missing columns
+          const matched = visibleIds
+            .map(id => columnMap[id])
+            .filter((col): col is ColumnDef<T> => !!col)
+      
           setVisible(matched)
-          onChange?.(matched)
-        } else {
-          await refreshFromDB()
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(visibleIds))
+          setSelectedVisible([])
+          setSelectedHidden([])
+          setSearch('')
+      
+          toast.success('Column settings refreshed from database')
+        } catch (err) {
+          console.warn('Failed to refresh column settings from DB:', err)
+          toast.error('Failed to refresh column settings from database')
         }
       }
+
+  useEffect(() => {
+    loadSettings()
+  },[])
+  const loadSettings = async () => {
+    const stored = localStorage.getItem(LOCAL_KEY)
+    if (stored) {
+      const visibleIds: string[] = JSON.parse(stored)
   
-      loadSettings()
-      setSelectedVisible([])
-      setSelectedHidden([])
-      setSearch('')
-    }, 0)
+      // Create a lookup map from initialColumns
+      const columnMap: Record<string, ColumnDef<T>> = {}
+      for (const col of initialColumns) {
+        columnMap[getColumnId(col)] = col
+      }
   
-    return () => clearTimeout(timeout)
-  }, [open, LOCAL_KEY])
+      // Reconstruct visible columns in the stored order
+      const matched = visibleIds
+        .map(id => columnMap[id])
+        .filter((col): col is ColumnDef<T> => !!col) // Filter out missing ones
+  
+      setVisible(matched)
+    } else {
+      await refreshFromDB()
+    }
+  
+    setSelectedVisible([])
+    setSelectedHidden([])
+    setSearch('')
+  }
 
   const allIds = initialColumns.map(getColumnId)
   const visibleIds = visible.map(getColumnId)
@@ -148,10 +163,12 @@ export function ColumnVisibilityManager<T>({
     id: string,
     selected: string[],
     setSelected: React.Dispatch<React.SetStateAction<string[]>>,
-    e: React.MouseEvent
+    e: MouseEvent
   ) => {
     if (e.metaKey || e.ctrlKey) {
-      setSelected(selected.includes(id) ? selected.filter(i => i !== id) : [...selected, id])
+      setSelected(selected.includes(id)
+        ? selected.filter(i => i !== id)
+        : [...selected, id])
     } else {
       setSelected([id])
     }
@@ -169,8 +186,7 @@ export function ColumnVisibilityManager<T>({
         '/user-table-combination',
         {
           tableId,
-          showColumnCombinations: visibleColumnIds,
-          // userId removed
+          showColumnCombinations: visibleColumnIds
         },
         { headers }
       )
@@ -178,17 +194,17 @@ export function ColumnVisibilityManager<T>({
       const formattedTable = formatLabel(tableId, 'sentence')
       if (res.status === 200 && res.data?.success) {
         toast.success(`Saved column settings for ${formattedTable}`, {
-          style: { background: 'green', color: 'white' },
+          style: { background: 'green', color: 'white' }
         })
       } else {
         toast.error(`Failed to save settings for ${formattedTable}`, {
-          style: { background: 'red', color: 'white' },
+          style: { background: 'red', color: 'white' }
         })
       }
     } catch (err) {
       console.warn('Save error:', err)
       toast.error(`Error saving settings for ${formatLabel(tableId, 'sentence')}`, {
-        style: { background: 'red', color: 'white' },
+        style: { background: 'red', color: 'white' }
       })
     }
   }
@@ -204,14 +220,20 @@ export function ColumnVisibilityManager<T>({
   const filteredHidden = hidden.filter(col =>
     (String(col.header) || '').toLowerCase().includes(search.toLowerCase())
   )
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isOpen) onClose()
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (isOpen) loadSettings()
+        else onClose()
+      }}
+    >
       <DialogContent className="w-full max-w-[95vw] sm:max-w-3xl lg:max-w-4xl min-h-[95vh] overflow-auto [&>[data-radix-dialog-close]]:hidden">
         <DialogHeader>
           <DialogTitle>Column Settings</DialogTitle>
         </DialogHeader>
+
         <div className="grid grid-cols-[42%_8%_42%] gap-4">
           {/* Visible Columns */}
           <div>
@@ -273,37 +295,16 @@ export function ColumnVisibilityManager<T>({
               onChange={e => setSearch(e.target.value)}
               className="mt-2"
             />
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full mt-2"
-              onClick={reset}
-              title="Reset to default (show all)"
-            >
-              <RotateCw className="mr-2 h-4 w-4" />
-              Reset
-            </Button>
           </div>
         </div>
 
-        <DialogFooter className="flex justify-between mt-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onClose()
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onSave}
-            disabled={visible.length === 0}
-          >
-            Save
-          </Button>
+        <DialogFooter className="flex justify-center items-center sm:justify-end mt-4 flex-wrap gap-2">
+          <div className="flex gap-2">
+            <Button variant="default" size="sm" onClick={onSave} disabled={visible.length === 0}>Save</Button>
+            <Button variant="outline" size="sm" onClick={refreshFromDB}><RotateCw className="mr-2 h-4 w-4" />Refresh</Button>
+            <Button variant="outline" size="sm" onClick={reset}>Reset</Button>
+            <Button variant="destructive" size="sm" onClick={onClose}>Close</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

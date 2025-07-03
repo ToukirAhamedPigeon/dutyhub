@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -33,14 +33,14 @@ import { Badge } from '@/components/ui/badge'
 import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate'
 import { capitalize, exportExcel } from '@/lib/helpers'
 import api from '@/lib/axios'
-import { authorizationHeader, getAuthenticatedUserId } from '@/lib/tokens'
+import { authorizationHeader } from '@/lib/tokens'
 
 import Register from './Register'
 import UserDetail from './UserDetail'
 import { IUser } from '@/types'
 
-// Import the new ColumnVisibilityManager
 import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
+import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
@@ -78,9 +78,9 @@ const getAllColumns = ({
   { header: 'Phone 1', id:'phone_1', accessorKey: 'phone_1' },
   { header: 'Email', id:'email', accessorKey: 'email' },
   { header: 'Address', id:'address', accessorKey: 'address' },
-  ...(authroles.includes('developer')
-    ? [{ header: 'Decrypted Password', id:'decrypted_password', accessorKey: 'decrypted_password' }]
-    : []),
+  // ...(authroles.includes('developer')
+  //   ? [{ header: 'Decrypted Password', id:'decrypted_password', accessorKey: 'decrypted_password' }]
+  //   : []),
   {
     header: 'Profile Picture',
     id:'profile_picture',
@@ -137,6 +137,7 @@ const getAllColumns = ({
     cell: ({ getValue }) => formatDateTime(getValue() as string),
   },
 ]
+
 export default function UserListTable() {
   const authroles = useAppSelector((state) => state.roles) as string[]
   const [isSheetOpen, setIsSheetOpen] = useState(false)
@@ -186,10 +187,6 @@ export default function UserListTable() {
     defaultSort: 'created_at',
   })
 
-  const handleColumnChange = (cols: ColumnDef<IUser>[]) => {
-    setVisible(cols)
-    setShowColumnModal(false)
-  }
   // Columns & Visibility State
   const allColumns = useMemo(
     () =>
@@ -202,18 +199,26 @@ export default function UserListTable() {
     [pageIndex, pageSize, fetchDetail, authroles]
   )
 
-  // useEffect(() => {
-  //   setVisible(allColumns);
-  // }, [allColumns]);
-
-  // Visible columns state, initialized with all columns
-  const [visible, setVisible] = useState<ColumnDef<IUser>[]>(allColumns)
+  // Visible columns state, initialized empty and will be loaded from refreshColumnSettings
+  const [visible, setVisible] = useState<ColumnDef<IUser>[]>([])
 
   // State to control the ColumnVisibilityManager modal visibility
   const [showColumnModal, setShowColumnModal] = useState(false)
 
-  // When columns change inside the visibility manager, update the visible columns here
+  // On mount, load saved column visibility with refreshColumnSettings
+  useEffect(() => {
+    (async () => {
+      const refreshedColumns = await refreshColumnSettings<IUser>('userTable', allColumns)
+      setVisible(refreshedColumns)
+    })()
+  }, [])
 
+  // When columns change inside the visibility manager, update the visible columns and persist settings
+  const handleColumnChange = (cols: ColumnDef<IUser>[]) => {
+    setVisible(cols)
+    setShowColumnModal(false)
+    // Optionally, save the columns visibility to localStorage or backend here if refreshColumnSettings doesn't do it automatically
+  }
 
   // Table instance
   const table = useReactTable({
@@ -228,7 +233,6 @@ export default function UserListTable() {
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
-
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -331,7 +335,7 @@ export default function UserListTable() {
 
       {/* Column Visibility Manager Modal */}
       {showColumnModal && (
-        <ColumnVisibilityManager
+        <ColumnVisibilityManager<IUser>
           tableId="userTable"
           open={showColumnModal}
           onClose={() => setShowColumnModal(false)}
