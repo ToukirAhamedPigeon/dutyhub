@@ -14,7 +14,6 @@ const COLLECTION_MAP: Record<string, mongoose.Model<any>> = {
 }
 
 export async function POST(req: Request) {
-    console.log('check-unique route')
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.split(' ')[1]
 
@@ -53,17 +52,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid collection' }, { status: 400 })
     }
 
-    console.log(collection);
 
     const query: any = { [fieldName]: fieldValue }
-
     if (exceptFieldValue != null) {
       query[exceptFieldName] =
         exceptFieldName === '_id' && mongoose.Types.ObjectId.isValid(exceptFieldValue)
           ? { $ne: new mongoose.Types.ObjectId(exceptFieldValue) }
           : { $ne: exceptFieldValue }
     }
-
     const existing = await Model.findOne(query)
     return NextResponse.json({ exists: !!existing })
   } catch (err) {

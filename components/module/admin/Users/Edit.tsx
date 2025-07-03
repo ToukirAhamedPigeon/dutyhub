@@ -1,281 +1,230 @@
 'use client'
 
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { z } from 'zod'
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
-import { EUserRole, IUser } from '@/types'
-import Dropzone from 'react-dropzone'
-import { AnimatePresence } from 'framer-motion'
-import { motion } from 'framer-motion'
-import Image from 'next/image'
-import { checkEmailExists } from '@/lib/validations'
+import { accessToken } from '@/lib/tokens'
 import { useProfilePicture } from '@/hooks/useProfilePicture'
+import DateTimeInput, {
+  BasicInput,
+  BasicTextarea,
+  CustomSelect,
+  SingleImageInput,
+  UniqueInput,
+} from '@/components/custom/FormInputs'
+import { bloodGroups } from '@/constants'
+
+const objectIdRegex = /^[0-9a-fA-F]{24}$/
+
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    email: z.string().email('Invalid email'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-    role: z.nativeEnum(EUserRole),
-    isActive: z.string(),
-    profilePicture: z.any().optional()
-  })
+  _id: z.string().regex(objectIdRegex, 'Invalid user ID'),
+  name: z.string().min(1, 'Name is required'),
+  username: z.string().min(1, 'Username is required'),
+  email: z.string().email({ message: 'Invalid email' }),
+  image: z
+    .instanceof(File)
+    .optional()
+    .refine((file) => !file || file.type.startsWith('image/'), {
+      message: 'Only image files are allowed',
+    }),
+  bp_no: z.string().optional(),
+  phone_1: z.string().min(11, 'Phone Number must be at least 11 digits').optional(),
+  phone_2: z.string().optional(),
+  address: z.string().optional(),
+  blood_group: z.string().optional(),
+  nid: z.string().optional(),
+  dob: z.coerce.date().optional(),
+  description: z.string().optional(),
+  current_status: z.string().min(1, 'Status is required'),
+  role_ids: z
+    .array(z.string().regex(objectIdRegex, { message: 'Invalid role ID' }))
+    .nonempty({ message: 'Select at least one role' }),
+  permission_ids: z
+    .array(z.string().regex(objectIdRegex, { message: 'Invalid permission ID' }))
+    .optional(),
+})
 
 type FormData = z.infer<typeof schema>
 
-const authUser = localStorage.getItem('authUser')
-const token = JSON.parse(authUser || '{}').token
-
-type EditUserFormProps = {
-  user: IUser
+interface EditUserProps {
+  user: any
+  fetchData: () => Promise<void>
   onClose: () => void
-  onSuccess: () => void
 }
 
-export default function EditUserForm({ user, onClose, onSuccess }: EditUserFormProps) {
-  const [emailChecking, setEmailChecking] = useState(false)
-  const [emailTaken, setEmailTaken] = useState(false)
+export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
+  const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
+  const model = 'User'
+
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     setError,
-    formState: { errors, isSubmitting },
+    watch,
+    reset,
+    formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      profilePicture: user.profilePicture,
-      password: user.decryptedPassword,
-      isActive: user.isActive ? 'active' : 'inactive',
+      ...user,
+      dob: user.dob ? new Date(user.dob) : undefined,
+      image: undefined,
     },
   })
 
+  const { preview, clearImage, onDrop } = useProfilePicture(setValue, setError, 'image', watch('image'))
+
   useEffect(() => {
-    setValue('name', user.name)
-    setValue('email', user.email)
-    setValue('role', user.role)
-    setValue('profilePicture', user.profilePicture)
-    setValue('password', user.decryptedPassword)
-    setValue('isActive', user.isActive ? 'active' : 'inactive')
-    if (user.profilePicture) {
-      setPreview(user.profilePicture.imageUrl)
+    if (user) {
+      reset({
+        ...user,
+        role_ids: user.role_ids?.map((r:any) => typeof r === 'string' ? r : r._id) || [],
+      });
     }
-  }, [user, setValue])
-
-  const {
-    preview,
-    isImageDeleted,
-    clearImage,
-    onDrop,
-    setIsImageDeleted,
-    setPreview
-  } = useProfilePicture(setValue, setError, 'profilePicture')
-
-  const profilePic = watch('profilePicture')
-  const email = watch('email')
-
-  // Debounced email validation
-  useEffect(() => {
-    if (!email || !email.includes('@')) {
-      setEmailTaken(false)
-      return
-    }
-
-    const debounceTimer = setTimeout(async () => {
-      setEmailChecking(true)
-      const exists = await checkEmailExists(email, token, user._id.toString(), '_id')
-      setEmailTaken(exists)
-      setEmailChecking(false)
-    }, 500)
-
-    return () => clearTimeout(debounceTimer)
-  }, [email])
-
+  }, [user]);
 
   const onSubmit = async (data: FormData) => {
-    const emailTaken = await checkEmailExists(data.email, token, user._id.toString(), '_id')
-    if (emailTaken) {
-      setError('email', { type: 'manual', message: 'Email already exists' })
-      setSubmitLoading(false)
-      return
-    }
+    setSubmitLoading(true)
+
     try {
-        setSubmitLoading(true)
-        const formData = new FormData()
-        formData.append('name', data.name)
-        formData.append('email', data.email)
-        formData.append('role', data.role)
-        formData.append('password', data.password)
-        formData.append('isActive', data.isActive === 'active' ? 'true' : 'false')
-        formData.append('isImageDeleted', isImageDeleted.toString())
-    
-      if (data.profilePicture) {
-        formData.append('profilePicture', data.profilePicture)
-      }
-      const res = await api.put(`/users/${user._id}`, formData, {
+      const formData = new FormData()
+      formData.append('name', data.name)
+      formData.append('username', data.username)
+      formData.append('email', data.email)
+      formData.append('current_status', data.current_status)
+      formData.append('dob', data.dob?.toISOString() ?? '')
+
+      if (data.image) formData.append('image', data.image)
+      if (data.bp_no) formData.append('bp_no', data.bp_no)
+      if (data.phone_1) formData.append('phone_1', data.phone_1)
+      if (data.phone_2) formData.append('phone_2', data.phone_2)
+      if (data.address) formData.append('address', data.address)
+      if (data.blood_group) formData.append('blood_group', data.blood_group)
+      if (data.nid) formData.append('nid', data.nid)
+      if (data.description) formData.append('description', data.description)
+
+      formData.append('role_ids', JSON.stringify(data.role_ids))
+      formData.append('permission_ids', JSON.stringify(data.permission_ids || []))
+
+      const res = await api.patch(`/users/${data._id}`, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       })
 
-      toast.success('User updated successfully')
-      onSuccess()
+      if (!res.data.success) throw new Error(res.data.message || 'Update failed')
+
+      toast.success('User updated successfully!', {
+        style: { background: 'green', color: 'white' },
+      })
+
+      await fetchData()
       onClose()
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update user')
+      console.error(error)
+      toast.error(error.message || 'Something went wrong')
     } finally {
       setSubmitLoading(false)
     }
   }
 
+  const handleReset = () => reset()
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-       <div className="flex flex-col md:flex-row gap-2">
-        {/* Name Field */}
-            <div className="w-full md:w-1/2 space-y-1">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name <span className="text-red-500">*</span></label>
-                <Input id="name" placeholder="Name" {...register('name')} />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
-            </div>
-          {/* Email Field */}
-            <div className="w-full md:w-1/2 space-y-1">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-                <div className="relative">
-                    <Input
-                    id="email"
-                    placeholder="Email"
-                    {...register('email')}
-                    className={`${emailTaken ? 'border-red-500' : ''} pr-10`}
-                    />
-                    {emailChecking && (
-                    <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 animate-spin text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    )}
-                </div>
-                {emailTaken && !errors.email && <p className="text-red-500 text-sm">Email already exists</p>}
-                {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
-            </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="flex items-center justify-center"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="p-3 w-full space-y-4">
+
+        <div className="flex flex-col md:flex-row gap-4">
+          <BasicInput id="name" label="Name" isRequired placeholder="Name" register={register('name')} error={errors.name} model={model} />
+          <UniqueInput
+            id="username"
+            label="Username"
+            placeholder="Username"
+            model={model}
+            isRequired
+            register={register('username')}
+            error={errors.username}
+            field="username"
+            watchValue={watch('username')}
+            uniqueErrorMessage="Username already exists"
+            exceptFieldValue={user._id}
+            exceptFieldName="_id"
+          />
         </div>
 
-        
-        <div className="flex flex-col md:flex-row gap-2">
-        {/* Password */}
-        <div className="w-full md:w-1/3 space-y-1">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
-          <Input type="password" id="password" placeholder="Password" {...register('password')} />
-          {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+        <div className="flex flex-col md:flex-row gap-4">
+        <UniqueInput
+          id="email"
+          label="Email"
+          placeholder="Email"
+          model={model}
+          isRequired
+          register={register('email')}
+          error={errors.email}
+          field="email"
+          watchValue={watch('email')}
+          uniqueErrorMessage="Email already in use"
+          exceptFieldValue={user._id}
+          exceptFieldName="_id"
+        />
+          <UniqueInput
+            id="bp_no"
+            label="BP No"
+            placeholder="BP No"
+            model={model}
+            register={register('bp_no')}
+            error={errors.bp_no}
+            field="bp_no"
+            watchValue={watch('bp_no') ?? ''}
+            uniqueErrorMessage="BP No must be unique"
+            exceptFieldValue={user._id}
+            exceptFieldName="_id"
+          />
         </div>
 
-        {/* Role */}
-        <div className="w-full md:w-1/3 space-y-1">
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role <span className="text-red-500">*</span></label>
-          <Select defaultValue={user.role} onValueChange={(val) => setValue('role', val as EUserRole)}>
-            <SelectTrigger id="role">
-              <SelectValue placeholder="Select Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={EUserRole.ADMIN}>Admin</SelectItem>
-              <SelectItem value={EUserRole.USER}>User</SelectItem>
-              <SelectItem value={EUserRole.DEVELOPER}>Developer</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
-        </div>
-            {/* Status */}
-            <div className="w-full md:w-1/3 space-y-1">
-            <label htmlFor="isActive" className="block text-sm font-medium text-gray-700">Status <span className="text-red-500">*</span></label>
-            <Select defaultValue={user.isActive ? 'active' : 'inactive'} onValueChange={(val) => setValue('isActive', val)}>
-                <SelectTrigger id="isActive">
-                <SelectValue placeholder="Select Status" />
-                </SelectTrigger>
-                <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-            </Select>
-            {errors.isActive && <p className="text-red-500 text-sm">{errors.isActive.message}</p>}
-            </div>
+        <div className="flex flex-col md:flex-row gap-4">
+          <BasicInput id="phone_1" label="Phone 1" type="number" isRequired placeholder="Phone 1" register={register('phone_1')} error={errors.phone_1} model={model} onWheel={(e) => e.currentTarget.blur()} />
+          <BasicInput id="phone_2" label="Phone 2" type="number" placeholder="Phone 2" register={register('phone_2')} error={errors.phone_2} model={model} onWheel={(e) => e.currentTarget.blur()} />
         </div>
 
-        {/* Profile Picture */}
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
-          <Dropzone
-            onDrop={onDrop}
-            accept={{ 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'] }}
-            maxFiles={1}
-          >
-            {({ getRootProps, getInputProps }) => (
-              <div
-                {...getRootProps()}
-                className="border border-dashed p-4 text-center rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
-              >
-                <input {...getInputProps()} />
-                <p className="text-sm text-gray-500">Drag & drop or click to select a profile picture</p>
-
-                {preview && (
-                  <div className="mt-2 flex flex-col items-center justify-center gap-2">
-                    <Image
-                      src={preview}
-                      alt="Preview"
-                      width={100}
-                      height={100}
-                      className="rounded-md border shadow"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={
-                        (e) => {
-                          e.stopPropagation()
-                          clearImage()
-                        }
-                      }
-                    >
-                      Remove Image
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </Dropzone>
-
-          {/* Animated Error Message */}
-          <AnimatePresence>
-            {errors.profilePicture?.message && (
-              <motion.p
-                className="text-red-500 text-sm mt-1"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25 }}
-              >
-                {errors.profilePicture.message?.toString()}
-              </motion.p>
-            )}
-          </AnimatePresence>
+        <div className="flex flex-col md:flex-row gap-4">
+          <CustomSelect<FormData> id="current_status" label="Current Status" name="current_status" placeholder="Select Status" isRequired options={[{ label: 'Active', value: 'Active' }, { label: 'Inactive', value: 'Inactive' }]} error={errors.current_status} setValue={setValue} value={watch('current_status')} model={model} />
+          <CustomSelect<FormData> id="role_ids" label="Roles" name="role_ids" model={model} setValue={setValue} apiUrl="/get-options" collection="Role" labelFields={['name']} valueFields={['_id']} multiple placeholder="Select Roles" value={watch('role_ids')} error={errors.role_ids?.[0]} />
+          <CustomSelect<FormData> id="blood_group" label="Blood Group" name="blood_group" placeholder="Select Blood Group" options={bloodGroups} error={errors.blood_group} setValue={setValue} model={model} value={watch('blood_group')} defaultOption={{ label: 'None', value: '' }} />
         </div>
 
-      {/* Submit */}
-      <hr className="border-t border-gray-200" />
-      <div className="flex justify-center">
-        <Button variant="warning" type="submit" disabled={isSubmitting || submitLoading}>
-          {isSubmitting || submitLoading ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
-    </form>
+        <CustomSelect<FormData> id="permission_ids" label="Permissions" name="permission_ids" model={model} setValue={setValue} apiUrl="/get-options" collection="Permission" labelFields={['name']} valueFields={['_id']} multiple placeholder="Select Permissions" value={watch('permission_ids')} error={errors.permission_ids?.[0]} />
+
+        <div className="flex flex-col md:flex-row gap-4">
+          <DateTimeInput id="dob" label="Date of Birth" name="dob" value={watch('dob') ?? null} setValue={(field, value) => setValue(field as any, value)} error={errors.dob} placeholder="Select DOB" showTime={false} showResetButton={true} model={model} />
+          <BasicInput id="nid" label="NID" placeholder="NID" register={register('nid')} error={errors.nid} model={model} />
+        </div>
+
+        <SingleImageInput label="Profile Picture" preview={preview} onDrop={onDrop} clearImage={clearImage} error={errors.image} isRequired={false} />
+
+        <BasicTextarea id="address" label="Address" placeholder="Enter address" register={register('address')} error={errors.address} model={model} />
+        <BasicTextarea id="description" label="Description" placeholder="Enter description" register={register('description')} error={errors.description} model={model} />
+
+        <div className="flex justify-between gap-4 mt-4 border-t border-gray-300 pt-4">
+          <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>Reset</Button>
+          <Button variant="warning" type="submit" className="" disabled={submitLoading}>
+            {submitLoading ? 'Saving...' : 'Update User'}
+          </Button>
+        </div>
+      </form>
+    </motion.div>
   )
 }

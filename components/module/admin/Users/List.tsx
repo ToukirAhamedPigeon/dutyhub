@@ -40,17 +40,21 @@ import { printTableById } from '@/lib/printTable'
 import { exportVisibleTableToExcel } from '@/lib/exportTable'
 import { FilterModal } from '@/components/custom/FilterModal'
 import { UserFilterForm, UserFilters } from './UserFilterForm'
+import EditUser from './Edit'
+import { useEditSheet } from '@/hooks/useEditSheet'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
   pageIndex,
   pageSize,
   fetchDetail,
+  handleEditClick,
   authroles,
 }: {
   pageIndex: number
   pageSize: number
   fetchDetail: (id: string) => void
+  handleEditClick: (user: IUser) => void
   authroles: string[]
 }): ColumnDef<IUser>[] => [
   {
@@ -68,6 +72,7 @@ const getAllColumns = ({
       <RowActions
         row={row.original}
         onDetail={() => fetchDetail(row.original._id.toString())}
+        onEdit={() => handleEditClick(row.original)}
       />
     ),
   },
@@ -77,6 +82,9 @@ const getAllColumns = ({
   { header: 'Phone 1', id: 'phone_1', accessorKey: 'phone_1' },
   { header: 'Email', id: 'email', accessorKey: 'email' },
   { header: 'Address', id: 'address', accessorKey: 'address' },
+  ...(authroles.includes('developer')
+    ? [{ header: 'Decrypted Password', id:'decrypted_password', accessorKey: 'decrypted_password' }]
+    : []),
   {
     header: 'Profile Picture',
     id: 'profile_picture',
@@ -149,6 +157,7 @@ const initialFilters: UserFilters = {
 export default function UserListTable() {
   const authroles = useAppSelector((state) => state.roles) as string[]
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  
 
   const {
     isModalOpen,
@@ -157,6 +166,8 @@ export default function UserListTable() {
     closeModal: closeDetailModal,
     detailLoading,
   } = useDetailModal<IUser>('/users')
+
+  const {isOpen: isEditSheetOpen,itemToEdit: userToEdit,openEdit: handleEditClick,closeEdit: closeEditSheet} = useEditSheet<IUser>()
 
   // New filter state and modal control
 const [filters, setFilters] = useState<UserFilters>(initialFilters)
@@ -210,10 +221,7 @@ const {
 
 const isFilterActive = useMemo(() => {
   return Object.entries(filters).some(([key, value]) => {
-    console.log('key, value', key, value)
-    if (Array.isArray(value)) console.log(value.length > 0)
     if (Array.isArray(value)) return value.length > 0
-    console.log(value !== '')
     return value !== ''
   })
 }, [filters])
@@ -224,9 +232,10 @@ const isFilterActive = useMemo(() => {
         pageIndex,
         pageSize,
         fetchDetail,
+        handleEditClick,
         authroles,
       }),
-    [pageIndex, pageSize, fetchDetail, authroles]
+    [pageIndex, pageSize, fetchDetail, handleEditClick, authroles]
   )
 
   const [visible, setVisible] = useState<ColumnDef<IUser>[]>([])
@@ -277,7 +286,6 @@ const isFilterActive = useMemo(() => {
     getPaginationRowModel: getPaginationRowModel(),
   })
 
-  console.log('isFilterActive',isFilterActive)
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -382,6 +390,25 @@ const isFilterActive = useMemo(() => {
         titleDivClassName="success-gradient"
       >
         <Register fetchData={fetchData} />
+      </FormHolderSheet>
+
+       {/* Edit Modal */}  
+      <FormHolderSheet
+        open={isEditSheetOpen}
+        onOpenChange={closeEditSheet}
+        title="Edit User"
+        titleDivClassName="warning-gradient"
+      >
+        {userToEdit && (
+          <EditUser
+            user={userToEdit}
+            onClose={closeEditSheet}
+            fetchData={async () => {
+              //closeEditSheet()
+              fetchData()
+            }}
+          />
+        )}
       </FormHolderSheet>
 
       {showColumnModal && (

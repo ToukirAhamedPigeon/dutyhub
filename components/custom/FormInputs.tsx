@@ -78,6 +78,8 @@ interface UniqueInputProps extends InputHTMLAttributes<HTMLInputElement> {
   field: string
   watchValue: string
   uniqueErrorMessage: string
+  exceptFieldName?: string
+  exceptFieldValue?: string
 }
 
 export const UniqueInput = ({
@@ -92,6 +94,8 @@ export const UniqueInput = ({
   field,
   watchValue,
   uniqueErrorMessage,
+  exceptFieldName,
+  exceptFieldValue,
   ...rest
 }: UniqueInputProps) => {
   const t = useTranslations(model)
@@ -106,13 +110,21 @@ export const UniqueInput = ({
 
     const timer = setTimeout(async () => {
       setChecking(true)
-      const found = await checkValueExists(model, field, watchValue)
+
+      const found = await checkValueExists(
+        model,
+        field,
+        watchValue,
+        exceptFieldValue,
+        exceptFieldName
+      )
+
       setExists(found)
       setChecking(false)
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [watchValue, model, field])
+  }, [watchValue, model, field, exceptFieldName, exceptFieldValue])
 
   const getErrorMessage = () => {
     if (exists) {
@@ -127,7 +139,8 @@ export const UniqueInput = ({
   return (
     <div className="space-y-1 w-full relative">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
-        {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
+        {t(label, { default: label })}{" "}
+        {isRequired && <span className="text-red-500">*</span>}
       </label>
 
       <Input
@@ -136,7 +149,7 @@ export const UniqueInput = ({
         placeholder={placeholder && t(placeholder, { default: placeholder })}
         {...register}
         {...rest}
-        className={`${exists ? 'border-red-500' : ''} ${rest.className || ''} bg-white`}
+        className={`${exists ? "border-red-500" : ""} ${rest.className || ""} bg-white`}
       />
 
       {checking && (
@@ -364,33 +377,43 @@ export function CustomSelect<T extends Record<string, any>>({
     initialValue: value,
   });
 
+  // Combine static & dynamic options
   const allOptions = apiUrl
     ? fetchedOptions
     : defaultOption
       ? [defaultOption, ...options]
       : options;
 
-      // console.log('fetchedOptions',fetchedOptions)
-      // console.log('allOptions',allOptions)
+  // Normalize selected value(s)
+  const normalizedValue = multiple
+    ? Array.isArray(value) ? value : value ? [value] : []
+    : typeof value === 'string' ? value : '';
 
-  const currentValue = apiUrl ? selected : value;
+  const getLabel = (val: string) =>
+    allOptions.find((opt) => opt.value === val)?.label || val;
+
+  const displayValue = multiple
+    ? (normalizedValue as string[])
+        .map((val) => capitalize(getLabel(val)))
+        .join(', ')
+    : capitalize(getLabel(normalizedValue as string));
 
   const isSelected = (val: string) =>
     multiple
-      ? Array.isArray(currentValue) && currentValue.includes(val)
-      : currentValue === val;
+      ? (normalizedValue as string[]).includes(val)
+      : normalizedValue === val;
 
-    const handleChange = (val: string) => {
-      if (multiple) {
-        const prev = Array.isArray(currentValue) ? currentValue : currentValue ? [currentValue] : [];
-        const exists = prev.includes(val);
-        const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
-        setValue(name, updated as any);
-      } else {
-        setValue(name, val as any);
-        setOpen(false);
-      }
-    };
+  const handleChange = (val: string) => {
+    if (multiple) {
+      const prev = Array.isArray(normalizedValue) ? normalizedValue : [];
+      const exists = prev.includes(val);
+      const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
+      setValue(name, updated as any);
+    } else {
+      setValue(name, val as any);
+      setOpen(false);
+    }
+  };
 
   return (
     <div className="space-y-1 w-full">
@@ -405,14 +428,7 @@ export function CustomSelect<T extends Record<string, any>>({
               readOnly
               ref={inputRef}
               className="text-left cursor-pointer hover:bg-slate-100 pr-10 border border-gray-500"
-              value={
-                multiple
-                  ? allOptions
-                      .filter((opt) => (currentValue as string[])?.includes(opt.value))
-                      .map((opt) => capitalize(opt.label))
-                      .join(', ')
-                  : allOptions.find((opt) => opt.value === currentValue)?.label || ''
-              }
+              value={displayValue}
               placeholder={t(placeholder, { default: placeholder })}
               onClick={() => setOpen(true)}
             />
@@ -438,7 +454,7 @@ export function CustomSelect<T extends Record<string, any>>({
                 </CommandItem>
               )}
               {!loading &&
-                allOptions.map((opt,i) => (
+                allOptions.map((opt, i) => (
                   <CommandItem
                     key={opt.value || i}
                     onSelect={() => handleChange(opt.value)}
@@ -463,6 +479,7 @@ export function CustomSelect<T extends Record<string, any>>({
     </div>
   );
 }
+
 
 //Single Image Upload
 
