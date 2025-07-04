@@ -238,7 +238,7 @@ const isFilterActive = useMemo(() => {
   })
 }, [filters])
 
-const {dialogOpen,confirmDelete,cancelDelete,handleDelete} = useDeleteWithConfirm({
+const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDeleteWithConfirm({
   endpoint: '/users',
   onSuccess: fetchData,
 })
@@ -464,7 +464,8 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete} = useDeleteWithConfir
         onConfirm={handleDelete}
         title="Confirm Deletion"
         description="Are you sure you want to delete this user?"
-        confirmLabel="Delete"
+        confirmLabel={deleteLoading ? 'Deleting...' : 'Delete'}
+        loading={deleteLoading}
       />
 
     </motion.div>

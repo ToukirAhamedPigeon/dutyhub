@@ -10,6 +10,7 @@ type UseDeleteWithConfirmProps = {
 }
 
 export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfirmProps) {
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -25,29 +26,30 @@ export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfi
 
   const handleDelete = async () => {
     if (!itemToDelete) return
-
+    setDeleteLoading(true) // start loading
+  
     try {
-      const headers = await authorizationHeader();
-      const res = await api.delete(`${endpoint}/${itemToDelete}`, {headers})
-
+      const headers = await authorizationHeader()
+      const res = await api.delete(`${endpoint}/${itemToDelete}`, { headers })
+  
       const { status, message } = res.data
-
+  
       if (status === 'deleted') {
         toast.success(message, {
           style: {
             background: 'green',
             color: 'white',
           },
-        });
+        })
       } else if (status === 'inactive') {
         toast.warning(message, {
           style: {
             background: 'orange',
             color: 'white',
           },
-        });
+        })
       }
-
+  
       onSuccess?.()
     } catch (error) {
       console.error('Delete error:', error)
@@ -57,6 +59,7 @@ export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfi
         toast.error('Error deleting item')
       }
     } finally {
+      setDeleteLoading(false) // end loading
       cancelDelete()
     }
   }
@@ -66,5 +69,6 @@ export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfi
     confirmDelete,
     cancelDelete,
     handleDelete,
+    deleteLoading,
   }
 }
