@@ -1,3 +1,5 @@
+import moment from 'moment-timezone';
+
 export function formatDateTime(dateStr: string): string {
     const date = new Date(dateStr)
     const day = date.getDate().toString().padStart(2, '0')
@@ -95,5 +97,9 @@ export function formatDateTime(dateStr: string): string {
       pad(createdAt.getMinutes()) +
       pad(createdAt.getSeconds())
     return parseInt(createdAtId)
+  }
+
+  export function getCustomDateTime(utcDate: string, format:string="YYYY-MM-DD", tz:string="Asia/Dhaka"): string {
+        return moment.utc(utcDate).tz(tz).format(format);
   }
   

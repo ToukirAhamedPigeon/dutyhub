@@ -122,6 +122,10 @@ export async function POST(req: NextRequest) {
         })
       
         newUser.image = imageUrl  
+        newUser.created_by = session.user.id
+        newUser.created_at = new Date()
+        newUser.updated_by = session.user.id
+        newUser.updated_at = new Date()
         await newUser.save()
       }
 

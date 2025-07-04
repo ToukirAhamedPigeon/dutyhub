@@ -218,15 +218,18 @@ export async function POST(req: NextRequest) {
       const roles = userRoleMap[uid] || { ids: [], names: [] };
       const perms = userPermissionMap[uid] || { ids: [], names: [] };
 
-      const role_ids = roles.ids.map((id, index) => ({
-        value: id,
-        label: roles.names[index] || '',
-      }));
+      // const role_ids = roles.ids.map((id, index) => ({
+      //   value: id,
+      //   label: roles.names[index] || '',
+      // }));
 
-      const permission_ids = perms.ids.map((id, index) => ({
-        value: id,
-        label: perms.names[index] || '',
-      }));
+      // const permission_ids = perms.ids.map((id, index) => ({
+      //   value: id,
+      //   label: perms.names[index] || '',
+      // }));
+
+      const role_ids = roles.ids; 
+      const permission_ids = perms.ids; 
 
       const allRolePermissionNamesSet = new Set<string>();
       roles.ids.forEach(rid => {

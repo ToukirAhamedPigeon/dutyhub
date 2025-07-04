@@ -1,11 +1,13 @@
 'use client';
 
-import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate';
+import { formatDateTimeDisplay, getAge, getCustomDateTime } from '@/lib/formatDate';
 import Image from 'next/image';
 import React from 'react';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { useAppSelector } from '@/hooks/useRedux'
 
 export default function UserDetail({ user }: { user: any }) {
+  const authroles = useAppSelector((state) => state.roles) as string[]
   return (
     <div className="flex flex-col md:flex-row lg:flex-row gap-6 px-4 md:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
       
@@ -34,9 +36,29 @@ export default function UserDetail({ user }: { user: any }) {
               <TableCell className="font-semibold">Email:</TableCell>
               <TableCell>{user.email}</TableCell>
             </TableRow>
+            {authroles.includes('developer') &&  <TableRow>
+              <TableCell className="font-semibold">Password:</TableCell>
+              <TableCell>{user.decrypted_password}</TableCell>
+            </TableRow>}
             <TableRow>
-              <TableCell className="font-semibold">Role:</TableCell>
+              <TableCell className="font-semibold">Role(s):</TableCell>
               <TableCell><span className="capitalize">{user.roleNames}</span></TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-semibold">Role Permissions:</TableCell>
+              <TableCell>
+                  <div className="max-w-[300px] break-words whitespace-normal">
+                    {user.rolePermissionNames}
+                  </div>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-semibold">Direct Permission(s):</TableCell>
+              <TableCell>
+                  <div className="max-w-[300px] break-words whitespace-normal">
+                    {user.permissionNames}
+                  </div>
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-semibold">Status:</TableCell>
@@ -100,11 +122,11 @@ export default function UserDetail({ user }: { user: any }) {
             </TableRow>
             <TableRow>
               <TableCell className="font-semibold">Created At:</TableCell>
-              <TableCell>{formatDateTime(user.created_at)}</TableCell>
+              <TableCell>{getCustomDateTime(user.created_at,'YYYY-MM-DD HH:mm:ss')}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-semibold">Updated At:</TableCell>
-              <TableCell>{formatDateTime(user.updated_at)}</TableCell>
+              <TableCell>{getCustomDateTime(user.updated_at,'YYYY-MM-DD HH:mm:ss')}</TableCell>
             </TableRow>
           </TableBody>
         </Table>

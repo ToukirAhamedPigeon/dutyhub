@@ -27,7 +27,7 @@ import {
   IndexCell,
 } from '@/components/custom/Table'
 import { Badge } from '@/components/ui/badge'
-import { formatDateTime, formatDateTimeDisplay, getAge } from '@/lib/formatDate'
+import { formatDateTimeDisplay, getAge, getCustomDateTime } from '@/lib/formatDate'
 import { capitalize } from '@/lib/helpers'
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
@@ -53,7 +53,7 @@ const getAllColumns = ({
 }: {
   pageIndex: number
   pageSize: number
-  fetchDetail: (id: string) => void
+  fetchDetail: (itemOrId: IUser | string) => void
   handleEditClick: (user: IUser) => void
   authroles: string[]
 }): ColumnDef<IUser>[] => [
@@ -71,7 +71,7 @@ const getAllColumns = ({
     cell: ({ row }) => (
       <RowActions
         row={row.original}
-        onDetail={() => fetchDetail(row.original._id.toString())}
+        onDetail={() => fetchDetail(row.original)}
         onEdit={() => handleEditClick(row.original)}
       />
     ),
@@ -132,13 +132,19 @@ const getAllColumns = ({
     header: 'Created At',
     accessorKey: 'created_at',
     id: 'created_at',
-    cell: ({ getValue }) => formatDateTime(getValue() as string),
+    cell: ({ getValue }) => getCustomDateTime(getValue() as string,'YYYY-MM-DD HH:mm:ss'),
+    meta: {
+      customClassName: 'text-center min-w-[150px] whitespace-nowrap',
+    },
   },
   {
     header: 'Updated At',
     accessorKey: 'updated_at',
     id: 'updated_at',
-    cell: ({ getValue }) => formatDateTime(getValue() as string),
+    cell: ({ getValue }) => getCustomDateTime(getValue() as string,'YYYY-MM-DD HH:mm:ss'),
+    meta: {
+      customClassName: 'text-center min-w-[150px] whitespace-nowrap',
+    },
   },
 ]
 

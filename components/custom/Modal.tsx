@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ModalProps = {
@@ -12,6 +12,7 @@ type ModalProps = {
   children: React.ReactNode;
   titleClassName?: string;
   bgColor?: string;
+  showPrintButton?: boolean; // Optional prop for print button
 };
 
 const Modal: React.FC<ModalProps> = ({
@@ -21,8 +22,52 @@ const Modal: React.FC<ModalProps> = ({
   children,
   titleClassName,
   bgColor = 'white',
+  showPrintButton = true,
 }) => {
+  const printRef = useRef<HTMLDivElement>(null);
+
   if (!isOpen) return null;
+
+  const handlePrint = () => {
+    const printContents = printRef.current?.innerHTML;
+    if (!printContents) return;
+
+    const newWindow = window.open('', '', 'width=800,height=600');
+    if (newWindow) {
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>${title}</title>
+            <style>
+              body {
+                font-family: sans-serif;
+                padding: 20px;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+                margin-bottom: 20px;
+              }
+              h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+              }
+            </style>
+          </head>
+          <body>
+            <h2>${title}</h2>
+            ${printContents}
+            <script>
+              window.onload = function() {
+                window.print();
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      newWindow.document.close();
+    }
+  };
 
   return (
     <motion.div
@@ -45,7 +90,7 @@ const Modal: React.FC<ModalProps> = ({
             : 'bg-gradient-to-t from-[#fdfbfb] via-white to-[#ebedee]'
         )}
         onClick={(e) => e.stopPropagation()}
-        style={{ display: 'flex', flexDirection: 'column' }} // enable flex column for sticky header + scrollable body
+        style={{ display: 'flex', flexDirection: 'column' }}
       >
         {/* Sticky Header */}
         <div
@@ -55,19 +100,31 @@ const Modal: React.FC<ModalProps> = ({
           )}
         >
           <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition"
-            aria-label="Close modal"
-          >
-            <X className='cursor-pointer' size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            {showPrintButton && (
+              <button
+                onClick={handlePrint}
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
+                aria-label="Print modal"
+              >
+                <Printer size={20} />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition"
+              aria-label="Close modal"
+            >
+              <X className="cursor-pointer" size={24} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body - Scrollable */}
         <div
           className="px-6 py-4 overflow-y-auto"
-          style={{ flexGrow: 1, maxHeight: 'calc(100vh - 150px)' }} // fill remaining height & scroll inside
+          style={{ flexGrow: 1, maxHeight: 'calc(100vh - 150px)' }}
+          ref={printRef}
         >
           {children}
         </div>

@@ -8,7 +8,7 @@ import ModelRole from '@/lib/database/models/modelRole.model';
 import { IRole, IUser } from '@/types';
 import Role from '@/lib/database/models/role.model';
 import User from '@/lib/database/models/user.model'
-import { uploadAndResizeImage } from '@/lib/imageUploder'
+import { deleteImageFromUrl, uploadAndResizeImage } from '@/lib/imageUploder'
 import { omitFields } from '@/lib/helpers'
 import { logAction } from '@/lib/logger'
 import { EActionType } from '@/types'
@@ -74,7 +74,9 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
         }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
+  const { id } = await params;
+  const userId = id
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.split(' ')[1]
 
@@ -104,13 +106,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     await dbConnect()
-    const userId = params.id
     const formData = await req.formData()
 
     const user = await User.findById(userId)
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 })
     }
+    const originalUser = user.toObject();
 
     const updatableFields = [
       'name',
@@ -137,7 +139,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const isImageDeleted = formData.get('isImageDeleted') === 'true'
 
     if (isImageDeleted && user.image) {
-      user.image = undefined // optionally also delete file from server or cloud here
+      await deleteImageFromUrl(user.image)
+      user.image = undefined
     }
 
     if (file && file.size > 0 && file.type.startsWith('image/')) {
@@ -149,10 +152,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         height: 400,
         baseName: user.name,
       })
-
+      if(user.image){
+        await deleteImageFromUrl(user.image)
+      }
       user.image = imageUrl
     }
-
+    user.updated_by = session.user.id
+    user.updated_at = new Date()
     await user.save()
 
     // Handle roles and permissions
@@ -166,11 +172,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     await logAction({
       detail: `User updated: ${user.name}`,
       changes: JSON.stringify({
-        after: omitFields(user.toObject?.() || user, ['password', 'decrypted_password', '__v']),
+        before: omitFields(originalUser, ['password', 'decrypted_password', 'createdAtId', '__v']),
+        after: omitFields(user.toObject?.() || user, ['password', 'decrypted_password', 'createdAtId', '__v']),
       }),
       actionType: EActionType.UPDATE,
       collectionName: 'User',
-      objectId: user._id.toString(),
+      objectId: userId,
     })
 
     return NextResponse.json({

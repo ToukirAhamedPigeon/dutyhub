@@ -23,12 +23,26 @@ export const schema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmed_password: z.string().min(1, 'Confirmed password is required'),
   image: z
-  .instanceof(File)
-  .optional()
+  .any()
+  .transform((file) => {
+    // If no file selected or it's an empty file from canceled picker, treat it as undefined
+    if (
+      !file ||
+      !(file instanceof File) ||
+      file.size === 0 ||
+      file.name === ""
+    ) {
+      return undefined
+    }
+    return file
+  })
   .refine(
     (file) => !file || file.type.startsWith("image/"),
-    { message: "Only image files are allowed" }
-  ),
+    {
+      message: "Only image files are allowed",
+    }
+  )
+  .optional(),
   bp_no: z.string().optional(),
   phone_1: z.string().min(11, 'Phone Number is required and at least 11 Digits').optional(),
   phone_2: z.string().optional(),

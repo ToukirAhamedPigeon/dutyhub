@@ -1,11 +1,12 @@
 
 import sharp from 'sharp'
+import { getCustomDateTime } from '@/lib/formatDate';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
 
 function generateSafeFileName(ext: string, width: number, height: number, baseName?: string): string {
   const now = new Date();
-  const timestamp = now.toISOString().replace(/[:.-]/g, '').slice(0, 15); // e.g. 20250627T154530
+  const timestamp = getCustomDateTime(now.toISOString(),'YYYYMMDDHHmmss') // e.g. 20250627T154530
 
   const safeBaseName = baseName
     ? baseName
@@ -81,6 +82,7 @@ export async function uploadAndResizeImage({
   const formData = new FormData();
   formData.append('image', new File([resizedBuffer], fileName, { type: file.type }));
   formData.append('folder', modelFolder);
+  formData.append('fileName', fileName);
 
   const uploadResponse = await fetch('https://dutyhubfiles.pigeonic.com/api/upload.php', {
     method: 'POST',
@@ -102,15 +104,32 @@ export async function uploadAndResizeImage({
   };
 
 }
-// export async function deleteImage(imageId: string) {
-//   const imageRecord = await Image.findById(imageId)
-//   if (imageRecord) {
-//     const imagePath = path.join(process.cwd(), 'public', imageRecord.imageUrl)
-//     try {
-//       await fs.promises.unlink(imagePath);
-//     } catch (err) {
-//       console.error('File deletion error:', err);
-//     }
-//     await Image.findByIdAndDelete(imageId);
-//   }
-// }
+export async function deleteImageFromUrl(imageUrl: string): Promise<void> {
+  try {
+    // Example: https://dutyhubfiles.pigeonic.com/uploads/images/users/685fa65087be1.jpg
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split('/'); // ["", "uploads", "images", "users", "685fa65087be1.jpg"]
+
+    const folder = pathParts[pathParts.length - 2]; // "users"
+    const fileName = pathParts[pathParts.length - 1]; // "685fa65087be1.jpg"
+
+    const deleteResponse = await fetch('https://dutyhubfiles.pigeonic.com/api/delete.php', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.CPANEL_UPLOAD_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fileName, folder }),
+    });
+
+    const result = await deleteResponse.json();
+
+    if (!deleteResponse.ok || !result?.success) {
+      throw new Error(result?.error || 'Image deletion failed');
+    }
+  } catch (error) {
+    console.error('Image deletion error:', error);
+    throw error;
+  }
+}
+

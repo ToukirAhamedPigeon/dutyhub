@@ -1,6 +1,6 @@
 import React,{ useEffect, useState, useRef, InputHTMLAttributes, forwardRef } from "react"
 import { Input } from "@/components/ui/input";
-import {  Path, FieldError, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
+import {  Path, PathValue, FieldError, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from "framer-motion"
 import { checkValueExists } from "@/lib/validations"
@@ -446,7 +446,7 @@ export function CustomSelect<T extends Record<string, any>>({
     : (value as any)?.value || "";
 
   const getLabel = (val: string) =>
-    allOptions.find((opt) => opt.value === val)?.label || val;
+    allOptions.find((opt) => opt.value === val)?.label || '';
 
   const displayValue = multiple
     ? (normalizedValue as string[]).map((val) => capitalize(getLabel(val))).join(", ")
@@ -457,17 +457,18 @@ export function CustomSelect<T extends Record<string, any>>({
       ? (normalizedValue as string[]).includes(val)
       : normalizedValue === val;
 
-  const handleChange = (val: string) => {
-    if (multiple) {
-      const prev = Array.isArray(normalizedValue) ? normalizedValue : [];
-      const exists = prev.includes(val);
-      const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
-      setValue(name, updated as any);
-    } else {
-      setValue(name, val as any);
-      setOpen(false);
-    }
-  };
+    const handleChange = (val: string) => {
+      if (multiple) {
+        const prev = Array.isArray(normalizedValue) ? normalizedValue : [];
+        const exists = prev.includes(val);
+        const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
+        setValue(name, updated as PathValue<T, typeof name>);
+      } else {
+        setValue(name, val as PathValue<T, typeof name>);
+        setOpen(false);
+      }
+    };
+
   return (
     <div className="space-y-1 w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
@@ -535,8 +536,6 @@ export function CustomSelect<T extends Record<string, any>>({
     </div>
   );
 }
-
-
 
 //Single Image Upload
 

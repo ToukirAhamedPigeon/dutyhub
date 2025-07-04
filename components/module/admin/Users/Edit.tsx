@@ -27,11 +27,26 @@ const schema = z.object({
   username: z.string().min(1, 'Username is required'),
   email: z.string().email({ message: 'Invalid email' }),
   image: z
-    .instanceof(File)
-    .optional()
-    .refine((file) => !file || file.type.startsWith('image/'), {
-      message: 'Only image files are allowed',
-    }),
+  .any()
+  .transform((file) => {
+    // If no file selected or it's an empty file from canceled picker, treat it as undefined
+    if (
+      !file ||
+      !(file instanceof File) ||
+      file.size === 0 ||
+      file.name === ""
+    ) {
+      return undefined
+    }
+    return file
+  })
+  .refine(
+    (file) => !file || file.type.startsWith("image/"),
+    {
+      message: "Only image files are allowed",
+    }
+  )
+  .optional(),
   bp_no: z.string().optional(),
   phone_1: z.string().min(11, 'Phone Number must be at least 11 digits').optional(),
   phone_2: z.string().optional(),
@@ -132,7 +147,9 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
 
   // console.log('User',user)
   // console.log('Role Ids',user.role_ids)
-  // console.log('watch Role Ids',watch('role_ids'))
+  // console.log('watch Permission Ids',watch('permission_ids'))
+
+
 
   return (
     <motion.div
@@ -198,11 +215,11 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
 
         <div className="flex flex-col md:flex-row gap-4">
           <CustomSelect<FormData> id="current_status" label="Current Status" name="current_status" placeholder="Select Status" isRequired options={[{ label: 'Active', value: 'Active' }, { label: 'Inactive', value: 'Inactive' }]} error={errors.current_status} setValue={setValue} value={watch('current_status')} model={model} />
-          <CustomSelect<FormData> id="role_ids" label="Roles" name="role_ids" model={model} setValue={setValue} apiUrl="/get-options" collection="Role" labelFields={['name']} valueFields={['_id']} multiple placeholder="Select Roles" value={watch('role_ids')} error={errors.role_ids?.[0]} />
+          <CustomSelect<FormData> id="role_ids" label="Roles" name="role_ids" model={model} setValue={setValue} apiUrl="/get-options" collection="Role" labelFields={['name']} valueFields={['_id']} multiple placeholder="Select Roles" value={watch('role_ids')?.map((v: any) => typeof v === 'object' ? v.value : v)} error={errors.role_ids?.[0]} />
           <CustomSelect<FormData> id="blood_group" label="Blood Group" name="blood_group" placeholder="Select Blood Group" options={bloodGroups} error={errors.blood_group} setValue={setValue} model={model} value={watch('blood_group')} defaultOption={{ label: 'None', value: '' }} />
         </div>
 
-        <CustomSelect<FormData> id="permission_ids" label="Permissions" name="permission_ids" model={model} setValue={setValue} apiUrl="/get-options" collection="Permission" labelFields={['name']} valueFields={['_id']} multiple placeholder="Select Permissions" value={watch('permission_ids')} error={errors.permission_ids?.[0]} />
+        <CustomSelect<FormData> id="permission_ids" label="Permissions" name="permission_ids" model={model} setValue={setValue} apiUrl="/get-options" collection="Permission" labelFields={['name']} valueFields={['_id']} multiple placeholder="Select Permissions" value={watch('permission_ids')?.map((v: any) => typeof v === 'object' ? v.value : v)} error={errors.permission_ids?.[0]} />
 
         <div className="flex flex-col md:flex-row gap-4">
           <DateTimeInput id="dob" label="Date of Birth" name="dob" value={watch('dob') ?? null} setValue={(field, value) => setValue(field as any, value)} error={errors.dob} placeholder="Select DOB" showTime={false} showResetButton={true} model={model} />
