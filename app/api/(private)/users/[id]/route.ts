@@ -4,19 +4,16 @@ import { dbConnect } from '@/lib/database/mongoose';
 import { Types } from 'mongoose'
 import { verifyAccessToken } from '@/lib/jwt';
 import { getServerSession } from 'next-auth';
-// import Log from '@/models/Log'
-import fs from 'fs'
-import path from 'path'
-// import { logAction } from '@/lib/logger'
-// import { EActionType, EModelType, EUserRole } from '@/types'
-import bcrypt from 'bcryptjs'
-// import { deleteImage, uploadAndResizeImage } from '@/lib/imageUploder'
-import { getCreatedAtId } from '@/lib/formatDate'
-import { omitFields } from '@/lib/helpers'
-import User from '@/lib/database/models/user.model';
 import ModelRole from '@/lib/database/models/modelRole.model';
 import { IRole, IUser } from '@/types';
 import Role from '@/lib/database/models/role.model';
+import User from '@/lib/database/models/user.model'
+import { uploadAndResizeImage } from '@/lib/imageUploder'
+import { omitFields } from '@/lib/helpers'
+import { logAction } from '@/lib/logger'
+import { EActionType } from '@/types'
+import { customAssignPermissionsToModelBatch, customAssignRolesToModelBatch } from '@/lib/authorization'
+import { ObjectId } from 'mongoose'
 
 
 export async function GET(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
@@ -76,6 +73,122 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
           return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
         }
 }
+
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const authHeader = req.headers.get('authorization')
+  const token = authHeader?.split(' ')[1]
+
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const decoded = verifyAccessToken(token)
+    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
+      return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 })
+    }
+
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user || !session.user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userPermissionsCookie = req.cookies.get('user-permissions')?.value
+    if (!userPermissionsCookie) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userPermissions: string[] = JSON.parse(userPermissionsCookie)
+    if (!userPermissions.includes('manage_users')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    await dbConnect()
+    const userId = params.id
+    const formData = await req.formData()
+
+    const user = await User.findById(userId)
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 })
+    }
+
+    const updatableFields = [
+      'name',
+      'username',
+      'email',
+      'current_status',
+      'dob',
+      'bp_no',
+      'phone_1',
+      'phone_2',
+      'address',
+      'blood_group',
+      'nid',
+      'description',
+    ]
+
+    for (const field of updatableFields) {
+      const val = formData.get(field)
+      if (val !== null) user[field] = val
+    }
+
+    // Handle image upload or deletion
+    const file = formData.get('image') as File | null
+    const isImageDeleted = formData.get('isImageDeleted') === 'true'
+
+    if (isImageDeleted && user.image) {
+      user.image = undefined // optionally also delete file from server or cloud here
+    }
+
+    if (file && file.size > 0 && file.type.startsWith('image/')) {
+      const { imageUrl } = await uploadAndResizeImage({
+        file,
+        modelFolder: 'users',
+        isResize: true,
+        width: 400,
+        height: 400,
+        baseName: user.name,
+      })
+
+      user.image = imageUrl
+    }
+
+    await user.save()
+
+    // Handle roles and permissions
+    const role_ids = JSON.parse(formData.get('role_ids') as string || '[]') as string[]
+    const permission_ids = JSON.parse(formData.get('permission_ids') as string || '[]') as string[]
+
+    const newAssignedRoleInfos = customAssignRolesToModelBatch(user._id.toString(), role_ids, 'User')
+    const newAssignedPermissionInfos = customAssignPermissionsToModelBatch(user._id.toString(), permission_ids, 'User')
+
+    // Log the update
+    await logAction({
+      detail: `User updated: ${user.name}`,
+      changes: JSON.stringify({
+        after: omitFields(user.toObject?.() || user, ['password', 'decrypted_password', '__v']),
+      }),
+      actionType: EActionType.UPDATE,
+      collectionName: 'User',
+      objectId: user._id.toString(),
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'User updated successfully',
+      user,
+      newAssignedRoleInfos,
+      newAssignedPermissionInfos,
+    })
+  } catch (err: any) {
+    console.error('User Update Error:', err)
+    return NextResponse.json(
+      { success: false, message: err?.message || 'Update failed' },
+      { status: err.name === 'JsonWebTokenError' ? 403 : 500 }
+    )
+  }
+}
+
 
 // export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
 //   const { id } = await params;

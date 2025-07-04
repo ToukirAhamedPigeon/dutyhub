@@ -359,8 +359,8 @@ export function CustomSelect<T extends Record<string, any>>({
   multiple = false,
 }: CustomSelectProps<T>) {
   const t = useTranslations(model);
-  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -381,6 +381,7 @@ export function CustomSelect<T extends Record<string, any>>({
     optionLabelKeys,
     optionLabelSeparator,
     initialValue: value,
+    isOpen:open
   });
 
   // 🔁 Ensure passed-in value objects are included in options
@@ -467,7 +468,6 @@ export function CustomSelect<T extends Record<string, any>>({
       setOpen(false);
     }
   };
-
   return (
     <div className="space-y-1 w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">

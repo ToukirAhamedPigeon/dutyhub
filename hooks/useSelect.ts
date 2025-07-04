@@ -19,6 +19,7 @@ type UseSelectParams = {
   optionLabelKeys?: string[];
   optionLabelSeparator?: string;
   initialValue?: string | string[] | { value: string; label: string } | { value: string; label: string }[];
+  isOpen: boolean;
 };
 
 // 🔧 Helper to normalize initialValue to string or string[]
@@ -45,6 +46,7 @@ export function useSelect({
   optionLabelKeys = ["name"],
   optionLabelSeparator = " ",
   initialValue,
+  isOpen
 }: UseSelectParams) {
   const [options, setOptions] = useState<OptionType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,15 +74,19 @@ export function useSelect({
 
   const mapOption = (item: Record<string, any>): OptionType => ({
     ...item,
-    value: item[optionValueKey],
-    label: getOptionLabel(item),
+    value: item['value'],
+    label: item['label'],
   });
 
   // ✅ Fetch options when search or initialValue is present
   useEffect(() => {
     if (!apiUrl) return;
 
-    const shouldFetch = debouncedSearch || normalizedInitialValue;
+    const shouldFetch = Boolean(isOpen || debouncedSearch || normalizedInitialValue);
+    // console.log('isOpen',isOpen);
+    // console.log('normalizedInitialValue',normalizedInitialValue);
+    // console.log('debouncedSearch',debouncedSearch);
+    // console.log('shouldFetch',shouldFetch);
     if (!shouldFetch) return;
 
     const fetchOptions = async () => {
@@ -93,7 +99,7 @@ export function useSelect({
               })),
               ...filter,
             }
-          : normalizedInitialValue
+          : normalizedInitialValue && !isOpen
           ? {
               [optionValueKey]: {
                 $in: Array.isArray(normalizedInitialValue)
@@ -124,7 +130,11 @@ export function useSelect({
           }
         );
 
+        // console.log('res.data',res.data);
+
         const mapped = (res.data || []).map(mapOption);
+
+        // console.log('mapped',mapped);
 
         setOptions((prev) => {
           const all = [...prev, ...mapped];
@@ -143,7 +153,7 @@ export function useSelect({
     };
 
     fetchOptions();
-  }, [debouncedSearch, JSON.stringify(filter), apiUrl, JSON.stringify(normalizedInitialValue)]);
+  }, [isOpen,debouncedSearch, JSON.stringify(filter), apiUrl, JSON.stringify(normalizedInitialValue)]);
 
   // ✅ Pre-select initial value(s)
   useEffect(() => {

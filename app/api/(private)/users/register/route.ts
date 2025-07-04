@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { authOptions } from '@/app/api/(public)/auth/[...nextauth]/route'
 import { getServerSession } from 'next-auth'
 import { verifyAccessToken } from '@/lib/jwt'
@@ -12,7 +12,7 @@ import bcrypt from 'bcryptjs'
 import { EActionType } from '@/types'
 import { customAssignPermissionsToModelBatch, customAssignRolesToModelBatch } from '@/lib/authorization'
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.split(' ')[1]
 
@@ -25,10 +25,17 @@ export async function POST(req: Request) {
     if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
       return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 })
     }
-
     const session = await getServerSession(authOptions)
     if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userPermissionsCookie = req.cookies.get('user-permissions')?.value;
+    if (!userPermissionsCookie) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userPermissions: string[] = JSON.parse(userPermissionsCookie);
+    if (!userPermissions.includes('manage_users')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await dbConnect();

@@ -75,20 +75,11 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
     defaultValues: {
       ...user,
       dob: user.dob ? new Date(user.dob) : undefined,
-      image: undefined,
+      image: user.image,
     },
   })
 
-  const { preview, clearImage, onDrop } = useProfilePicture(setValue, setError, 'image', watch('image'))
-
-  // useEffect(() => {
-  //   if (user) {
-  //     reset({
-  //       ...user,
-  //       role_ids: user.role_ids?.map((r:any) => typeof r === 'string' ? r : r._id) || [],
-  //     });
-  //   }
-  // }, [user]);
+  const { preview, clearImage, onDrop, isImageDeleted } = useProfilePicture(setValue, setError, 'image', watch('image'))
 
   const onSubmit = async (data: FormData) => {
     setSubmitLoading(true)
@@ -102,6 +93,7 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
       formData.append('dob', data.dob?.toISOString() ?? '')
 
       if (data.image) formData.append('image', data.image)
+      formData.append('isImageDeleted', isImageDeleted ? 'true' : 'false')
       if (data.bp_no) formData.append('bp_no', data.bp_no)
       if (data.phone_1) formData.append('phone_1', data.phone_1)
       if (data.phone_2) formData.append('phone_2', data.phone_2)
