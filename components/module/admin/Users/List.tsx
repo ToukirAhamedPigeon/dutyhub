@@ -42,6 +42,8 @@ import { FilterModal } from '@/components/custom/FilterModal'
 import { UserFilterForm, UserFilters } from './UserFilterForm'
 import EditUser from './Edit'
 import { useEditSheet } from '@/hooks/useEditSheet'
+import ConfirmDialog from '@/components/custom/ConfirmDialog'
+import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
@@ -49,12 +51,14 @@ const getAllColumns = ({
   pageSize,
   fetchDetail,
   handleEditClick,
+  confirmDelete,
   authroles,
 }: {
   pageIndex: number
   pageSize: number
   fetchDetail: (itemOrId: IUser | string) => void
   handleEditClick: (user: IUser) => void
+  confirmDelete: (id: string) => void
   authroles: string[]
 }): ColumnDef<IUser>[] => [
   {
@@ -73,6 +77,7 @@ const getAllColumns = ({
         row={row.original}
         onDetail={() => fetchDetail(row.original)}
         onEdit={() => handleEditClick(row.original)}
+        onDelete={() => confirmDelete(row.original._id.toString())}
       />
     ),
   },
@@ -179,6 +184,7 @@ export default function UserListTable() {
 const [filters, setFilters] = useState<UserFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
 
+
 const {
   data,
   totalCount,
@@ -232,6 +238,11 @@ const isFilterActive = useMemo(() => {
   })
 }, [filters])
 
+const {dialogOpen,confirmDelete,cancelDelete,handleDelete} = useDeleteWithConfirm({
+  endpoint: '/users',
+  onSuccess: fetchData,
+})
+
   const allColumns = useMemo(
     () =>
       getAllColumns({
@@ -240,6 +251,7 @@ const isFilterActive = useMemo(() => {
         fetchDetail,
         handleEditClick,
         authroles,
+        confirmDelete,
       }),
     [pageIndex, pageSize, fetchDetail, handleEditClick, authroles]
   )
@@ -443,6 +455,16 @@ const isFilterActive = useMemo(() => {
             onClose={() => setFilterModalOpen(false)}
           />
         )}
+      />
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={dialogOpen}
+        onCancel={cancelDelete}
+        onConfirm={handleDelete}
+        title="Confirm Deletion"
+        description="Are you sure you want to delete this user?"
+        confirmLabel="Delete"
       />
 
     </motion.div>

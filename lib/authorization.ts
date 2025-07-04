@@ -399,6 +399,40 @@ export async function removeModelRolesBatch(
   return results;
 }
 
+export async function removeRolesOfModelBatch(
+  modelId: string,
+  modelType = "User"
+) {
+  await dbConnect();
+
+  const result = await ModelRole.deleteMany({
+    model_id: modelId,
+    model_type: modelType,
+  });
+
+  return {
+    deletedCount: result.deletedCount || 0,
+    success: result.deletedCount > 0,
+  };
+}
+
+export async function removePermissionsOfModelBatch(
+  modelId: string,
+  modelType = "User"
+) {
+  await dbConnect();
+
+  const result = await ModelPermission.deleteMany({
+    model_id: modelId,
+    model_type: modelType,
+  });
+
+  return {
+    deletedCount: result.deletedCount || 0,
+    success: result.deletedCount > 0,
+  };
+}
+
 export async function removeRolePermissionsBatch(permissionIds: string[], roleId: string) {
   const results = [];
 

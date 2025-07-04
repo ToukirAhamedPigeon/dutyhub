@@ -2,6 +2,7 @@ import { useState } from 'react'
 import api from '@/lib/axios'
 import { AxiosError } from 'axios'
 import { toast } from 'sonner'
+import { authorizationHeader } from '@/lib/tokens';
 
 type UseDeleteWithConfirmProps = {
   endpoint: string
@@ -9,8 +10,6 @@ type UseDeleteWithConfirmProps = {
 }
 
 export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfirmProps) {
-  const authUser = localStorage.getItem('authUser')
-  const token = JSON.parse(authUser || '{}').token
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -28,9 +27,8 @@ export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfi
     if (!itemToDelete) return
 
     try {
-      const res = await api.delete(`${endpoint}/${itemToDelete}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const headers = await authorizationHeader();
+      const res = await api.delete(`${endpoint}/${itemToDelete}`, {headers})
 
       const { status, message } = res.data
 
