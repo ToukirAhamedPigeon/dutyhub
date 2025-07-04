@@ -33,9 +33,19 @@ export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfi
       const { status, message } = res.data
 
       if (status === 'deleted') {
-        toast.success('Deleted successfully')
+        toast.success(message, {
+          style: {
+            background: 'green',
+            color: 'white',
+          },
+        });
       } else if (status === 'inactive') {
-        toast.warning('Has activity, made inactive')
+        toast.warning(message, {
+          style: {
+            background: 'orange',
+            color: 'white',
+          },
+        });
       }
 
       onSuccess?.()

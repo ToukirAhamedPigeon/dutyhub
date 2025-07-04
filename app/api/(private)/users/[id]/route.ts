@@ -270,7 +270,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       }),
     });
 
-    return NextResponse.json({ success: true, message: 'User deleted successfully' });
+    return NextResponse.json({ success: true, status: 'deleted', message: 'User deleted successfully' });
 
   } catch (err: any) {
     console.error('Delete User Error:', err);

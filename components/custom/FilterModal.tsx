@@ -82,7 +82,7 @@ export function FilterModal<T>({
           <Button variant="outline" onClick={handleReset}>
             Reset
           </Button>
-          <Button onClick={handleApply} disabled={!isFilterApplied()}>
+          <Button onClick={handleApply}>
             Apply Filters
           </Button>
           <Button variant="destructive" onClick={onClose}>
