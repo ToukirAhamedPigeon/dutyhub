@@ -129,28 +129,45 @@ export async function POST(req: NextRequest) {
       modelRoles = modelRoles.filter((mr) => matchedUserIds.includes(mr.model_id.toString()));
     }
 
-    // Step 5: Fetch Role names
-    const uniqueRoleIds = [...new Set(modelRoles.map((mr) => mr.role_id.toString()))];
-    const roles = await Role.find({ _id: { $in: uniqueRoleIds } }).lean<IRole[]>();
-
-    const roleMap = Object.fromEntries(roles.map((r) => [r._id.toString(), r.name]));
-    const userRoleMap: Record<string, string[]> = {};
-
-    modelRoles.forEach((mr) => {
-      const uid = mr.model_id.toString();
-      const roleName = roleMap[mr.role_id.toString()];
-      if (roleName) {
-        if (!userRoleMap[uid]) userRoleMap[uid] = [];
-        userRoleMap[uid].push(roleName);
-      }
-    });
-
-    // Step 6: Format users with role names
-    const formatted = users.map((user) => ({
-      ...user,
-      roleNames: (userRoleMap[user._id.toString()] || []).join(", "),
-    }));
-
+      // Step 5: Fetch Role names
+      const uniqueRoleIds = [...new Set(modelRoles.map((mr) => mr.role_id.toString()))];
+      const roles = await Role.find({ _id: { $in: uniqueRoleIds } }).lean<IRole[]>();
+  
+      const roleMap = Object.fromEntries(roles.map((r) => [r._id.toString(), r.name]));
+      const userRoleMap: Record<string, { ids: string[]; names: string[] }> = {};
+  
+      modelRoles.forEach((mr) => {
+        const uid = mr.model_id.toString();
+        const rid = mr.role_id.toString();
+        const roleName = roleMap[rid];
+  
+        if (!userRoleMap[uid]) {
+          userRoleMap[uid] = { ids: [], names: [] };
+        }
+  
+        userRoleMap[uid].ids.push(rid);
+        if (roleName) {
+          userRoleMap[uid].names.push(roleName);
+        }
+      });
+  
+      // Step 6: Format users with both role IDs and names
+      const formatted = users.map((user) => {
+        const uid = user._id.toString();
+        const roles = userRoleMap[uid] || { ids: [], names: [] };
+  
+        const role_ids = roles.ids.map((id, index) => ({
+          value: id,
+          label: roles.names[index] || '',
+        }));
+  
+        return {
+          ...user,
+          roleNames: roles.names.join(', '),
+          role_ids,
+        };
+      });
+    
     return NextResponse.json({ users: formatted, totalCount });
   } catch (err) {
     console.error('Auth or DB error:', err);

@@ -18,12 +18,25 @@ type UseSelectParams = {
   optionValueKey?: string;
   optionLabelKeys?: string[];
   optionLabelSeparator?: string;
-  initialValue?: string | string[];
+  initialValue?: string | string[] | { value: string; label: string } | { value: string; label: string }[];
+};
+
+// 🔧 Helper to normalize initialValue to string or string[]
+const normalizeInitialValue = (
+  val: UseSelectParams["initialValue"]
+): string | string[] | undefined => {
+  if (Array.isArray(val)) {
+    return val.map((v) => typeof v === "string" ? v : v?.value).filter(Boolean);
+  }
+  if (typeof val === "string") {
+    return val;
+  }
+  return val?.value;
 };
 
 export function useSelect({
   apiUrl,
-  collection, 
+  collection,
   search,
   filter = {},
   limit = 50,
@@ -39,6 +52,8 @@ export function useSelect({
     multiple ? [] : null
   );
   const debouncedSearch = useDebounce(search, 300);
+  const normalizedInitialValue = normalizeInitialValue(initialValue);
+
   const token = typeof window !== "undefined"
     ? (() => {
         try {
@@ -61,37 +76,65 @@ export function useSelect({
     label: getOptionLabel(item),
   });
 
-  // Fetch options based on search/filter
+  // ✅ Fetch options when search or initialValue is present
   useEffect(() => {
     if (!apiUrl) return;
+
+    const shouldFetch = debouncedSearch || normalizedInitialValue;
+    if (!shouldFetch) return;
 
     const fetchOptions = async () => {
       setLoading(true);
       try {
-        const res = await api.post(apiUrl, {
-        collection, // <-- Add this
-        labelFields: optionLabelKeys,
-        valueFields: [optionValueKey],
-        label_con_str: optionLabelSeparator,
-        where: debouncedSearch
+        const where = debouncedSearch
           ? {
               $or: optionLabelKeys.map((key) => ({
                 [key]: { $regex: debouncedSearch, $options: "i" },
               })),
               ...filter,
             }
-          : filter,
-        limit,
-        skip: 0,
-        sortBy: optionLabelKeys[0],
-        sortOrder: "asc",
-      }, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-        // console.log('res.data',res.data);
-        // const mapped = (res.data || []).map(mapOption);
-        // console.log('mapped',mapped);
-        setOptions(res.data || []);
+          : normalizedInitialValue
+          ? {
+              [optionValueKey]: {
+                $in: Array.isArray(normalizedInitialValue)
+                  ? normalizedInitialValue
+                  : [normalizedInitialValue],
+              },
+              ...filter,
+            }
+          : filter;
+
+        const res = await api.post(
+          apiUrl,
+          {
+            collection,
+            labelFields: optionLabelKeys,
+            valueFields: [optionValueKey],
+            label_con_str: optionLabelSeparator,
+            where,
+            limit,
+            skip: 0,
+            sortBy: optionLabelKeys[0],
+            sortOrder: "asc",
+          },
+          {
+            headers: token
+              ? { Authorization: `Bearer ${token}` }
+              : undefined,
+          }
+        );
+
+        const mapped = (res.data || []).map(mapOption);
+
+        setOptions((prev) => {
+          const all = [...prev, ...mapped];
+          const seen = new Set();
+          return all.filter((opt) => {
+            if (seen.has(opt.value)) return false;
+            seen.add(opt.value);
+            return true;
+          });
+        });
       } catch (err) {
         console.error("useSelect: Failed to fetch options", err);
       } finally {
@@ -100,41 +143,13 @@ export function useSelect({
     };
 
     fetchOptions();
-  }, [debouncedSearch, JSON.stringify(filter), apiUrl]);
+  }, [debouncedSearch, JSON.stringify(filter), apiUrl, JSON.stringify(normalizedInitialValue)]);
 
-  // Load initial values
+  // ✅ Pre-select initial value(s)
   useEffect(() => {
-    if (!apiUrl || !initialValue) return;
-
-    const loadInitial = async () => {
-      const ids = multiple && Array.isArray(initialValue) ? initialValue : [initialValue];
-
-      setSelected(initialValue);
-
-      const missing = ids.filter((id) => !options.some((opt) => opt.value === id));
-      if (missing.length === 0) return;
-
-      try {
-        const res = await api.post(apiUrl, {
-          labelFields: optionLabelKeys,
-          valueFields: [optionValueKey],
-          label_con_str: optionLabelSeparator,
-          where: { [optionValueKey]: { $in: missing } },
-          limit: missing.length,
-        }, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
-
-        const fetched = (res.data || []).map(mapOption);
-        setOptions((prev) => [...prev, ...fetched]);
-      } catch (err) {
-        console.error("useSelect: Failed to fetch initial values", err);
-      }
-
-    };
-
-    loadInitial();
-  }, [initialValue, options.length]);
+    if (!normalizedInitialValue) return;
+    setSelected(normalizedInitialValue);
+  }, [JSON.stringify(normalizedInitialValue)]);
 
   return {
     options,

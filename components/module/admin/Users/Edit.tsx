@@ -81,14 +81,14 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
 
   const { preview, clearImage, onDrop } = useProfilePicture(setValue, setError, 'image', watch('image'))
 
-  useEffect(() => {
-    if (user) {
-      reset({
-        ...user,
-        role_ids: user.role_ids?.map((r:any) => typeof r === 'string' ? r : r._id) || [],
-      });
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user) {
+  //     reset({
+  //       ...user,
+  //       role_ids: user.role_ids?.map((r:any) => typeof r === 'string' ? r : r._id) || [],
+  //     });
+  //   }
+  // }, [user]);
 
   const onSubmit = async (data: FormData) => {
     setSubmitLoading(true)
@@ -137,6 +137,10 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
   }
 
   const handleReset = () => reset()
+
+  // console.log('User',user)
+  // console.log('Role Ids',user.role_ids)
+  // console.log('watch Role Ids',watch('role_ids'))
 
   return (
     <motion.div

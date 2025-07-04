@@ -298,6 +298,7 @@ export const BasicSelect = <T extends Record<string, any>>({
 }
 
 //Custom Select
+
 export interface CustomSelectProps<T extends Record<string, any>> {
   id: string;
   label: string;
@@ -307,14 +308,18 @@ export interface CustomSelectProps<T extends Record<string, any>> {
   isRequired?: boolean;
   placeholder?: string;
   model: string;
-  value?: string | string[];
+  value?:
+    | string
+    | string[]
+    | { value: string; label: string }
+    | { value: string; label: string }[];
   multiple?: boolean;
 
   // 🔹 Static Options
   options?: { label: string; value: string }[];
   defaultOption?: { label: string; value: string };
 
-  // 🔹 Dynamic/API Options (all optional)
+  // 🔹 Dynamic/API Options
   apiUrl?: string;
   collection?: string;
   labelFields?: string[];
@@ -338,7 +343,7 @@ export function CustomSelect<T extends Record<string, any>>({
   name,
   collection,
   isRequired = false,
-  placeholder = 'Select option(s)',
+  placeholder = "Select option(s)",
   error,
   setValue,
   model,
@@ -348,13 +353,13 @@ export function CustomSelect<T extends Record<string, any>>({
   defaultOption,
   limit = 50,
   filter = {},
-  optionValueKey = '_id',
-  optionLabelKeys = ['name'],
-  optionLabelSeparator = ' ',
+  optionValueKey = "_id",
+  optionLabelKeys = ["name"],
+  optionLabelSeparator = " ",
   multiple = false,
 }: CustomSelectProps<T>) {
   const t = useTranslations(model);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -364,6 +369,7 @@ export function CustomSelect<T extends Record<string, any>>({
     selected,
     setSelected,
     getOptionLabel,
+    setOptions,
   } = useSelect({
     collection,
     apiUrl,
@@ -377,25 +383,72 @@ export function CustomSelect<T extends Record<string, any>>({
     initialValue: value,
   });
 
-  // Combine static & dynamic options
-  const allOptions = apiUrl
-    ? fetchedOptions
-    : defaultOption
+  // 🔁 Ensure passed-in value objects are included in options
+  useEffect(() => {
+    if (!apiUrl || !value) return;
+  
+    const valArray = Array.isArray(value) ? value : [value];
+    const valObjects: { value: string; label: string }[] = valArray.filter(
+      (v): v is { value: string; label: string } =>
+        typeof v === "object" && "value" in v && "label" in v
+    );
+  
+    if (valObjects.length > 0) {
+      setOptions((prev) => {
+        const existingValues = new Set(prev.map((opt) => opt.value));
+        const missing = valObjects.filter((vo) => !existingValues.has(vo.value));
+  
+        // Safely map to OptionType
+        const normalized = missing.map((vo) => ({
+          ...vo,
+          label: vo.label,
+          value: vo.value,
+        }));
+  
+        return [...prev, ...normalized];
+      });
+    }
+  }, [JSON.stringify(value), apiUrl]);
+
+  // 🧠 Combine static + dynamic + passed value options
+  const valueOptions = Array.isArray(value)
+    ? value.filter((v) => typeof v === "object" && v?.value && v?.label)
+    : typeof value === "object" && value?.value && value?.label
+    ? [value]
+    : [];
+
+    const objectValueOptions = valueOptions.filter(
+      (vo): vo is { value: string; label: string } =>
+        typeof vo === 'object' && vo !== null && 'value' in vo && 'label' in vo
+    );
+    
+    const allOptions = apiUrl
+      ? [
+          ...objectValueOptions,
+          ...fetchedOptions.filter(
+            (fo) => !objectValueOptions.some((vo) => vo.value === fo.value)
+          ),
+        ]
+      : defaultOption
       ? [defaultOption, ...options]
       : options;
 
-  // Normalize selected value(s)
+  // 🧱 Normalize selected value(s)
   const normalizedValue = multiple
-    ? Array.isArray(value) ? value : value ? [value] : []
-    : typeof value === 'string' ? value : '';
+    ? Array.isArray(value)
+      ? value.map((v: any) => (typeof v === "string" ? v : v?.value))
+      : value
+      ? [typeof value === "string" ? value : value?.value]
+      : []
+    : typeof value === "string"
+    ? value
+    : (value as any)?.value || "";
 
   const getLabel = (val: string) =>
     allOptions.find((opt) => opt.value === val)?.label || val;
 
   const displayValue = multiple
-    ? (normalizedValue as string[])
-        .map((val) => capitalize(getLabel(val)))
-        .join(', ')
+    ? (normalizedValue as string[]).map((val) => capitalize(getLabel(val))).join(", ")
     : capitalize(getLabel(normalizedValue as string));
 
   const isSelected = (val: string) =>
@@ -418,7 +471,8 @@ export function CustomSelect<T extends Record<string, any>>({
   return (
     <div className="space-y-1 w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
-        {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
+        {t(label, { default: label })}{" "}
+        {isRequired && <span className="text-red-500">*</span>}
       </label>
 
       <Popover open={open} onOpenChange={setOpen}>
@@ -442,7 +496,7 @@ export function CustomSelect<T extends Record<string, any>>({
         >
           <Command className="w-full">
             <CommandInput
-              placeholder={t('Search', { default: 'Search' }) + '...'}
+              placeholder={t("Search", { default: "Search" }) + "..."}
               value={search}
               onValueChange={setSearch}
               className="w-full"
@@ -450,7 +504,7 @@ export function CustomSelect<T extends Record<string, any>>({
             <CommandList>
               {loading && (
                 <CommandItem key="loading" disabled>
-                  {t('Loading', { default: 'Loading' }) + '...'}
+                  {t("Loading", { default: "Loading" }) + "..."}
                 </CommandItem>
               )}
               {!loading &&
@@ -459,7 +513,9 @@ export function CustomSelect<T extends Record<string, any>>({
                     key={opt.value || i}
                     onSelect={() => handleChange(opt.value)}
                     className={`cursor-pointer hover:bg-blue-100 !rounded-none ${
-                      isSelected(opt.value) ? '!bg-blue-400 hover:!bg-blue-400 !text-white' : ''
+                      isSelected(opt.value)
+                        ? "!bg-blue-400 hover:!bg-blue-400 !text-white"
+                        : ""
                     }`}
                   >
                     {capitalize(opt.label)}
@@ -467,7 +523,7 @@ export function CustomSelect<T extends Record<string, any>>({
                 ))}
               {!loading && allOptions.length === 0 && (
                 <CommandItem key="no-options" disabled>
-                  {t('No options found', { default: 'No options found.' })}
+                  {t("No options found", { default: "No options found." })}
                 </CommandItem>
               )}
             </CommandList>
@@ -479,6 +535,7 @@ export function CustomSelect<T extends Record<string, any>>({
     </div>
   );
 }
+
 
 
 //Single Image Upload

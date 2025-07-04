@@ -63,7 +63,8 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
 
             const formattedUser = {
               ...user,
-              roleNames, // Now this will be correct
+              roleNames,
+              role_ids:roleIds,
             };
 
             return NextResponse.json(formattedUser)
