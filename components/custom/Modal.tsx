@@ -39,7 +39,7 @@ const Modal: React.FC<ModalProps> = ({
       newWindow.document.write(`
         <html>
           <head>
-            <title>${title}</title>
+            <title>${t(title)}</title>
             <style>
               body {
                 font-family: sans-serif;
@@ -57,7 +57,7 @@ const Modal: React.FC<ModalProps> = ({
             </style>
           </head>
           <body>
-            <h2>${title}</h2>
+            <h2>${t(title)}</h2>
             ${printContents}
             <script>
               window.onload = function() {
@@ -101,7 +101,7 @@ const Modal: React.FC<ModalProps> = ({
             titleClassName
           )}
         >
-          <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+          <h2 className="text-xl font-semibold text-gray-800">{t(title)}</h2>
           <div className="flex items-center gap-2">
             {showPrintButton && (
               <button
