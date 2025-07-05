@@ -177,6 +177,15 @@
     "Delete failed": "ডিলিট ব্যর্থ হয়েছে",
     "Drag & drop or click to select an image": "ছবি নির্বাচনের জন্য ড্র্যাগ ও ড্রপ করুন বা ক্লিক করুন",
     "Remove Image": "ছবি মুছুন",
+    "Created By": "তৈরি করেছেন",
+    "Guard Name": "গার্ড নাম",
+    "Updated By": "আপডেট করেছেন",
+    "Add Role": "রোল যুক্ত করুন",
+    "Add New Role": "নতুন রোল যোগ করুন",
+    "Select Guard Name": "গার্ড নাম নির্বাচন করুন",
+    "Update Role": "রোল আপডেট করুন",
+    "Are you sure you want to delete": "আপনি কি নিশ্চিত যে আপনি মুছে ফেলতে চান",
+    "Edit Role": "রোল সম্পাদনা করুন",
     "User Details": "ইউজার বিস্তারিত"
   }
   

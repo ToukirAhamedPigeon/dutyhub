@@ -433,6 +433,21 @@ export async function removePermissionsOfModelBatch(
   };
 }
 
+export async function removePermissionsOfRoleBatch(
+  roleId: string
+) {
+  await dbConnect();
+
+  const result = await RolePermission.deleteMany({
+    role_id: roleId,
+  });
+
+  return {
+    deletedCount: result.deletedCount || 0,
+    success: result.deletedCount > 0,
+  };
+}
+
 export async function removeRolePermissionsBatch(permissionIds: string[], roleId: string) {
   const results = [];
 

@@ -183,9 +183,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     // 🔍 Reference check
     const refCheck = await checkReferenceBeforeDelete(userId, [
-      // { collectionName: 'Order', columnNames: ['created_by', 'updated_by'] },
-      // { collectionName: 'Log', columnNames: ['user_id'] },
-      // { collectionName: 'AnotherCollection', columnNames: ['user'] },
+      { collectionName: 'Role', columnNames: ['created_by', 'updated_by'] },
+      { collectionName: 'Log', columnNames: ['createdBy'] },
     ]);
 
     if (refCheck) {

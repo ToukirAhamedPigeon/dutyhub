@@ -18,7 +18,6 @@ import { useDetailModal } from '@/hooks/useDetailModal'
 import { useAppSelector } from '@/hooks/useRedux'
 import Modal from '@/components/custom/Modal'
 import FormHolderSheet from '@/components/custom/FormHolderSheet'
-import Fancybox from '@/components/custom/FancyBox'
 import {
   TableLoader,
   TableHeaderActions,
@@ -26,21 +25,19 @@ import {
   RowActions,
   IndexCell,
 } from '@/components/custom/Table'
-import { Badge } from '@/components/ui/badge'
-import { formatDateTimeDisplay, getAge, getCustomDateTime } from '@/lib/formatDate'
-import { capitalize } from '@/lib/helpers'
+import { getCustomDateTime } from '@/lib/formatDate'
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
-import Register from './Register'
-import UserDetail from './UserDetail'
-import { IUser } from '@/types'
+import Add from './Add'
+import RoleDetail from './RoleDetail'
+import { IRole } from '@/types'
 import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
 import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
 import { printTableById } from '@/lib/printTable'
 import { exportVisibleTableToExcel } from '@/lib/exportTable'
 import { FilterModal } from '@/components/custom/FilterModal'
-import { UserFilterForm, UserFilters } from './UserFilterForm'
-import EditUser from './Edit'
+import { RoleFilterForm, RoleFilters } from './RoleFilterForm'
+import EditRole from './Edit'
 import { useEditSheet } from '@/hooks/useEditSheet'
 import ConfirmDialog from '@/components/custom/ConfirmDialog'
 import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
@@ -54,21 +51,19 @@ const getAllColumns = ({
   fetchDetail,
   handleEditClick,
   confirmDelete,
-  authroles,
   showDetail=true,
   showEdit=true,
   showDelete=true,
 }: {
   pageIndex: number
   pageSize: number
-  fetchDetail: (itemOrId: IUser | string) => void
-  handleEditClick: (user: IUser) => void
+  fetchDetail: (itemOrId: IRole | string) => void
+  handleEditClick: (user: IRole) => void
   confirmDelete: (id: string) => void
-  authroles: string[]
   showDetail?: boolean
   showEdit?: boolean
   showDelete?: boolean
-}): ColumnDef<IUser>[] => [
+}): ColumnDef<IRole>[] => [
   {
     header: 'SL',
     id: 'sl',
@@ -88,62 +83,13 @@ const getAllColumns = ({
         onDelete={() => confirmDelete(row.original._id.toString())}
         showDetail={showDetail}
         showEdit={showEdit}
-        showDelete={showDelete && !(row.original as any).roleNames?.split(',').map((r:string) => r.trim()).includes('developer')}
+        showDelete={showDelete}
       />
     ),
   },
   { header: 'Name', id: 'name', accessorKey: 'name' },
-  { header: 'Username', id: 'username', accessorKey: 'username' },
-  { header: 'BP No', id: 'bp_no', accessorKey: 'bp_no' },
-  { header: 'Phone 1', id: 'phone_1', accessorKey: 'phone_1' },
-  { header: 'Email', id: 'email', accessorKey: 'email' },
-  { header: 'Address', id: 'address', accessorKey: 'address' },
-  ...(authroles.includes('developer')
-    ? [{ header: 'Decrypted Password', id:'decrypted_password', accessorKey: 'decrypted_password' }]
-    : []),
-  {
-    header: 'Profile Picture',
-    id: 'profile_picture',
-    cell: ({ row }) => (
-      <Fancybox
-        src={row.original.image || '/policeman.png'}
-        alt={row.original.name || 'Profile Picture'}
-        className="w-14 h-14 rounded-full"
-      />
-    ),
-  },
-  {
-    header: 'Roles',
-    id: 'roles',
-    accessorKey: 'roleNames',
-    cell: ({ getValue }) => capitalize(getValue() as string),
-  },
-  { header: 'Blood Group', id: 'blood_group', accessorKey: 'blood_group' },
-  { header: 'NID', id: 'nid', accessorKey: 'nid' },
-  {
-    header: 'Date of Birth',
-    accessorKey: 'dob',
-    id: 'dob',
-    cell: ({ getValue }) =>
-      getValue()
-        ? `${formatDateTimeDisplay(getValue() as string, false)} Age: ${getAge(
-            getValue() as string
-          )}`
-        : '-',
-    meta: {
-      customClassName: 'text-center min-w-[300px] whitespace-nowrap',
-    },
-  },
-  {
-    header: 'Current Status',
-    accessorKey: 'current_status',
-    id: 'current_status',
-    cell: ({ getValue }) => (
-      <Badge variant={getValue() ? 'success' : 'destructive'}>
-        {getValue() ? 'Active' : 'Inactive'}
-      </Badge>
-    ),
-  },
+  { header: 'Guard Name', id: 'guard_name', accessorKey: 'guard_name' },
+  { header: 'Created By', id: 'created_by', accessorKey: 'created_by_name' },
   {
     header: 'Created At',
     accessorKey: 'created_at',
@@ -153,6 +99,7 @@ const getAllColumns = ({
       customClassName: 'text-center min-w-[150px] whitespace-nowrap',
     },
   },
+  { header: 'Updated By', id: 'updated_by', accessorKey: 'updated_by_name' },
   {
     header: 'Updated At',
     accessorKey: 'updated_at',
@@ -164,21 +111,14 @@ const getAllColumns = ({
   },
 ]
 
-const initialFilters: UserFilters = {
+const initialFilters: RoleFilters = {
   name: '',
-  email: '',
-  username: '',
-  phone: '',
-  bp_no: '',
-  nid: '',
-  current_status: '',
-  role_ids: [],
-  blood_group: [],
+  guard_name: '',
+  permission_ids: [],
 }
 
-export default function UserListTable() {
+export default function RoleListTable() {
   const t = useTranslations();
-  const authroles = useAppSelector((state) => state.roles) as string[]
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   
 
@@ -188,20 +128,20 @@ export default function UserListTable() {
     fetchDetail,
     closeModal: closeDetailModal,
     detailLoading,
-  } = useDetailModal<IUser>('/users')
+  } = useDetailModal<IRole>('/roles')
 
-  const {isOpen: isEditSheetOpen,itemToEdit: userToEdit,openEdit: handleEditClick,closeEdit: closeEditSheet} = useEditSheet<IUser>()
+  const {isOpen: isEditSheetOpen,itemToEdit: roleToEdit,openEdit: handleEditClick,closeEdit: closeEditSheet} = useEditSheet<IRole>()
 
   // New filter state and modal control
-const [filters, setFilters] = useState<UserFilters>(initialFilters)
+const [filters, setFilters] = useState<RoleFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
 const showDetail= true
-const showEdit= can(['manage_users'])
-const showDelete= can(['manage_users'])
+const showEdit= can(['manage_roles'])
+const showDelete= can(['manage_roles'])
 const [showAddButton,setShowAddButton]= useState(false)
 
 useEffect(() => {
-  setShowAddButton(can(['manage_users']))
+  setShowAddButton(can(['manage_roles']))
 },[])
 
 
@@ -218,11 +158,11 @@ const {
   pageSize,
   setPageSize,
   fetchData,
-} = useTable<IUser>({
+} = useTable<IRole>({
   fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
     const headers = await authorizationHeader();
     const res = await api.post(
-      '/users',
+      '/roles',
       {
         q,
         page,
@@ -230,20 +170,14 @@ const {
         sortBy: sortBy || 'created_at',
         sortOrder: sortOrder || 'desc',
         ...(filters.name && { name: filters.name }),
-        ...(filters.email && { email: filters.email }),
-        ...(filters.username && { username: filters.username }),
-        ...(filters.phone && { phone: filters.phone }),
-        ...(filters.bp_no && { bp_no: filters.bp_no }),
-        ...(filters.nid && { nid: filters.nid }),
-        ...(filters.current_status && { current_status: filters.current_status }),
-        ...(filters.blood_group && filters.blood_group.length > 0 && { blood_group: filters.blood_group }),
-        ...(filters.role_ids && filters.role_ids.length > 0 && { role_ids: filters.role_ids }),
+        ...(filters.guard_name && { guard_name: filters.guard_name }),
+        ...(filters.permission_ids && filters.permission_ids.length > 0 && { permission_ids: filters.permission_ids }),
       },
       { headers }
     );
 
     return {
-      data: res.data.users,
+      data: res.data.roles,
       total: res.data.totalCount,
     };
   },
@@ -259,7 +193,7 @@ const isFilterActive = useMemo(() => {
 }, [filters])
 
 const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDeleteWithConfirm({
-  endpoint: '/users',
+  endpoint: '/roles',
   onSuccess: fetchData,
 })
 
@@ -270,35 +204,34 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         pageSize,
         fetchDetail,
         handleEditClick,
-        authroles,
         confirmDelete,
         showDetail,
         showEdit,
         showDelete,
       }),
-    [pageIndex, pageSize, fetchDetail, handleEditClick, authroles, confirmDelete, showDetail, showEdit, showDelete]
+    [pageIndex, pageSize, fetchDetail, handleEditClick, confirmDelete, showDetail, showEdit, showDelete]
   )
 
   
 
-  const [visible, setVisible] = useState<ColumnDef<IUser>[]>([])
+  const [visible, setVisible] = useState<ColumnDef<IRole>[]>([])
   const [showColumnModal, setShowColumnModal] = useState(false)
 
   useEffect(() => {
     (async () => {
-      const refreshedColumns = await refreshColumnSettings<IUser>('userTable', allColumns)
+      const refreshedColumns = await refreshColumnSettings<IRole>('roleTable', allColumns)
       setVisible(refreshedColumns)
     })()
   }, [])
 
-  const handleColumnChange = (cols: ColumnDef<IUser>[]) => {
+  const handleColumnChange = (cols: ColumnDef<IRole>[]) => {
     setVisible(cols)
     setShowColumnModal(false)
   }
 
   // Load saved filters from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('userFilters')
+    const saved = localStorage.getItem('roleFilters')
     if (saved) setFilters(JSON.parse(saved))
   }, [])
 
@@ -306,7 +239,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
   useEffect(() => {
     fetchData()
     setPageIndex(0) // Reset page on filter change
-    localStorage.setItem('userFilters', JSON.stringify(filters))
+    localStorage.setItem('roleFilters', JSON.stringify(filters))
   }, [filters])
 
   // ✅ Correct visible column IDs for export
@@ -345,11 +278,11 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
             data,
             columns: allColumns,
             visibleColumnIds: visibleIds,
-            fileName: 'Users',
-            sheetName: 'Users',
+            fileName: 'Roles',
+            sheetName: 'Roles',
           })
         }
-        addButtonLabel="Register New User"
+        addButtonLabel="Add New Role"
         onFilter={() => setFilterModalOpen(true)}
         isFilterActive={isFilterActive}
       />
@@ -428,29 +361,29 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
             <TableLoader loading />
           </div>
         ) : (
-          <UserDetail user={selectedItem} />
+          <RoleDetail role={selectedItem} />
         )}
       </Modal>}
 
       {showAddButton && <FormHolderSheet
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
-        title="Register New User"
+        title="Add New Role"
         titleDivClassName="success-gradient"
       >
-        <Register fetchData={fetchData} />
+        <Add fetchData={fetchData} />
       </FormHolderSheet>}
 
        {/* Edit Modal */}  
       {showEdit && <FormHolderSheet
         open={isEditSheetOpen}
         onOpenChange={closeEditSheet}
-        title="Edit User"
+        title="Edit Role"
         titleDivClassName="warning-gradient"
       >
-        {userToEdit && (
-          <EditUser
-            user={userToEdit}
+        {roleToEdit && (
+          <EditRole
+            role={roleToEdit}
             onClose={closeEditSheet}
             fetchData={async () => {
               //closeEditSheet()
@@ -461,8 +394,8 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
       </FormHolderSheet>}
 
       {showColumnModal && (
-        <ColumnVisibilityManager<IUser>
-          tableId="userTable"
+        <ColumnVisibilityManager<IRole>
+          tableId="roleTable"
           open={showColumnModal}
           onClose={() => setShowColumnModal(false)}
           initialColumns={allColumns}
@@ -481,7 +414,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         }}
         initialFilters={initialFilters}
         renderForm={(filterValues, setFilterValues) => (
-          <UserFilterForm
+          <RoleFilterForm
             filterValues={filterValues}             // ✅ MATCHES expected prop
             setFilterValues={setFilterValues}       // ✅ MATCHES expected prop
             onClose={() => setFilterModalOpen(false)}

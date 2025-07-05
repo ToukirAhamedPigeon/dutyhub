@@ -177,6 +177,15 @@
     "Delete failed": "Delete failed",
     "Drag & drop or click to select an image": "Drag & drop or click to select an image",
     "Remove Image": "Remove Image",
-    "User Details": "User Details"
+    "User Details": "User Details",
+    "Add New Role": "Add New Role",
+    "Created By": "Created By",
+    "Guard Name": "Guard Name",
+    "Updated By": "Updated By",
+    "Add Role": "Add Role",
+    "Select Guard Name": "Select Guard Name",
+    "Update Role": "Update Role",
+    "Are you sure you want to delete": "Are you sure you want to delete",
+    "Edit Role": "Edit Role"
   }
   

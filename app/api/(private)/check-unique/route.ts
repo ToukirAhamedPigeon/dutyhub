@@ -2,13 +2,15 @@ import { NextResponse } from 'next/server'
 import { authOptions } from '@/app/api/(public)/auth/[...nextauth]/route'
 import { dbConnect } from '@/lib/database/mongoose'
 import User from '@/lib/database/models/user.model'
+import Role from '@/lib/database/models/role.model'
+import Permission from '@/lib/database/models/permission.model'
 // import OtherModel from '@/lib/database/models/other.model' // Add as needed
 import { getServerSession } from 'next-auth'
 import { verifyAccessToken } from '@/lib/jwt'
 import mongoose from 'mongoose'
 
 const COLLECTION_MAP: Record<string, mongoose.Model<any>> = {
-  User,
+  User,Role,Permission
 //   Other: OtherModel,
   // Add more collections here as needed
 }

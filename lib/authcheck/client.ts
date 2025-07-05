@@ -5,6 +5,7 @@ export function can(
   permissionArray: string[],
   checkType: 'any' | 'all' = 'all'
 ): boolean {
+  if (typeof window === 'undefined') return false; 
   try {
     const stored = localStorage.getItem('permissions')
     const userPermissions: string[] = stored ? JSON.parse(stored) : []
