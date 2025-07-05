@@ -195,6 +195,22 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       }, { status: 400 });
     }
 
+    const modelRoles = await ModelRole.find({
+      model_type: "User",
+      model_id: user._id,
+    }).lean();
+    
+    const roleIds = modelRoles.map((modelRole) => modelRole.role_id);
+    const roles = await Role.find({ _id: { $in: roleIds } }).lean<IRole[]>();
+
+    const hasDeveloperRole = roles.some(role => role.name === 'developer');
+    if (hasDeveloperRole) {
+      return NextResponse.json(
+        { error: 'User with "developer" role cannot be deleted.' },
+        { status: 403 }
+      );
+    }
+
     // 🧹 Clean up related data
     if (user.image) {
       await deleteImageFromUrl(user.image);

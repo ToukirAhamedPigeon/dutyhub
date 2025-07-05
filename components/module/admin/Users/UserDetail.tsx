@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 export default function UserDetail({ user }: { user: any }) {
   const t = useTranslations();
   const authroles = useAppSelector((state) => state.roles) as string[];
+  console.log(user);
 
   // Prepare static rows data
   const rows = [

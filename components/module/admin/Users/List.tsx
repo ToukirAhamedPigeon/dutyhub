@@ -88,7 +88,7 @@ const getAllColumns = ({
         onDelete={() => confirmDelete(row.original._id.toString())}
         showDetail={showDetail}
         showEdit={showEdit}
-        showDelete={showDelete}
+        showDelete={showDelete && !(row.original as any).roleNames?.split(',').map((r:string) => r.trim()).includes('developer')}
       />
     ),
   },
@@ -422,7 +422,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         />
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
+      {showDetail && <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
         {detailLoading || !selectedItem ? (
           <div className="flex items-center justify-center min-h-[150px]">
             <TableLoader loading />
@@ -430,19 +430,19 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         ) : (
           <UserDetail user={selectedItem} />
         )}
-      </Modal>
+      </Modal>}
 
-      <FormHolderSheet
+      {showAddButton && <FormHolderSheet
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         title="Register New User"
         titleDivClassName="success-gradient"
       >
         <Register fetchData={fetchData} />
-      </FormHolderSheet>
+      </FormHolderSheet>}
 
        {/* Edit Modal */}  
-      <FormHolderSheet
+      {showEdit && <FormHolderSheet
         open={isEditSheetOpen}
         onOpenChange={closeEditSheet}
         title="Edit User"
@@ -458,7 +458,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
             }}
           />
         )}
-      </FormHolderSheet>
+      </FormHolderSheet>}
 
       {showColumnModal && (
         <ColumnVisibilityManager<IUser>
@@ -490,7 +490,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
       />
 
       {/* Confirm Dialog */}
-      <ConfirmDialog
+      {showDelete && <ConfirmDialog
         open={dialogOpen}
         onCancel={cancelDelete}
         onConfirm={handleDelete}
@@ -498,7 +498,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         description="Are you sure you want to delete this user"
         confirmLabel={deleteLoading ? 'Deleting' : 'Delete'}
         loading={deleteLoading}
-      />
+      />}
 
     </motion.div>
   )
