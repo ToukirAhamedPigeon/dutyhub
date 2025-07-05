@@ -3,6 +3,7 @@ import api from '@/lib/axios'
 import { AxiosError } from 'axios'
 import { toast } from 'sonner'
 import { authorizationHeader } from '@/lib/tokens';
+import { useTranslations } from 'next-intl';
 
 type UseDeleteWithConfirmProps = {
   endpoint: string
@@ -10,6 +11,7 @@ type UseDeleteWithConfirmProps = {
 }
 
 export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfirmProps) {
+  const t = useTranslations();
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -35,14 +37,14 @@ export function useDeleteWithConfirm({ endpoint, onSuccess }: UseDeleteWithConfi
       const { status, message } = res.data
   
       if (status === 'deleted') {
-        toast.success(message, {
+        toast.success(t(message), {
           style: {
             background: 'green',
             color: 'white',
           },
         })
       } else if (status === 'inactive') {
-        toast.warning(message, {
+        toast.warning(t(message), {
           style: {
             background: 'orange',
             color: 'white',

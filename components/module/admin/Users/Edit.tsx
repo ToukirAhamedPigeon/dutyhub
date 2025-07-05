@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ import DateTimeInput, {
   UniqueInput,
 } from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
+import { useTranslations } from 'next-intl'
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/
 
@@ -73,6 +74,7 @@ interface EditUserProps {
 }
 
 export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
+  const t = useTranslations();
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model = 'User'
@@ -232,9 +234,9 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
         <BasicTextarea id="description" label="Description" placeholder="Enter description" register={register('description')} error={errors.description} model={model} />
 
         <div className="flex justify-between gap-4 mt-4 border-t border-gray-300 pt-4">
-          <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>Reset</Button>
+          <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>{t('Reset')}</Button>
           <Button variant="warning" type="submit" className="" disabled={submitLoading}>
-            {submitLoading ? 'Saving...' : 'Update User'}
+            {submitLoading ? t('Saving')+'...' : t('Update User')}
           </Button>
         </div>
       </form>

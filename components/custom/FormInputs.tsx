@@ -560,6 +560,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
   isRequired = false,
   className,
 }) => {
+  const t = useTranslations()
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     accept: {
@@ -573,7 +574,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
     <div className={cn('space-y-1', className)}>
       {label && (
         <label className="block text-sm font-medium text-gray-700">
-          {label} {isRequired && <span className="text-red-500">*</span>}
+          {t(label)} {isRequired && <span className="text-red-500">*</span>}
         </label>
       )}
 
@@ -585,7 +586,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
         )}
       >
         <input {...getInputProps()} />
-        <p className="text-sm text-gray-500">Drag & drop or click to select an image</p>
+        <p className="text-sm text-gray-500">{t('Drag & drop or click to select an image')}</p>
 
         {preview && (
           <div className="mt-2 flex flex-col items-center justify-center gap-2">
@@ -605,7 +606,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
                 clearImage();
               }}
             >
-              Remove Image
+              {t('Remove Image')}
             </Button>
           </div>
         )}
@@ -686,7 +687,7 @@ export const BasicTextarea: React.FC<BasicTextareaProps> = ({
         className="w-full border border-gray-400 rounded-md p-2 text-sm bg-white"
       />
       {error && (
-        <p className="text-sm text-red-600 mt-1">{error.message}</p>
+        <p className="text-sm text-red-600 mt-1">{t(error.message)}</p>
       )}
     </div>
   );

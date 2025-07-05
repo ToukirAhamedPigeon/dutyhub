@@ -17,6 +17,7 @@ interface FormHolderSheetProps {
 
 export default function FormHolderSheet({ open, onOpenChange, title, children,titleDivClassName }: FormHolderSheetProps) {
     const isDesktop = useMediaQuery("(min-width: 640px)");
+    const t = useTranslations()
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -34,7 +35,7 @@ export default function FormHolderSheet({ open, onOpenChange, title, children,ti
             height: "56px",
           }}
         >
-          <SheetTitle className="text-xl font-semibold text-white">{title}</SheetTitle>
+          <SheetTitle className="text-xl font-semibold text-white">{t(title)}</SheetTitle>
           <Button
             variant="link"
             size="icon"

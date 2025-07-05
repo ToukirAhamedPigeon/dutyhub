@@ -45,6 +45,7 @@ import { useEditSheet } from '@/hooks/useEditSheet'
 import ConfirmDialog from '@/components/custom/ConfirmDialog'
 import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
 import { can } from '@/lib/authcheck/client'
+import { useTranslations } from 'next-intl'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
@@ -176,6 +177,7 @@ const initialFilters: UserFilters = {
 }
 
 export default function UserListTable() {
+  const t = useTranslations();
   const authroles = useAppSelector((state) => state.roles) as string[]
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   
@@ -375,7 +377,12 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
                           className="flex justify-between items-center w-full cursor-pointer"
                           onClick={header.column.getToggleSortingHandler()}
                         >
-                          <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                          <span>
+                            {(() => {
+                              const content = flexRender(header.column.columnDef.header, header.getContext());
+                              return typeof content === "string" ? t(content) : content;
+                            })()}
+                          </span>
                           <span className="ml-2">
                             {header.column.getIsSorted() === 'asc' ? (
                               <FaSortUp size={12} />
@@ -465,6 +472,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
 
       <FilterModal
         tableId="userTable"
+        title="Filter Users"
         open={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
         onApply={(newFilters) => {
@@ -487,8 +495,8 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         onCancel={cancelDelete}
         onConfirm={handleDelete}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this user?"
-        confirmLabel={deleteLoading ? 'Deleting...' : 'Delete'}
+        description="Are you sure you want to delete this user"
+        confirmLabel={deleteLoading ? 'Deleting' : 'Delete'}
         loading={deleteLoading}
       />
 

@@ -13,6 +13,7 @@ import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { accessToken } from '@/lib/tokens';
 import DateTimeInput,{BasicInput, BasicTextarea, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
+import { useTranslations } from 'next-intl';
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
@@ -81,6 +82,7 @@ interface RegisterProps {
 
 
 export default function Register({fetchData}:RegisterProps) {
+  const t = useTranslations();
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model='User'
@@ -126,6 +128,7 @@ export default function Register({fetchData}:RegisterProps) {
 
   // Form Submit
   const onSubmit = async (data: FormData) => {
+    const t = useTranslations();
     setSubmitLoading(true);
   
     try {
@@ -441,10 +444,10 @@ export default function Register({fetchData}:RegisterProps) {
         {/* Submit Actions */}
         <div className="flex justify-between gap-4 mt-4 border-t border-gray-300 pt-4">
           <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>
-            Reset Form
+            {t('Reset Form')}
           </Button>
           <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white" disabled={submitLoading}>
-            {submitLoading ? 'Registering...' : 'Register User'}
+            {submitLoading ? t('Registering')+'...' : t('Register User')}
           </Button>
         </div>
         </form>

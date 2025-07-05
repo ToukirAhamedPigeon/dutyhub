@@ -47,6 +47,7 @@ export function ColumnVisibilityManager<T>({
   const [selectedVisible, setSelectedVisible] = useState<string[]>([])
   const [selectedHidden, setSelectedHidden] = useState<string[]>([])
   const [search, setSearch] = useState('')
+  const t = useTranslations()
 
   const LOCAL_KEY = `columnConfig:${tableId}`
 
@@ -83,10 +84,10 @@ export function ColumnVisibilityManager<T>({
           setSelectedHidden([])
           setSearch('')
       
-          toast.success('Column settings refreshed from database')
+          toast.success(t('Column settings refreshed from database'))
         } catch (err) {
           console.warn('Failed to refresh column settings from DB:', err)
-          toast.error('Failed to refresh column settings from database')
+          toast.error(t('Failed to refresh column settings from database'))
         }
       }
 
@@ -232,13 +233,13 @@ export function ColumnVisibilityManager<T>({
     >
       <DialogContent className="w-full max-w-[95vw] sm:max-w-3xl lg:max-w-4xl min-h-[95vh] overflow-auto [&>[data-radix-dialog-close]]:hidden">
         <DialogHeader>
-          <DialogTitle>Column Settings</DialogTitle>
+          <DialogTitle>{t('Column Settings')}</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-[42%_8%_42%] gap-4">
           {/* Visible Columns */}
           <div>
-            <h3 className="font-bold mb-2">Display</h3>
+            <h3 className="font-bold mb-2">{t('Display')}</h3>
             <ScrollArea className="border border-gray-600 rounded h-120 space-y-1">
               {visible.map(col => {
                 const colId = getColumnId(col)
@@ -249,31 +250,31 @@ export function ColumnVisibilityManager<T>({
                       onClick={e => handleSelect(colId, selectedVisible, setSelectedVisible, e)}
                       className={`w-full py-1 px-2 cursor-pointer ${selectedVisible.includes(colId) ? 'bg-blue-200' : ''}`}
                     >
-                      {String(col.header)}
+                      {t(String(col.header))}
                     </div>
                   </div>
                 )
               })}
             </ScrollArea>
             <div className="flex flex-wrap gap-1 mt-2 items-center justify-center">
-              <Button title="Move Up" size="xs" onClick={() => move(selectedVisible, 'up')}><ArrowUp /></Button>
-              <Button title="Move Down" size="xs" onClick={() => move(selectedVisible, 'down')}><ArrowDown /></Button>
-              <Button title="Move to Top" size="xs" onClick={() => move(selectedVisible, 'top')}><ArrowBigUp /></Button>
-              <Button title="Move to Bottom" size="xs" onClick={() => move(selectedVisible, 'bottom')}><ArrowBigDown /></Button>
+              <Button title={t("Move Up")} size="xs" onClick={() => move(selectedVisible, 'up')}><ArrowUp /></Button>
+              <Button title={t("Move Down")} size="xs" onClick={() => move(selectedVisible, 'down')}><ArrowDown /></Button>
+              <Button title={t("Move to Top")} size="xs" onClick={() => move(selectedVisible, 'top')}><ArrowBigUp /></Button>
+              <Button title={t("Move to Bottom")} size="xs" onClick={() => move(selectedVisible, 'bottom')}><ArrowBigDown /></Button>
             </div>
           </div>
 
           {/* Controls */}
           <div className="flex flex-col justify-center items-center gap-2">
-            <Button title="Move to Do not Display" size="xs" onClick={() => moveToHidden(selectedVisible)}><ArrowRight /></Button>
-            <Button title="Move to Display" size="xs" onClick={() => moveToVisible(selectedHidden)}><ArrowLeft /></Button>
-            <Button title="Hide All" size="xs" onClick={() => moveToHidden(visible.map(getColumnId))}><ArrowBigRight /></Button>
-            <Button title="Show All" size="xs" onClick={() => moveToVisible(hidden.map(getColumnId))}><ArrowBigLeft /></Button>
+            <Button title={t("Move to Do not Display")} size="xs" onClick={() => moveToHidden(selectedVisible)}><ArrowRight /></Button>
+            <Button title={t("Move to Display")} size="xs" onClick={() => moveToVisible(selectedHidden)}><ArrowLeft /></Button>
+            <Button title={t("Hide All")} size="xs" onClick={() => moveToHidden(visible.map(getColumnId))}><ArrowBigRight /></Button>
+            <Button title={t("Show All")} size="xs" onClick={() => moveToVisible(hidden.map(getColumnId))}><ArrowBigLeft /></Button>
           </div>
 
           {/* Hidden Columns */}
           <div>
-            <h3 className="font-bold mb-2">Do Not Display</h3>
+            <h3 className="font-bold mb-2">{t('Do Not Display')}</h3>
             <ScrollArea className="border border-gray-600 rounded h-120 space-y-1">
               {filteredHidden.map(col => {
                 const colId = getColumnId(col)
@@ -284,14 +285,14 @@ export function ColumnVisibilityManager<T>({
                       onClick={e => handleSelect(colId, selectedHidden, setSelectedHidden, e)}
                       className={`w-full py-1 px-2 cursor-pointer ${selectedHidden.includes(colId) ? 'bg-blue-200' : ''}`}
                     >
-                      {String(col.header)}
+                      {t(String(col.header))}
                     </div>
                   </div>
                 )
               })}
             </ScrollArea>
             <Input
-              placeholder="Filter columns..."
+              placeholder={t("Filter columns")+'...'}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="mt-2"
@@ -301,10 +302,10 @@ export function ColumnVisibilityManager<T>({
 
         <DialogFooter className="flex justify-center items-center sm:justify-end mt-4 flex-wrap gap-2">
           <div className="flex gap-2">
-            <Button variant="default" size="sm" onClick={onSave} disabled={visible.length === 0}>Save</Button>
-            <Button variant="outline" size="sm" onClick={refreshFromDB}><RotateCw className="mr-2 h-4 w-4" />Refresh</Button>
-            <Button variant="outline" size="sm" onClick={reset}>Reset</Button>
-            <Button variant="destructive" size="sm" onClick={onClose}>Close</Button>
+            <Button variant="default" size="sm" onClick={onSave} disabled={visible.length === 0}>{t('Save')}</Button>
+            <Button variant="outline" size="sm" onClick={refreshFromDB}><RotateCw className="mr-2 h-4 w-4" />{t('Refresh')}</Button>
+            <Button variant="outline" size="sm" onClick={reset}>{t('Reset')}</Button>
+            <Button variant="destructive" size="sm" onClick={onClose}>{t('Close')}</Button>
           </div>
         </DialogFooter>
       </DialogContent>

@@ -25,6 +25,7 @@ const Modal: React.FC<ModalProps> = ({
   bgColor = 'white',
   showPrintButton = true,
 }) => {
+  const t = useTranslations()
   const printRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen) return null;

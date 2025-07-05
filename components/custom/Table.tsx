@@ -16,7 +16,6 @@ interface RowActionsProps<T> {
   showEdit?: boolean
   showDelete?: boolean
 }
-const model ='Table';
 
 export function RowActions<T>({ row, onDetail, onEdit, onDelete, showDetail=true, showEdit=true, showDelete=true }: RowActionsProps<T>) {
   const t = useTranslations();
@@ -24,17 +23,17 @@ export function RowActions<T>({ row, onDetail, onEdit, onDelete, showDetail=true
     <div className="flex gap-2">
       {showDetail && onDetail && (
         <Button size="sm" variant="info" onClick={() => onDetail(row)}>
-          <FaEye /> <span className="hidden md:block">Detail</span>
+          <FaEye /> <span className="hidden md:block">{t('Detail')}</span>
         </Button>
       )}
       {showEdit && onEdit && (
         <Button size="sm" variant="warning" onClick={() => onEdit(row)}>
-          <FaEdit /> <span className="hidden md:block">Edit</span>
+          <FaEdit /> <span className="hidden md:block">{t('Edit')}</span>
         </Button>
       )}
       {showDelete && onDelete && (
         <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>
-          <FaTrash /> <span className="hidden md:block">Delete</span>
+          <FaTrash /> <span className="hidden md:block">{t('Delete')}</span>
         </Button>
       )}
     </div>
@@ -52,7 +51,7 @@ export function RecordInfo({ pageIndex, pageSize, totalCount }: RecordInfoProps)
   const t = useTranslations();
   return (
     <span>
-      Showing {pageIndex * pageSize + 1} to {Math.min((pageIndex + 1) * pageSize, totalCount)} of {totalCount}
+      {t('Showing')} {pageIndex * pageSize + 1} {t('to')} {Math.min((pageIndex + 1) * pageSize, totalCount)} {t('Total')} {totalCount}
     </span>
   )
 }
@@ -111,7 +110,7 @@ export function TableHeaderActions({
       {showSearch && 
         <Input
           aria-label="Search"
-          placeholder="Search..."
+          placeholder={t("Search")+"..."}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-[150px] md:w-1/3"
@@ -121,7 +120,7 @@ export function TableHeaderActions({
         {showAddButton && onAddNew && (
           <Button variant="success" onClick={onAddNew} aria-label="Add new item">
             <FaPlus />
-            <span className="hidden lg:block ml-1">{addButtonLabel}</span>
+            <span className="hidden lg:block ml-1">{t(addButtonLabel)}</span>
           </Button>
         )}
 
@@ -132,7 +131,7 @@ export function TableHeaderActions({
             className="relative bg-blue-900 hover:bg-blue-800"
           >
             <FaFilter />
-            <span className="hidden lg:block ml-1">Filter</span>
+            <span className="hidden lg:block ml-1">{t('Filter')}</span>
 
             {/* Indicator dot */}
             {isFilterActive && (
@@ -147,7 +146,7 @@ export function TableHeaderActions({
         {showColumnSettingsButton && onColumnSettings && (
           <Button onClick={onColumnSettings} aria-label="Open column settings">
             <FaSlidersH />
-            <span className="hidden lg:block ml-1">Columns</span>
+            <span className="hidden lg:block ml-1">{t('Columns')}</span>
           </Button>
         )}
         {showPrintButton && onPrint && (
@@ -158,7 +157,7 @@ export function TableHeaderActions({
             aria-label="Print table"
           >
             <FaPrint />
-            <span className="hidden lg:block ml-1">Print</span>
+            <span className="hidden lg:block ml-1">{t('Print')}</span>
           </Button>
         )}
         {showExportButton && onExport && (
@@ -169,7 +168,7 @@ export function TableHeaderActions({
             aria-label="Export table to Excel"
           >
             <FaFileExcel />
-            <span className="hidden lg:block ml-1">Excel</span>
+            <span className="hidden lg:block ml-1">{t('Excel')}</span>
           </Button>
         )}
       </div>
@@ -209,7 +208,7 @@ export function TablePaginationFooter({
       <div className="flex items-center gap-2">
         {showRowsPerPage && (<>
         <label htmlFor="pageSize" className="hidden md:block">
-          Rows per page:
+          {t('Rows per page')}:
         </label>
         <select
           id="pageSize"
@@ -228,7 +227,7 @@ export function TablePaginationFooter({
         {showPagination && (
           <>
           <Button size="sm" onClick={() => setPageIndex(Math.max(pageIndex - 1, 0))} disabled={pageIndex === 0}>
-            Previous
+            {t('Previous')}
           </Button>
 
           <Button
@@ -236,7 +235,7 @@ export function TablePaginationFooter({
             onClick={() => setPageIndex(Math.min(pageIndex + 1, totalPage - 1))}
             disabled={(pageIndex + 1) * pageSize >= totalCount}
           >
-            Next
+            {t('Next')}
           </Button>
           </>
         )}
