@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import { useTranslations } from 'next-intl';
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 

@@ -24,6 +24,7 @@ import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
 import { toast } from 'sonner'
 import { formatLabel } from '@/lib/helpers'
+import { useTranslations } from 'next-intl';
 
 export type ColumnKey = string
 

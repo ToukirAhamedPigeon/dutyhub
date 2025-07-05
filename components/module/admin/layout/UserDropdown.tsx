@@ -15,7 +15,7 @@ import {
   import { useTranslations } from 'next-intl';
 
   export default function UserDropdown() {
-    const t = useTranslations("Common");
+    const t = useTranslations();
     const [isOpen, setIsOpen] = useState(false)
     const user = useAppSelector((state) => state.authUser);
     const roles = useAppSelector((state) => state.roles);
@@ -27,6 +27,7 @@ import {
               <AvatarImage src={user?.image || '/policeman.png'} alt={user.name || 'Police Man'} />
               <AvatarFallback>{user.name?.charAt(0) ?? '?'}</AvatarFallback>
             </Avatar>
+            <h3 className='hidden lg:block text-white'>{user.name?.split(' ')[0] ?? ''}</h3>
             {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
         </DropdownMenuTrigger>

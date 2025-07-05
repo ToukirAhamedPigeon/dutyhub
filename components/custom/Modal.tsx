@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 type ModalProps = {
   isOpen: boolean;

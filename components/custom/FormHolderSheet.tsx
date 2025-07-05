@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 interface FormHolderSheetProps {
   open: boolean;

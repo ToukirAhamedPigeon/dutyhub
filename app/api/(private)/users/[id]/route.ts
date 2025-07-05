@@ -13,28 +13,17 @@ import { omitFields } from '@/lib/helpers'
 import { logAction } from '@/lib/logger'
 import { EActionType } from '@/types'
 import { customAssignPermissionsToModelBatch, customAssignRolesToModelBatch, removePermissionsOfModelBatch, removeRolesOfModelBatch } from '@/lib/authorization'
-import { ObjectId } from 'mongoose'
 import { checkReferenceBeforeDelete } from '@/lib/checkRefBeforeDelete';
+import { checkUserAccess } from '@/lib/authcheck/server';
 
 
 export async function GET(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
-  const { id } = await params;
-  const authHeader = req.headers.get('authorization')
-  const token = authHeader?.split(' ')[1]
-  
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
       try {
-        const decoded = verifyAccessToken(token);
-        if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
-          return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 });
+        const authCheck = await checkUserAccess(req, ['manage_users'])
+        if (!authCheck.authorized) {
+          return authCheck.response
         }
-      
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user || !session.user.id) {
-          return new NextResponse('Unauthorized', { status: 401 });
-        }
+        const { id } = await params;
         await dbConnect()
 
         if (!Types.ObjectId.isValid(id)) {
@@ -76,36 +65,14 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
 }
 
 export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
-  const { id } = await params;
-  const userId = id
-  const authHeader = req.headers.get('authorization')
-  const token = authHeader?.split(' ')[1]
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   try {
-    const decoded = verifyAccessToken(token)
-    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
-      return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 })
+    const authCheck = await checkUserAccess(req, ['manage_users'])
+    if (!authCheck.authorized) {
+      return authCheck.response
     }
 
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const userPermissionsCookie = req.cookies.get('user-permissions')?.value
-    if (!userPermissionsCookie) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const userPermissions: string[] = JSON.parse(userPermissionsCookie)
-    if (!userPermissions.includes('manage_users')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+    const { id } = await params;
+    const userId = id
     await dbConnect()
     const formData = await req.formData()
 
@@ -158,7 +125,7 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
       }
       user.image = imageUrl
     }
-    user.updated_by = session.user.id
+    user.updated_by = authCheck.userId
     user.updated_at = new Date()
     await user.save()
 
@@ -198,34 +165,13 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id: userId } = params;
-  const token = req.headers.get('authorization')?.split(' ')[1];
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
-    const decoded = verifyAccessToken(token);
-    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
-      return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 });
+    const authCheck = await checkUserAccess(req, ['manage_users'])
+    if (!authCheck.authorized) {
+      return authCheck.response
     }
 
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const userPermissionsCookie = req.cookies.get('user-permissions')?.value;
-    if (!userPermissionsCookie) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const userPermissions: string[] = JSON.parse(userPermissionsCookie);
-    if (!userPermissions.includes('manage_users')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { id: userId } = params;
     await dbConnect();
 
     const user = await User.findById(userId);

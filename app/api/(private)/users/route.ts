@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOptions } from '@/app/api/(public)/auth/[...nextauth]/route';
-import { getServerSession } from 'next-auth';
-import { verifyAccessToken } from '@/lib/jwt';
 import { dbConnect } from '@/lib/database/mongoose';
 import User from '@/lib/database/models/user.model';
 import ModelRole from '@/lib/database/models/modelRole.model';
@@ -10,7 +7,8 @@ import ModelPermission from '@/lib/database/models/modelPermission.model';
 import Permission from '@/lib/database/models/permission.model';
 import RolePermission from '@/lib/database/models/rolePermission.model';
 import { IUser, IRole, IPermission, IRolePermission } from '@/types';
-import mongoose, { Types } from 'mongoose';
+import { Types } from 'mongoose';
+import { checkUserAccess } from '@/lib/authcheck/server';
 
 function extractId(value: unknown): string {
   if (value instanceof Types.ObjectId) {
@@ -24,38 +22,14 @@ function extractId(value: unknown): string {
 }
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   try {
-    const decoded = verifyAccessToken(token);
-    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
-      return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 });
+    const authCheck = await checkUserAccess(req, ['manage_users'])
+    if (!authCheck.authorized) {
+      return authCheck.response
     }
-
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user || !session.user.id) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-
-    const userPermissionsCookie = req.cookies.get('user-permissions')?.value;
     const userRolesCookie = req.cookies.get('user-roles')?.value;
-
-    if (!userPermissionsCookie) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const userPermissions: string[] = JSON.parse(userPermissionsCookie);
     const userRoles: string[] = userRolesCookie ? JSON.parse(userRolesCookie) : [];
-
-    if (!userPermissions.includes('manage_users')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const isDeveloper = userRoles.includes('developer');
 
     await dbConnect();
@@ -217,16 +191,6 @@ export async function POST(req: NextRequest) {
       const uid = user._id.toString();
       const roles = userRoleMap[uid] || { ids: [], names: [] };
       const perms = userPermissionMap[uid] || { ids: [], names: [] };
-
-      // const role_ids = roles.ids.map((id, index) => ({
-      //   value: id,
-      //   label: roles.names[index] || '',
-      // }));
-
-      // const permission_ids = perms.ids.map((id, index) => ({
-      //   value: id,
-      //   label: perms.names[index] || '',
-      // }));
 
       const role_ids = roles.ids; 
       const permission_ids = perms.ids; 

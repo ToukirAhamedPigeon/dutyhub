@@ -43,7 +43,7 @@ export const BasicInput=({
     model,
     ...rest
   }: FormInputProps) => {
-    const t = useTranslations(model);
+    const t = useTranslations();
   
     const getErrorMessage = () => {
       if (!error?.message) return null;
@@ -98,7 +98,7 @@ export const UniqueInput = ({
   exceptFieldValue,
   ...rest
 }: UniqueInputProps) => {
-  const t = useTranslations(model)
+  const t = useTranslations()
   const [checking, setChecking] = useState(false)
   const [exists, setExists] = useState(false)
 
@@ -192,7 +192,7 @@ interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement>
 
 export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, isRequiredStar, placeholder, model, ...rest }: PasswordInputProps) => {
   const [hidden, setHidden] = useState(isHidden);
-  const t = useTranslations(model);
+  const t = useTranslations();
   return (
     <div className="space-y-1 w-full">
       <label className="block text-sm font-medium text-gray-700">
@@ -254,7 +254,7 @@ export const BasicSelect = <T extends Record<string, any>>({
   defaultOption,
   value
 }: BasicSelectProps<T>) => {
-  const t = useTranslations(model)
+  const t = useTranslations()
 
   return (
     <div className="space-y-1 w-full">
@@ -358,7 +358,7 @@ export function CustomSelect<T extends Record<string, any>>({
   optionLabelSeparator = " ",
   multiple = false,
 }: CustomSelectProps<T>) {
-  const t = useTranslations(model);
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -672,7 +672,7 @@ export const BasicTextarea: React.FC<BasicTextareaProps> = ({
   model,
   isRequired = false,
 }) => {
-  const t = useTranslations(model);
+  const t = useTranslations();
   return (
     <div className="space-y-1 w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
@@ -714,7 +714,7 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
     },
     ref
   ) => {
-    const t = useTranslations(model);
+    const t = useTranslations();
 
     const handleReset = (e: React.MouseEvent) => {
       e.stopPropagation(); // prevent popover toggle if any

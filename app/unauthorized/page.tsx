@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 
 export default function UnauthorizedPage() {
   const router = useRouter()
-  const t = useTranslations('ErrorPages')
+  const t = useTranslations()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5c400] to-[#bc6d00]">

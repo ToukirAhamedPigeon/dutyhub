@@ -44,6 +44,7 @@ import EditUser from './Edit'
 import { useEditSheet } from '@/hooks/useEditSheet'
 import ConfirmDialog from '@/components/custom/ConfirmDialog'
 import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
+import { can } from '@/lib/authcheck/client'
 
 // 🧱 Column Definitions
 const getAllColumns = ({
@@ -53,6 +54,9 @@ const getAllColumns = ({
   handleEditClick,
   confirmDelete,
   authroles,
+  showDetail=true,
+  showEdit=true,
+  showDelete=true,
 }: {
   pageIndex: number
   pageSize: number
@@ -60,6 +64,9 @@ const getAllColumns = ({
   handleEditClick: (user: IUser) => void
   confirmDelete: (id: string) => void
   authroles: string[]
+  showDetail?: boolean
+  showEdit?: boolean
+  showDelete?: boolean
 }): ColumnDef<IUser>[] => [
   {
     header: 'SL',
@@ -78,6 +85,9 @@ const getAllColumns = ({
         onDetail={() => fetchDetail(row.original)}
         onEdit={() => handleEditClick(row.original)}
         onDelete={() => confirmDelete(row.original._id.toString())}
+        showDetail={showDetail}
+        showEdit={showEdit}
+        showDelete={showDelete}
       />
     ),
   },
@@ -183,6 +193,14 @@ export default function UserListTable() {
   // New filter state and modal control
 const [filters, setFilters] = useState<UserFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
+const showDetail= true
+const showEdit= can(['manage_users'])
+const showDelete= can(['manage_users'])
+const [showAddButton,setShowAddButton]= useState(false)
+
+useEffect(() => {
+  setShowAddButton(can(['manage_users']))
+},[])
 
 
 const {
@@ -252,9 +270,14 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         handleEditClick,
         authroles,
         confirmDelete,
+        showDetail,
+        showEdit,
+        showDelete,
       }),
-    [pageIndex, pageSize, fetchDetail, handleEditClick, authroles]
+    [pageIndex, pageSize, fetchDetail, handleEditClick, authroles, confirmDelete, showDetail, showEdit, showDelete]
   )
+
+  
 
   const [visible, setVisible] = useState<ColumnDef<IUser>[]>([])
   const [showColumnModal, setShowColumnModal] = useState(false)
@@ -312,6 +335,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         searchValue={globalFilter}
         onSearchChange={setGlobalFilter}
         onAddNew={() => setIsSheetOpen(true)}
+        showAddButton={showAddButton}
         onColumnSettings={() => setShowColumnModal(true)}
         onPrint={() => printTableById('printable-user-table', 'User Table')}
         onExport={() =>

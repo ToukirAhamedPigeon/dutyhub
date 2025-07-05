@@ -21,7 +21,7 @@ export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {
 
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
-  const t = useTranslations("Common");
+  const t = useTranslations();
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>

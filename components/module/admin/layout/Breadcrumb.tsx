@@ -23,7 +23,7 @@ export default function Breadcrumb({
   showTitle = true,
   className = '',
 }: BreadcrumbProps) {
-  const t = useTranslations('Common');
+  const t = useTranslations();
   return (
     <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-4", className)}>
       {showTitle && (
