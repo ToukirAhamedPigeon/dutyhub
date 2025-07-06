@@ -272,7 +272,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         onAddNew={() => setIsSheetOpen(true)}
         showAddButton={showAddButton}
         onColumnSettings={() => setShowColumnModal(true)}
-        onPrint={() => printTableById('printable-user-table', 'User Table')}
+        onPrint={() => printTableById('printable-user-table', 'Role Table')}
         onExport={() =>
           exportVisibleTableToExcel({
             data,
@@ -355,7 +355,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         />
       </div>
 
-      {showDetail && <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="User Details">
+      {showDetail && <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="Role Details">
         {detailLoading || !selectedItem ? (
           <div className="flex items-center justify-center min-h-[150px]">
             <TableLoader loading />
