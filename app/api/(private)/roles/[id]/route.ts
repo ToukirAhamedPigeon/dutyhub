@@ -122,14 +122,14 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }:  {params: Promise<{ id: string }>}) {
   try {
     const authCheck = await checkUserAccess(req, ['manage_users'])
     if (!authCheck.authorized) {
       return authCheck.response
     }
 
-    const { id: roleId } = params;
+    const { id: roleId } = await params;
     await dbConnect();
 
     const role = await Role.findById(roleId);
