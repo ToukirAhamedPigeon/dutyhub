@@ -6,7 +6,7 @@ import Role from '@/lib/database/models/role.model';
 import { omitFields } from '@/lib/helpers'
 import { logAction } from '@/lib/logger'
 import { EActionType } from '@/types'
-import { customAssignPermissionsToRoleBatch,removePermissionsOfRoleBatch } from '@/lib/authorization'
+import { customAssignRolesToPermissionBatch,removeRolesOfPermissionBatch } from '@/lib/authorization'
 import { checkReferenceBeforeDelete } from '@/lib/checkRefBeforeDelete';
 import { checkUserAccess } from '@/lib/authcheck/server';
 import RolePermission from '@/lib/database/models/rolePermission.model';
@@ -15,7 +15,7 @@ import Permission from '@/lib/database/models/permission.model';
 
 export async function GET(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
       try {
-        const authCheck = await checkUserAccess(req, ['manage_roles'])
+        const authCheck = await checkUserAccess(req, ['manage_permissions'])
         if (!authCheck.authorized) {
           return authCheck.response
         }
@@ -27,30 +27,30 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
         }
 
         try {
-            const role = await Role.findById(id).lean<IRole>()
+            const permission = await Permission.findById(id).lean<IPermission>()
 
-            if (!role) {
-              return NextResponse.json({ error: 'Role not found' }, { status: 404 })
+            if (!permission) {
+              return NextResponse.json({ error: 'Permission not found' }, { status: 404 })
             }
 
             const rolePermissions = await RolePermission.find({
-              role_id: role._id,
+              permission_id: permission._id,
             }).lean();
-            const permissionIds = rolePermissions.map((rp) => rp.permission_id);
-            const permissions = await Permission.find({ _id: { $in: permissionIds } }).lean<IPermission[]>();
+            const roleIds = rolePermissions.map((rp) => rp.role_id);
+            const roles = await Role.find({ _id: { $in: roleIds } }).lean<IRole[]>();
 
              // Directly get role names from roles
-            const permissionNames = permissions.map((permission) => permission.name).join(", ");
+            const roleNames = roles.map((role) => role.name).join(", ");
 
-            const formattedRole = {
-              ...role,
-              permissionNames,
-              permission_ids:permissionIds,
+            const formattedPermission = {
+              ...permission,
+              roleNames,
+              role_ids:roleIds,
             };
 
-            return NextResponse.json(formattedRole)
+            return NextResponse.json(formattedPermission)
           } catch (err) {
-            console.error('Error fetching role detail:', err)
+            console.error('Error fetching permission detail:', err)
             return NextResponse.json({ error: 'Server error' }, { status: 500 })
           }
         } catch (err) {
@@ -60,21 +60,21 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
 
 export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_roles'])
+    const authCheck = await checkUserAccess(req, ['manage_permissions'])
     if (!authCheck.authorized) {
       return authCheck.response
     }
 
     const { id } = await params;
-    const roleId = id
+    const permissionId = id
     await dbConnect()
     const formData = await req.formData()
 
-    const role = await Role.findById(roleId)
-    if (!role) {
-      return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 })
+    const permission = await Role.findById(permissionId)
+    if (!permission) {
+      return NextResponse.json({ success: false, message: 'Permission not found' }, { status: 404 })
     }
-    const originalRole = role.toObject();
+    const originalPermission = permission.toObject();
 
     const updatableFields = [
       'name',
@@ -83,38 +83,38 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 
     for (const field of updatableFields) {
       const val = formData.get(field)
-      if (val !== null) role[field] = val
+      if (val !== null) permission[field] = val
     }
 
-    role.updated_by = authCheck.userId
-    role.updated_at = new Date()
-    await role.save()
+    permission.updated_by = authCheck.userId
+    permission.updated_at = new Date()
+    await permission.save()
 
     // Handle roles and permissions
  
-    const permission_ids = JSON.parse(formData.get('permission_ids') as string || '[]') as string[]
-    const newAssignedPermissionInfos = customAssignPermissionsToRoleBatch(role._id.toString(), permission_ids)
+    const role_ids = JSON.parse(formData.get('role_ids') as string || '[]') as string[]
+    const newAssignedRoleInfos = customAssignRolesToPermissionBatch(permission._id.toString(), role_ids)
 
     // Log the update
     await logAction({
-      detail: `Role updated: ${role.name}`,
+      detail: `Permission updated: ${permission.name}`,
       changes: JSON.stringify({
-        before: omitFields(originalRole, ['created_by','created_at']),
-        after: omitFields(role.toObject?.() || role, ['created_by','created_at']),
+        before: omitFields(originalPermission, ['created_by','created_at']),
+        after: omitFields(permission.toObject?.() || permission, ['created_by','created_at']),
       }),
       actionType: EActionType.UPDATE,
-      collectionName: 'Role',
-      objectId: roleId,
+      collectionName: 'Permission',
+      objectId: permissionId,
     })
 
     return NextResponse.json({
       success: true,
       message: 'Role updated successfully',
-      role,
-      newAssignedPermissionInfos,
+      permission,
+      newAssignedRoleInfos,
     })
   } catch (err: any) {
-    console.error('Role Update Error:', err)
+    console.error('Permission Update Error:', err)
     return NextResponse.json(
       { success: false, message: err?.message || 'Update failed' },
       { status: err.name === 'JsonWebTokenError' ? 403 : 500 }
@@ -124,54 +124,54 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }:  {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_roles'])
+    const authCheck = await checkUserAccess(req, ['manage_permissions'])
     if (!authCheck.authorized) {
       return authCheck.response
     }
 
-    const { id: roleId } = await params;
+    const { id: permissionId } = await params;
     await dbConnect();
 
-    const role = await Role.findById(roleId);
-    if (!role) {
-      return NextResponse.json({ error: 'Role not found' }, { status: 404 });
+    const permission = await Permission.findById(permissionId);
+    if (!permission) {
+      return NextResponse.json({ error: 'Permission not found' }, { status: 404 });
     }
 
-    const originalRole = role.toObject();
+    const originalPermission = permission.toObject();
 
     // 🔍 Reference check
-    const refCheck = await checkReferenceBeforeDelete(roleId, [
+    const refCheck = await checkReferenceBeforeDelete(permissionId, [
       // { collectionName: 'RolePermission', columnNames: ['role_id'] },
       // { collectionName: 'ModelRole', columnNames: ['role_id'] },
     ]);
 
     if (refCheck) {
       return NextResponse.json({
-        error: 'Cannot delete role due to existing reference.',
+        error: 'Cannot delete permission due to existing reference.',
         reference: refCheck,
       }, { status: 400 });
     }
 
 
-    await removePermissionsOfRoleBatch(role._id.toString());
+    await removeRolesOfPermissionBatch(permission._id.toString());
 
-    await role.deleteOne();
+    await permission.deleteOne();
 
     await logAction({
-      detail: `Role deleted: ${originalRole.name}`,
+      detail: `Permission deleted: ${originalPermission.name}`,
       actionType: EActionType.DELETE,
-      collectionName: 'Role',
-      objectId: roleId,
+      collectionName: 'Permission',
+      objectId: permissionId,
       changes: JSON.stringify({
-        before: omitFields(originalRole, ['created_by', 'created_at']),
+        before: omitFields(originalPermission, ['created_by', 'created_at']),
         after: null,
       }),
     });
 
-    return NextResponse.json({ success: true, status: 'deleted', message: 'Role deleted successfully' });
+    return NextResponse.json({ success: true, status: 'deleted', message: 'Permission deleted successfully' });
 
   } catch (err: any) {
-    console.error('Delete Role Error:', err);
+    console.error('Delete Permission Error:', err);
     return NextResponse.json(
       { error: err?.message || 'Delete failed' },
       { status: err.name === 'JsonWebTokenError' ? 403 : 500 }

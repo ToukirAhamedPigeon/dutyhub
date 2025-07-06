@@ -60,9 +60,8 @@ export async function POST(req: NextRequest) {
         detail: `Role created: ${newRole.name}`,
         changes: JSON.stringify({
           after: omitFields(newRole.toObject?.() || newRole, [
-            'password',
-            'decrypted_password',
-            '__v',
+            'created_by',
+            'created_at',
           ]),
         }),
         actionType: EActionType.CREATE,
