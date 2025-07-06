@@ -131,7 +131,7 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
 
       if (!res.data.success) throw new Error(res.data.message || 'Update failed')
 
-      toast.success('User updated successfully!', {
+      toast.success(t('User updated successfully!'), {
         style: { background: 'green', color: 'white' },
       })
 

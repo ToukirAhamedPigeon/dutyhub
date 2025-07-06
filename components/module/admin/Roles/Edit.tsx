@@ -72,7 +72,7 @@ export default function EditRole({ role, fetchData, onClose }: EditRoleProps) {
 
       if (!res.data.success) throw new Error(res.data.message || 'Update failed')
 
-      toast.success('Role updated successfully!', {
+      toast.success(t('Role updated successfully!'), {
         style: { background: 'green', color: 'white' },
       })
 

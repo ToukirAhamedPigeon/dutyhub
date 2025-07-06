@@ -186,7 +186,7 @@ export default function Register({fetchData}:RegisterProps) {
         throw new Error(result.message || "Registration failed");
       }
   
-      toast.success("User registered successfully!", {
+      toast.success(t("User registered successfully!"), {
         style: {
           background: 'green',
           color: 'white',

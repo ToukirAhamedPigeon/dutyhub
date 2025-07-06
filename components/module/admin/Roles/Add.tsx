@@ -59,7 +59,6 @@ export default function Add({fetchData}:AddProps) {
 
   // Form Submit
   const onSubmit = async (data: FormData) => {
-    const t = useTranslations();
     setSubmitLoading(true);
   
     try {
@@ -89,7 +88,7 @@ export default function Add({fetchData}:AddProps) {
         throw new Error(result.message || "Failed to add role");
       }
   
-      toast.success("Role added successfully!", {
+      toast.success(t("Role added successfully!"), {
         style: {
           background: 'green',
           color: 'white',
