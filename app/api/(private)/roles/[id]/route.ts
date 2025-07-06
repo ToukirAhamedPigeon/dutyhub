@@ -72,7 +72,7 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 
     const role = await Role.findById(roleId)
     if (!role) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 })
+      return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 })
     }
     const originalRole = role.toObject();
 
@@ -158,7 +158,7 @@ export async function DELETE(req: NextRequest, { params }:  {params: Promise<{ i
     await role.deleteOne();
 
     await logAction({
-      detail: `User deleted: ${originalRole.name}`,
+      detail: `Role deleted: ${originalRole.name}`,
       actionType: EActionType.DELETE,
       collectionName: 'User',
       objectId: roleId,
@@ -168,7 +168,7 @@ export async function DELETE(req: NextRequest, { params }:  {params: Promise<{ i
       }),
     });
 
-    return NextResponse.json({ success: true, status: 'deleted', message: 'User deleted successfully' });
+    return NextResponse.json({ success: true, status: 'deleted', message: 'Role deleted successfully' });
 
   } catch (err: any) {
     console.error('Delete Role Error:', err);

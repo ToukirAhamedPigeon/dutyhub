@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/database/mongoose';
 import User from '@/lib/database/models/user.model';
-import ModelRole from '@/lib/database/models/modelRole.model';
 import Role from '@/lib/database/models/role.model';
-import ModelPermission from '@/lib/database/models/modelPermission.model';
 import Permission from '@/lib/database/models/permission.model';
 import RolePermission from '@/lib/database/models/rolePermission.model';
 import { IUser, IRole, IPermission, IRolePermission } from '@/types';
