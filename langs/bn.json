@@ -189,6 +189,31 @@
     "Update Role": "রোল আপডেট করুন",
     "Are you sure you want to delete": "আপনি কি নিশ্চিত যে আপনি মুছে ফেলতে চান",
     "Edit Role": "রোল সম্পাদনা করুন",
-    "User Details": "ইউজার বিস্তারিত"
+    "User Details": "ইউজার বিস্তারিত",
+
+    "Guard Name is required": "গার্ড নাম আবশ্যক",
+    "Each role ID must be a valid ObjectId": "প্রতিটি রোল আইডি একটি বৈধ ObjectId হতে হবে",
+    "Name already exists": "নাম ইতিমধ্যেই বিদ্যমান",
+    "Add Permission": "পারমিশন যোগ করুন",
+    "Permission added successfully!": "পারমিশন সফলভাবে যোগ হয়েছে!",
+    "Something went wrong during adding permission": "পারমিশন যোগ করার সময় কিছু ভুল হয়েছে",
+    "Update Permission": "পারমিশন আপডেট করুন",
+    "Permission updated successfully!": "পারমিশন সফলভাবে আপডেট হয়েছে!",
+    "Add New Permission": "নতুন পারমিশন যোগ করুন",
+    "Permission Table": "পারমিশন টেবিল",
+    "Permission Details": "পারমিশন বিস্তারিত",
+    "Edit Permission": "পারমিশন সম্পাদনা করুন",
+    "Filter Permissions": "পারমিশন ফিল্টার করুন",
+    "Permission created:": "পারমিশন তৈরি হয়েছে:",
+    "Permission updated:": "পারমিশন আপডেট হয়েছে:",
+    "Permission deleted:": "পারমিশন মুছে ফেলা হয়েছে:",
+    "permission(s) created,": "পারমিশন(গুলি) তৈরি হয়েছে,",
+    "skipped.": "স্কিপ করা হয়েছে।",
+    "Permission creation failed": "পারমিশন তৈরি ব্যর্থ হয়েছে",
+    "Permission not found": "পারমিশন পাওয়া যায়নি",
+    "Server error": "সার্ভার ত্রুটি",
+    "Role updated successfully": "রোল সফলভাবে আপডেট হয়েছে",
+    "Cannot delete permission due to existing reference.": "বিদ্যমান রেফারেন্স থাকার কারণে পারমিশন মুছে ফেলা যায়নি।",
+    "Permission deleted successfully": "পারমিশন সফলভাবে মুছে ফেলা হয়েছে"
   }
   

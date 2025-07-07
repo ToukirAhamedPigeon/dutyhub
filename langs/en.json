@@ -189,6 +189,31 @@
     "Adding": "Adding",
     "Role added successfully!": "Role added successfully!",
     "Role updated successfully!": "Role updated successfully!",
-    "Edit Role": "Edit Role"
+    "Edit Role": "Edit Role",
+
+    "Guard Name is required": "Guard Name is required",
+    "Each role ID must be a valid ObjectId": "Each role ID must be a valid ObjectId",
+    "Name already exists": "Name already exists",
+    "Add Permission": "Add Permission",
+    "Permission added successfully!": "Permission added successfully!",
+    "Something went wrong during adding permission": "Something went wrong during adding permission",
+    "Update Permission": "Update Permission",
+    "Permission updated successfully!": "Permission updated successfully!",   
+    "Add New Permission": "Add New Permission",
+    "Permission Table": "Permission Table",
+    "Permission Details": "Permission Details",
+    "Edit Permission": "Edit Permission",
+    "Filter Permissions": "Filter Permissions",
+    "Permission created:": "Permission created:",
+    "Permission updated:": "Permission updated:",
+    "Permission deleted:": "Permission deleted:",
+    "permission(s) created,": "permission(s) created,",
+    "skipped.": "skipped.",
+    "Permission creation failed": "Permission creation failed",
+    "Permission not found": "Permission not found",
+    "Server error": "Server error",
+    "Role updated successfully": "Role updated successfully",
+    "Cannot delete permission due to existing reference.": "Cannot delete permission due to existing reference.",
+    "Permission deleted successfully": "Permission deleted successfully"
   }
   
