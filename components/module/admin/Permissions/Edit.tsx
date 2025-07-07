@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import api from '@/lib/axios'
 import {  accessToken } from '@/lib/tokens'
+import { useAppDispatch } from '@/hooks/useRedux';
+import { initAuthUser } from '@/lib/initAuthUser';
 
 import {
   CustomSelect,
@@ -41,6 +43,7 @@ export default function EditPermission({ permission, fetchData, onClose }: EditP
   const token =  accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model = 'Permission'
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -71,6 +74,8 @@ export default function EditPermission({ permission, fetchData, onClose }: EditP
       },})
 
       if (!res.data.success) throw new Error(res.data.message || 'Update failed')
+
+      await initAuthUser(dispatch, true);
 
       toast.success(t('Permission updated successfully!'), {
         style: { background: 'green', color: 'white' },

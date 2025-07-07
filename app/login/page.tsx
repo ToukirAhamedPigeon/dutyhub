@@ -11,6 +11,7 @@ import { signIn } from 'next-auth/react'
 import { useSession,getSession } from 'next-auth/react'
 import PermissionRedirector from '@/components/custom/PermissionRedirector'
 import { useAppDispatch } from '@/hooks/useRedux';
+import { initAuthUser } from '@/lib/initAuthUser';
 import { setLoaderContent, showLoader, hideLoader } from '@/store/fullPageLoaderSlice';
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -20,7 +21,6 @@ import { signInSchema, SignInSchemaType } from '@/lib/validations'
 import Container from '@/components/custom/Container'
 import Footer from '@/components/custom/Footer'
 import { toast } from "sonner"
-import { initAuthUser } from '@/lib/initAuthUser';
 import LanguageSwitcher from '@/components/custom/LanguageSwitcher';
 import { useTranslations } from 'next-intl';
 import { PasswordInput } from '@/components/custom/FormInputs'

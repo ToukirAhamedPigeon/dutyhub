@@ -13,6 +13,9 @@ import { accessToken } from '@/lib/tokens';
 import {CustomSelect, UniqueInput} from '@/components/custom/FormInputs'
 import { useTranslations } from 'next-intl';
 import { guards } from '@/constants'
+import { useAppDispatch } from '@/hooks/useRedux';
+import { initAuthUser } from '@/lib/initAuthUser';
+
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
@@ -39,6 +42,8 @@ export default function Add({fetchData}:AddProps) {
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model='Permission'
+  const dispatch = useAppDispatch();
+  
 
   const {
     register,
@@ -87,6 +92,8 @@ export default function Add({fetchData}:AddProps) {
       if (!result.success) {
         throw new Error(result.message || "Failed to add permission");
       }
+
+      await initAuthUser(dispatch, true);
   
       toast.success(t("Permission added successfully!"), {
         style: {

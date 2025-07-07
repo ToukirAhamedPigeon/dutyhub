@@ -14,6 +14,8 @@ import { accessToken } from '@/lib/tokens';
 import DateTimeInput,{BasicInput, BasicTextarea, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
 import { useTranslations } from 'next-intl';
+import { useAppDispatch } from '@/hooks/useRedux';
+import { initAuthUser } from '@/lib/initAuthUser';
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
@@ -86,6 +88,7 @@ export default function Register({fetchData}:RegisterProps) {
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model='User'
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -185,7 +188,7 @@ export default function Register({fetchData}:RegisterProps) {
       if (!result.success) {
         throw new Error(result.message || "Registration failed");
       }
-  
+      await initAuthUser(dispatch, true);
       toast.success(t("User registered successfully!"), {
         style: {
           background: 'green',

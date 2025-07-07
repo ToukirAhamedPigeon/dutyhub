@@ -19,6 +19,8 @@ import DateTimeInput, {
 } from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
 import { useTranslations } from 'next-intl'
+import { useAppDispatch } from '@/hooks/useRedux';
+import { initAuthUser } from '@/lib/initAuthUser';
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/
 
@@ -78,6 +80,7 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model = 'User'
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -130,6 +133,8 @@ export default function EditUser({ user, fetchData, onClose }: EditUserProps) {
       })
 
       if (!res.data.success) throw new Error(res.data.message || 'Update failed')
+
+      await initAuthUser(dispatch, true);
 
       toast.success(t('User updated successfully!'), {
         style: { background: 'green', color: 'white' },
