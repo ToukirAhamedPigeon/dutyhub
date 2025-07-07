@@ -115,3 +115,12 @@ export enum BloodGroup {
     createdAtId?: number;
     createdAt: Date;
   }
+
+  export interface IUserTableCombination {
+    _id?: Types.ObjectId
+    tableId: string
+    showColumnCombinations: string[] // Array of column IDs to show
+    userId: IUser
+    updatedBy?: IUser
+    updatedAt?: Date
+  }

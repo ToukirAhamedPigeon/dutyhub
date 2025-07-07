@@ -2,19 +2,20 @@ import { NextResponse } from 'next/server'
 import { authOptions } from '@/app/api/(public)/auth/[...nextauth]/route'
 import { dbConnect } from '@/lib/database/mongoose'
 import User from '@/lib/database/models/user.model'
+import Role from '@/lib/database/models/role.model'
+import Permission from '@/lib/database/models/permission.model'
 // import OtherModel from '@/lib/database/models/other.model' // Add as needed
 import { getServerSession } from 'next-auth'
 import { verifyAccessToken } from '@/lib/jwt'
 import mongoose from 'mongoose'
 
 const COLLECTION_MAP: Record<string, mongoose.Model<any>> = {
-  User,
+  User,Role,Permission
 //   Other: OtherModel,
   // Add more collections here as needed
 }
 
 export async function POST(req: Request) {
-    console.log('check-unique route')
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.split(' ')[1]
 
@@ -53,17 +54,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid collection' }, { status: 400 })
     }
 
-    console.log(collection);
 
     const query: any = { [fieldName]: fieldValue }
-
     if (exceptFieldValue != null) {
       query[exceptFieldName] =
         exceptFieldName === '_id' && mongoose.Types.ObjectId.isValid(exceptFieldValue)
           ? { $ne: new mongoose.Types.ObjectId(exceptFieldValue) }
           : { $ne: exceptFieldValue }
     }
-
     const existing = await Model.findOne(query)
     return NextResponse.json({ exists: !!existing })
   } catch (err) {

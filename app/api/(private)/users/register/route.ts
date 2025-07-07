@@ -1,7 +1,4 @@
-import { NextResponse } from 'next/server'
-import { authOptions } from '@/app/api/(public)/auth/[...nextauth]/route'
-import { getServerSession } from 'next-auth'
-import { verifyAccessToken } from '@/lib/jwt'
+import { NextResponse, NextRequest } from 'next/server'
 import { dbConnect } from '@/lib/database/mongoose'
 import User from '@/lib/database/models/user.model'
 import { uploadAndResizeImage } from '@/lib/imageUploder'
@@ -11,24 +8,14 @@ import { logAction } from '@/lib/logger'
 import bcrypt from 'bcryptjs'
 import { EActionType } from '@/types'
 import { customAssignPermissionsToModelBatch, customAssignRolesToModelBatch } from '@/lib/authorization'
+import { checkUserAccess } from '@/lib/authcheck/server'
 
-export async function POST(req: Request) {
-  const authHeader = req.headers.get('authorization')
-  const token = authHeader?.split(' ')[1]
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+export async function POST(req: NextRequest) {
 
   try {
-    const decoded = verifyAccessToken(token)
-    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
-      return NextResponse.json({ error: 'Invalid token payload' }, { status: 401 })
-    }
-
-    const session = await getServerSession(authOptions)
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authCheck = await checkUserAccess(req, ['manage_users'])
+    if (!authCheck.authorized) {
+      return authCheck.response
     }
 
     await dbConnect();
@@ -115,6 +102,10 @@ export async function POST(req: Request) {
         })
       
         newUser.image = imageUrl  
+        newUser.created_by = authCheck.userId
+        newUser.created_at = new Date()
+        newUser.updated_by = authCheck.userId
+        newUser.updated_at = new Date()
         await newUser.save()
       }
 
