@@ -404,8 +404,8 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
       )}
 
       <FilterModal
-        tableId="userTable"
-        title="Filter Users"
+        tableId="roleTable"
+        title="Filter Roles"
         open={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
         onApply={(newFilters) => {

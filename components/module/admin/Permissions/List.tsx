@@ -15,7 +15,6 @@ import { motion } from 'framer-motion'
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'
 import { useTable } from '@/hooks/useTable'
 import { useDetailModal } from '@/hooks/useDetailModal'
-import { useAppSelector } from '@/hooks/useRedux'
 import Modal from '@/components/custom/Modal'
 import FormHolderSheet from '@/components/custom/FormHolderSheet'
 import {
@@ -29,15 +28,15 @@ import { getCustomDateTime } from '@/lib/formatDate'
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
 import Add from './Add'
-import RoleDetail from './PermissionDetail'
-import { IRole } from '@/types'
+import PermissionDetail from './PermissionDetail'
+import { IPermission } from '@/types'
 import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
 import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
 import { printTableById } from '@/lib/printTable'
 import { exportVisibleTableToExcel } from '@/lib/exportTable'
 import { FilterModal } from '@/components/custom/FilterModal'
-import { RoleFilterForm, RoleFilters } from './PermissionFilterForm'
-import EditRole from './Edit'
+import { PermissionFilterForm, PermissionFilters } from './PermissionFilterForm'
+import EditPermission from './Edit'
 import { useEditSheet } from '@/hooks/useEditSheet'
 import ConfirmDialog from '@/components/custom/ConfirmDialog'
 import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
@@ -57,13 +56,13 @@ const getAllColumns = ({
 }: {
   pageIndex: number
   pageSize: number
-  fetchDetail: (itemOrId: IRole | string) => void
-  handleEditClick: (user: IRole) => void
+  fetchDetail: (itemOrId: IPermission | string) => void
+  handleEditClick: (user: IPermission) => void
   confirmDelete: (id: string) => void
   showDetail?: boolean
   showEdit?: boolean
   showDelete?: boolean
-}): ColumnDef<IRole>[] => [
+}): ColumnDef<IPermission>[] => [
   {
     header: 'SL',
     id: 'sl',
@@ -111,13 +110,13 @@ const getAllColumns = ({
   },
 ]
 
-const initialFilters: RoleFilters = {
+const initialFilters: PermissionFilters = {
   name: '',
   guard_name: '',
-  permission_ids: [],
+  role_ids: [],
 }
 
-export default function RoleListTable() {
+export default function PermissionListTable() {
   const t = useTranslations();
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   
@@ -128,20 +127,20 @@ export default function RoleListTable() {
     fetchDetail,
     closeModal: closeDetailModal,
     detailLoading,
-  } = useDetailModal<IRole>('/roles')
+  } = useDetailModal<IPermission>('/permissions')
 
-  const {isOpen: isEditSheetOpen,itemToEdit: roleToEdit,openEdit: handleEditClick,closeEdit: closeEditSheet} = useEditSheet<IRole>()
+  const {isOpen: isEditSheetOpen,itemToEdit: permissionToEdit,openEdit: handleEditClick,closeEdit: closeEditSheet} = useEditSheet<IPermission>()
 
   // New filter state and modal control
-const [filters, setFilters] = useState<RoleFilters>(initialFilters)
+const [filters, setFilters] = useState<PermissionFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
 const showDetail= true
-const showEdit= can(['manage_roles'])
-const showDelete= can(['manage_roles'])
+const showEdit= can(['manage_permissions'])
+const showDelete= can(['manage_permissions'])
 const [showAddButton,setShowAddButton]= useState(false)
 
 useEffect(() => {
-  setShowAddButton(can(['manage_roles']))
+  setShowAddButton(can(['manage_permissions']))
 },[])
 
 
@@ -158,11 +157,11 @@ const {
   pageSize,
   setPageSize,
   fetchData,
-} = useTable<IRole>({
+} = useTable<IPermission>({
   fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
     const headers = await authorizationHeader();
     const res = await api.post(
-      '/roles',
+      '/permissions',
       {
         q,
         page,
@@ -171,13 +170,13 @@ const {
         sortOrder: sortOrder || 'desc',
         ...(filters.name && { name: filters.name }),
         ...(filters.guard_name && { guard_name: filters.guard_name }),
-        ...(filters.permission_ids && filters.permission_ids.length > 0 && { permission_ids: filters.permission_ids }),
+        ...(filters.role_ids && filters.role_ids.length > 0 && { role_ids: filters.role_ids }),
       },
       { headers }
     );
 
     return {
-      data: res.data.roles,
+      data: res.data.permissions,
       total: res.data.totalCount,
     };
   },
@@ -193,7 +192,7 @@ const isFilterActive = useMemo(() => {
 }, [filters])
 
 const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDeleteWithConfirm({
-  endpoint: '/roles',
+  endpoint: '/permissions',
   onSuccess: fetchData,
 })
 
@@ -214,24 +213,24 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
 
   
 
-  const [visible, setVisible] = useState<ColumnDef<IRole>[]>([])
+  const [visible, setVisible] = useState<ColumnDef<IPermission>[]>([])
   const [showColumnModal, setShowColumnModal] = useState(false)
 
   useEffect(() => {
     (async () => {
-      const refreshedColumns = await refreshColumnSettings<IRole>('roleTable', allColumns)
+      const refreshedColumns = await refreshColumnSettings<IPermission>('permissionTable', allColumns)
       setVisible(refreshedColumns)
     })()
   }, [])
 
-  const handleColumnChange = (cols: ColumnDef<IRole>[]) => {
+  const handleColumnChange = (cols: ColumnDef<IPermission>[]) => {
     setVisible(cols)
     setShowColumnModal(false)
   }
 
   // Load saved filters from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('roleFilters')
+    const saved = localStorage.getItem('permissionFilters')
     if (saved) setFilters(JSON.parse(saved))
   }, [])
 
@@ -239,7 +238,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
   useEffect(() => {
     fetchData()
     setPageIndex(0) // Reset page on filter change
-    localStorage.setItem('roleFilters', JSON.stringify(filters))
+    localStorage.setItem('permissionFilters', JSON.stringify(filters))
   }, [filters])
 
   // ✅ Correct visible column IDs for export
@@ -272,17 +271,17 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         onAddNew={() => setIsSheetOpen(true)}
         showAddButton={showAddButton}
         onColumnSettings={() => setShowColumnModal(true)}
-        onPrint={() => printTableById('printable-user-table', 'Role Table')}
+        onPrint={() => printTableById('printable-user-table', 'Permission Table')}
         onExport={() =>
           exportVisibleTableToExcel({
             data,
             columns: allColumns,
             visibleColumnIds: visibleIds,
-            fileName: 'Roles',
-            sheetName: 'Roles',
+            fileName: 'Permissions',
+            sheetName: 'Permissions',
           })
         }
-        addButtonLabel="Add New Role"
+        addButtonLabel="Add New Permission"
         onFilter={() => setFilterModalOpen(true)}
         isFilterActive={isFilterActive}
       />
@@ -355,20 +354,20 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         />
       </div>
 
-      {showDetail && <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="Role Details">
+      {showDetail && <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="Permission Details">
         {detailLoading || !selectedItem ? (
           <div className="flex items-center justify-center min-h-[150px]">
             <TableLoader loading />
           </div>
         ) : (
-          <RoleDetail role={selectedItem} />
+          <PermissionDetail permission={selectedItem} />
         )}
       </Modal>}
 
       {showAddButton && <FormHolderSheet
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
-        title="Add New Role"
+        title="Add New Permission"
         titleDivClassName="success-gradient"
       >
         <Add fetchData={fetchData} />
@@ -378,12 +377,12 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
       {showEdit && <FormHolderSheet
         open={isEditSheetOpen}
         onOpenChange={closeEditSheet}
-        title="Edit Role"
+        title="Edit Permission"
         titleDivClassName="warning-gradient"
       >
-        {roleToEdit && (
-          <EditRole
-            role={roleToEdit}
+        {permissionToEdit && (
+          <EditPermission
+            permission={permissionToEdit}
             onClose={closeEditSheet}
             fetchData={async () => {
               //closeEditSheet()
@@ -394,8 +393,8 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
       </FormHolderSheet>}
 
       {showColumnModal && (
-        <ColumnVisibilityManager<IRole>
-          tableId="roleTable"
+        <ColumnVisibilityManager<IPermission>
+          tableId="permissionTable"
           open={showColumnModal}
           onClose={() => setShowColumnModal(false)}
           initialColumns={allColumns}
@@ -404,8 +403,8 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
       )}
 
       <FilterModal
-        tableId="userTable"
-        title="Filter Users"
+        tableId="permissionTable"
+        title="Filter Permissions"
         open={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
         onApply={(newFilters) => {
@@ -414,7 +413,7 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         }}
         initialFilters={initialFilters}
         renderForm={(filterValues, setFilterValues) => (
-          <RoleFilterForm
+          <PermissionFilterForm
             filterValues={filterValues}             // ✅ MATCHES expected prop
             setFilterValues={setFilterValues}       // ✅ MATCHES expected prop
             onClose={() => setFilterModalOpen(false)}
