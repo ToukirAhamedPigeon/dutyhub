@@ -19,10 +19,10 @@ const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 export const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   guard_name: z.string().min(1, 'Guard Name is required'),
-  permission_ids: z
+  role_ids: z
   .array(
     z.string().regex(objectIdRegex, {
-      message: "Each permission ID must be a valid ObjectId",
+      message: "Each role ID must be a valid ObjectId",
     })
   )
 });
@@ -38,7 +38,7 @@ export default function Add({fetchData}:AddProps) {
   const t = useTranslations();
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
-  const model='Role'
+  const model='Permission'
 
   const {
     register,
@@ -53,7 +53,7 @@ export default function Add({fetchData}:AddProps) {
     defaultValues: {
       name: '',
       guard_name: '',
-      permission_ids: []
+      role_ids: []
     }
   })
 
@@ -63,7 +63,7 @@ export default function Add({fetchData}:AddProps) {
   
     try {
       // Check if name is already taken
-      const nameTaken = await checkValueExists("Role", "name", data.name);
+      const nameTaken = await checkValueExists("Permission", "name", data.name);
       if (nameTaken) {
         setError("name", { type: "manual", message: "Name already exists" });
         setSubmitLoading(false);
@@ -74,9 +74,9 @@ export default function Add({fetchData}:AddProps) {
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("guard_name", data.guard_name);
-      formData.append("permission_ids", JSON.stringify(data.permission_ids));
+      formData.append("role_ids", JSON.stringify(data.role_ids));
   
-      const res = await api.post("/roles/add", formData, {
+      const res = await api.post("/permissions/add", formData, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -85,10 +85,10 @@ export default function Add({fetchData}:AddProps) {
       const result = res.data;
   
       if (!result.success) {
-        throw new Error(result.message || "Failed to add role");
+        throw new Error(result.message || "Failed to add permission");
       }
   
-      toast.success(t("Role added successfully!"), {
+      toast.success(t("Permission added successfully!"), {
         style: {
           background: 'green',
           color: 'white',
@@ -99,7 +99,7 @@ export default function Add({fetchData}:AddProps) {
   
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Something went wrong during adding role");
+      toast.error(error.message || "Something went wrong during adding permission");
     } finally {
       setSubmitLoading(false);
     }
@@ -151,21 +151,21 @@ export default function Add({fetchData}:AddProps) {
       </div>
 
         <CustomSelect<FormData>
-            id="permission_ids"
-            label="Permissions"
-            name="permission_ids"
+            id="role_ids"
+            label="Roles"
+            name="role_ids"
             setValue={setValue}
-            model="Role"
+            model="Permission"
             apiUrl="/get-options"
-            collection="Permission"
+            collection="Role"
             labelFields={["name"]}
             valueFields={["_id"]}
             sortOrder="asc"
             isRequired={false}
-            placeholder="Select Permissions"
+            placeholder="Select Roles"
             multiple={true}
-            value={watch("permission_ids")}
-            error={errors.permission_ids?.[0]}
+            value={watch("role_ids")}
+            error={errors.role_ids?.[0]}
           />
 
         {/* Submit Actions */}
@@ -174,7 +174,7 @@ export default function Add({fetchData}:AddProps) {
             {t('Reset Form')}
           </Button>
           <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white" disabled={submitLoading}>
-            {submitLoading ? t('Adding')+'...' : t('Add Role')}
+            {submitLoading ? t('Adding')+'...' : t('Add Permission')}
           </Button>
         </div>
         </form>
