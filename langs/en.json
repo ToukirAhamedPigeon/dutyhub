@@ -204,16 +204,16 @@
     "Permission Details": "Permission Details",
     "Edit Permission": "Edit Permission",
     "Filter Permissions": "Filter Permissions",
-    "Permission created:": "Permission created:",
-    "Permission updated:": "Permission updated:",
-    "Permission deleted:": "Permission deleted:",
-    "permission(s) created,": "permission(s) created,",
-    "skipped.": "skipped.",
+    "Permission created": "Permission created",
+    "Permission updated": "Permission updated",
+    "Permission deleted": "Permission deleted",
+    "permission(s) created": "permission(s) created",
+    "skipped": "skipped",
     "Permission creation failed": "Permission creation failed",
     "Permission not found": "Permission not found",
     "Server error": "Server error",
     "Role updated successfully": "Role updated successfully",
-    "Cannot delete permission due to existing reference.": "Cannot delete permission due to existing reference.",
+    "Cannot delete permission due to existing reference": "Cannot delete permission due to existing reference",
     "Permission deleted successfully": "Permission deleted successfully"
   }
   

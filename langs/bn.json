@@ -207,13 +207,13 @@
     "Permission created:": "পারমিশন তৈরি হয়েছে:",
     "Permission updated:": "পারমিশন আপডেট হয়েছে:",
     "Permission deleted:": "পারমিশন মুছে ফেলা হয়েছে:",
-    "permission(s) created,": "পারমিশন(গুলি) তৈরি হয়েছে,",
-    "skipped.": "স্কিপ করা হয়েছে।",
+    "permission(s) created": "পারমিশন(গুলি) তৈরি হয়েছে,",
+    "skipped": "স্কিপ করা হয়েছে।",
     "Permission creation failed": "পারমিশন তৈরি ব্যর্থ হয়েছে",
     "Permission not found": "পারমিশন পাওয়া যায়নি",
     "Server error": "সার্ভার ত্রুটি",
     "Role updated successfully": "রোল সফলভাবে আপডেট হয়েছে",
-    "Cannot delete permission due to existing reference.": "বিদ্যমান রেফারেন্স থাকার কারণে পারমিশন মুছে ফেলা যায়নি।",
+    "Cannot delete permission due to existing reference": "বিদ্যমান রেফারেন্স থাকার কারণে পারমিশন মুছে ফেলা যায়নি।",
     "Permission deleted successfully": "পারমিশন সফলভাবে মুছে ফেলা হয়েছে"
   }
   
