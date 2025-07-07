@@ -1,6 +1,6 @@
 import React,{ useEffect, useState, useRef, InputHTMLAttributes, forwardRef } from "react"
 import { Input } from "@/components/ui/input";
-import {  Path, FieldError, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
+import {  Path, PathValue, FieldError, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from "framer-motion"
 import { checkValueExists } from "@/lib/validations"
@@ -43,7 +43,7 @@ export const BasicInput=({
     model,
     ...rest
   }: FormInputProps) => {
-    const t = useTranslations(model);
+    const t = useTranslations();
   
     const getErrorMessage = () => {
       if (!error?.message) return null;
@@ -78,6 +78,8 @@ interface UniqueInputProps extends InputHTMLAttributes<HTMLInputElement> {
   field: string
   watchValue: string
   uniqueErrorMessage: string
+  exceptFieldName?: string
+  exceptFieldValue?: string
 }
 
 export const UniqueInput = ({
@@ -92,9 +94,11 @@ export const UniqueInput = ({
   field,
   watchValue,
   uniqueErrorMessage,
+  exceptFieldName,
+  exceptFieldValue,
   ...rest
 }: UniqueInputProps) => {
-  const t = useTranslations(model)
+  const t = useTranslations()
   const [checking, setChecking] = useState(false)
   const [exists, setExists] = useState(false)
 
@@ -106,13 +110,21 @@ export const UniqueInput = ({
 
     const timer = setTimeout(async () => {
       setChecking(true)
-      const found = await checkValueExists(model, field, watchValue)
+
+      const found = await checkValueExists(
+        model,
+        field,
+        watchValue,
+        exceptFieldValue,
+        exceptFieldName
+      )
+
       setExists(found)
       setChecking(false)
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [watchValue, model, field])
+  }, [watchValue, model, field, exceptFieldName, exceptFieldValue])
 
   const getErrorMessage = () => {
     if (exists) {
@@ -127,7 +139,8 @@ export const UniqueInput = ({
   return (
     <div className="space-y-1 w-full relative">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
-        {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
+        {t(label, { default: label })}{" "}
+        {isRequired && <span className="text-red-500">*</span>}
       </label>
 
       <Input
@@ -136,7 +149,7 @@ export const UniqueInput = ({
         placeholder={placeholder && t(placeholder, { default: placeholder })}
         {...register}
         {...rest}
-        className={`${exists ? 'border-red-500' : ''} ${rest.className || ''} bg-white`}
+        className={`${exists ? "border-red-500" : ""} ${rest.className || ""} bg-white`}
       />
 
       {checking && (
@@ -179,7 +192,7 @@ interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement>
 
 export const PasswordInput = ({ label, error, isHidden = true, registerProps, inputClassName, isRequiredStar, placeholder, model, ...rest }: PasswordInputProps) => {
   const [hidden, setHidden] = useState(isHidden);
-  const t = useTranslations(model);
+  const t = useTranslations();
   return (
     <div className="space-y-1 w-full">
       <label className="block text-sm font-medium text-gray-700">
@@ -241,7 +254,7 @@ export const BasicSelect = <T extends Record<string, any>>({
   defaultOption,
   value
 }: BasicSelectProps<T>) => {
-  const t = useTranslations(model)
+  const t = useTranslations()
 
   return (
     <div className="space-y-1 w-full">
@@ -285,6 +298,7 @@ export const BasicSelect = <T extends Record<string, any>>({
 }
 
 //Custom Select
+
 export interface CustomSelectProps<T extends Record<string, any>> {
   id: string;
   label: string;
@@ -294,14 +308,18 @@ export interface CustomSelectProps<T extends Record<string, any>> {
   isRequired?: boolean;
   placeholder?: string;
   model: string;
-  value?: string | string[];
+  value?:
+    | string
+    | string[]
+    | { value: string; label: string }
+    | { value: string; label: string }[];
   multiple?: boolean;
 
   // 🔹 Static Options
   options?: { label: string; value: string }[];
   defaultOption?: { label: string; value: string };
 
-  // 🔹 Dynamic/API Options (all optional)
+  // 🔹 Dynamic/API Options
   apiUrl?: string;
   collection?: string;
   labelFields?: string[];
@@ -325,7 +343,7 @@ export function CustomSelect<T extends Record<string, any>>({
   name,
   collection,
   isRequired = false,
-  placeholder = 'Select option(s)',
+  placeholder = "Select option(s)",
   error,
   setValue,
   model,
@@ -335,14 +353,14 @@ export function CustomSelect<T extends Record<string, any>>({
   defaultOption,
   limit = 50,
   filter = {},
-  optionValueKey = '_id',
-  optionLabelKeys = ['name'],
-  optionLabelSeparator = ' ',
+  optionValueKey = "_id",
+  optionLabelKeys = ["name"],
+  optionLabelSeparator = " ",
   multiple = false,
 }: CustomSelectProps<T>) {
-  const t = useTranslations(model);
-  const [search, setSearch] = useState('');
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -351,6 +369,7 @@ export function CustomSelect<T extends Record<string, any>>({
     selected,
     setSelected,
     getOptionLabel,
+    setOptions,
   } = useSelect({
     collection,
     apiUrl,
@@ -362,32 +381,90 @@ export function CustomSelect<T extends Record<string, any>>({
     optionLabelKeys,
     optionLabelSeparator,
     initialValue: value,
+    isOpen:open
   });
 
-  const allOptions = apiUrl
-    ? fetchedOptions
-    : defaultOption
+  // 🔁 Ensure passed-in value objects are included in options
+  useEffect(() => {
+    if (!apiUrl || !value) return;
+  
+    const valArray = Array.isArray(value) ? value : [value];
+    const valObjects: { value: string; label: string }[] = valArray.filter(
+      (v): v is { value: string; label: string } =>
+        typeof v === "object" && "value" in v && "label" in v
+    );
+  
+    if (valObjects.length > 0) {
+      setOptions((prev) => {
+        const existingValues = new Set(prev.map((opt) => opt.value));
+        const missing = valObjects.filter((vo) => !existingValues.has(vo.value));
+  
+        // Safely map to OptionType
+        const normalized = missing.map((vo) => ({
+          ...vo,
+          label: vo.label,
+          value: vo.value,
+        }));
+  
+        return [...prev, ...normalized];
+      });
+    }
+  }, [JSON.stringify(value), apiUrl]);
+
+  // 🧠 Combine static + dynamic + passed value options
+  const valueOptions = Array.isArray(value)
+    ? value.filter((v) => typeof v === "object" && v?.value && v?.label)
+    : typeof value === "object" && value?.value && value?.label
+    ? [value]
+    : [];
+
+    const objectValueOptions = valueOptions.filter(
+      (vo): vo is { value: string; label: string } =>
+        typeof vo === 'object' && vo !== null && 'value' in vo && 'label' in vo
+    );
+    
+    const allOptions = apiUrl
+      ? [
+          ...objectValueOptions,
+          ...fetchedOptions.filter(
+            (fo) => !objectValueOptions.some((vo) => vo.value === fo.value)
+          ),
+        ]
+      : defaultOption
       ? [defaultOption, ...options]
       : options;
 
-      // console.log('fetchedOptions',fetchedOptions)
-      // console.log('allOptions',allOptions)
+  // 🧱 Normalize selected value(s)
+  const normalizedValue = multiple
+    ? Array.isArray(value)
+      ? value.map((v: any) => (typeof v === "string" ? v : v?.value))
+      : value
+      ? [typeof value === "string" ? value : value?.value]
+      : []
+    : typeof value === "string"
+    ? value
+    : (value as any)?.value || "";
 
-  const currentValue = apiUrl ? selected : value;
+  const getLabel = (val: string) =>
+    allOptions.find((opt) => opt.value === val)?.label || '';
+
+  const displayValue = multiple
+    ? (normalizedValue as string[]).map((val) => capitalize(getLabel(val))).join(", ")
+    : capitalize(getLabel(normalizedValue as string));
 
   const isSelected = (val: string) =>
     multiple
-      ? Array.isArray(currentValue) && currentValue.includes(val)
-      : currentValue === val;
+      ? (normalizedValue as string[]).includes(val)
+      : normalizedValue === val;
 
     const handleChange = (val: string) => {
       if (multiple) {
-        const prev = Array.isArray(currentValue) ? currentValue : currentValue ? [currentValue] : [];
+        const prev = Array.isArray(normalizedValue) ? normalizedValue : [];
         const exists = prev.includes(val);
         const updated = exists ? prev.filter((v) => v !== val) : [...prev, val];
-        setValue(name, updated as any);
+        setValue(name, updated as PathValue<T, typeof name>);
       } else {
-        setValue(name, val as any);
+        setValue(name, val as PathValue<T, typeof name>);
         setOpen(false);
       }
     };
@@ -395,7 +472,8 @@ export function CustomSelect<T extends Record<string, any>>({
   return (
     <div className="space-y-1 w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
-        {t(label, { default: label })} {isRequired && <span className="text-red-500">*</span>}
+        {t(label, { default: label })}{" "}
+        {isRequired && <span className="text-red-500">*</span>}
       </label>
 
       <Popover open={open} onOpenChange={setOpen}>
@@ -405,14 +483,7 @@ export function CustomSelect<T extends Record<string, any>>({
               readOnly
               ref={inputRef}
               className="text-left cursor-pointer hover:bg-slate-100 pr-10 border border-gray-500"
-              value={
-                multiple
-                  ? allOptions
-                      .filter((opt) => (currentValue as string[])?.includes(opt.value))
-                      .map((opt) => capitalize(opt.label))
-                      .join(', ')
-                  : allOptions.find((opt) => opt.value === currentValue)?.label || ''
-              }
+              value={displayValue}
               placeholder={t(placeholder, { default: placeholder })}
               onClick={() => setOpen(true)}
             />
@@ -426,7 +497,7 @@ export function CustomSelect<T extends Record<string, any>>({
         >
           <Command className="w-full">
             <CommandInput
-              placeholder={t('Search', { default: 'Search' }) + '...'}
+              placeholder={t("Search", { default: "Search" }) + "..."}
               value={search}
               onValueChange={setSearch}
               className="w-full"
@@ -434,16 +505,18 @@ export function CustomSelect<T extends Record<string, any>>({
             <CommandList>
               {loading && (
                 <CommandItem key="loading" disabled>
-                  {t('Loading', { default: 'Loading' }) + '...'}
+                  {t("Loading", { default: "Loading" }) + "..."}
                 </CommandItem>
               )}
               {!loading &&
-                allOptions.map((opt,i) => (
+                allOptions.map((opt, i) => (
                   <CommandItem
                     key={opt.value || i}
                     onSelect={() => handleChange(opt.value)}
                     className={`cursor-pointer hover:bg-blue-100 !rounded-none ${
-                      isSelected(opt.value) ? '!bg-blue-400 hover:!bg-blue-400 !text-white' : ''
+                      isSelected(opt.value)
+                        ? "!bg-blue-400 hover:!bg-blue-400 !text-white"
+                        : ""
                     }`}
                   >
                     {capitalize(opt.label)}
@@ -451,7 +524,7 @@ export function CustomSelect<T extends Record<string, any>>({
                 ))}
               {!loading && allOptions.length === 0 && (
                 <CommandItem key="no-options" disabled>
-                  {t('No options found', { default: 'No options found.' })}
+                  {t("No options found", { default: "No options found." })}
                 </CommandItem>
               )}
             </CommandList>
@@ -487,6 +560,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
   isRequired = false,
   className,
 }) => {
+  const t = useTranslations()
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     accept: {
@@ -500,7 +574,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
     <div className={cn('space-y-1', className)}>
       {label && (
         <label className="block text-sm font-medium text-gray-700">
-          {label} {isRequired && <span className="text-red-500">*</span>}
+          {t(label)} {isRequired && <span className="text-red-500">*</span>}
         </label>
       )}
 
@@ -512,7 +586,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
         )}
       >
         <input {...getInputProps()} />
-        <p className="text-sm text-gray-500">Drag & drop or click to select an image</p>
+        <p className="text-sm text-gray-500">{t('Drag & drop or click to select an image')}</p>
 
         {preview && (
           <div className="mt-2 flex flex-col items-center justify-center gap-2">
@@ -532,7 +606,7 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
                 clearImage();
               }}
             >
-              Remove Image
+              {t('Remove Image')}
             </Button>
           </div>
         )}
@@ -599,7 +673,7 @@ export const BasicTextarea: React.FC<BasicTextareaProps> = ({
   model,
   isRequired = false,
 }) => {
-  const t = useTranslations(model);
+  const t = useTranslations();
   return (
     <div className="space-y-1 w-full">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">
@@ -613,7 +687,7 @@ export const BasicTextarea: React.FC<BasicTextareaProps> = ({
         className="w-full border border-gray-400 rounded-md p-2 text-sm bg-white"
       />
       {error && (
-        <p className="text-sm text-red-600 mt-1">{error.message}</p>
+        <p className="text-sm text-red-600 mt-1">{t(error.message)}</p>
       )}
     </div>
   );
@@ -641,7 +715,7 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
     },
     ref
   ) => {
-    const t = useTranslations(model);
+    const t = useTranslations();
 
     const handleReset = (e: React.MouseEvent) => {
       e.stopPropagation(); // prevent popover toggle if any

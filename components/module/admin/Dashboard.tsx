@@ -60,7 +60,7 @@ const lineChartData = {
 }
 
 export default function Dashboard() {
-  const t = useTranslations("Dashboard");
+  const t = useTranslations();
   const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(hideLoader());

@@ -366,6 +366,15 @@ export async function assignPermissionsToRoleBatch(permissionIds: string[], role
   return results;
 }
 
+export async function assignRolesToPermissionBatch(roleIds: string[], permissionId: string) {
+  const results = [];
+  for (const roleId of roleIds) {
+    const assignment = await assignPermissionToRole(roleId, permissionId);
+    if (assignment) results.push(assignment);
+  }
+  return results;
+}
+
 export async function deleteRolesBatch(roleIds: string[]) {
   const results = [];
   for (const roleId of roleIds) {
@@ -399,12 +408,87 @@ export async function removeModelRolesBatch(
   return results;
 }
 
+export async function removeRolesOfModelBatch(
+  modelId: string,
+  modelType = "User"
+) {
+  await dbConnect();
+
+  const result = await ModelRole.deleteMany({
+    model_id: modelId,
+    model_type: modelType,
+  });
+
+  return {
+    deletedCount: result.deletedCount || 0,
+    success: result.deletedCount > 0,
+  };
+}
+
+export async function removePermissionsOfModelBatch(
+  modelId: string,
+  modelType = "User"
+) {
+  await dbConnect();
+
+  const result = await ModelPermission.deleteMany({
+    model_id: modelId,
+    model_type: modelType,
+  });
+
+  return {
+    deletedCount: result.deletedCount || 0,
+    success: result.deletedCount > 0,
+  };
+}
+
+export async function removePermissionsOfRoleBatch(
+  roleId: string
+) {
+  await dbConnect();
+
+  const result = await RolePermission.deleteMany({
+    role_id: roleId,
+  });
+
+  return {
+    deletedCount: result.deletedCount || 0,
+    success: result.deletedCount > 0,
+  };
+}
+
+export async function removeRolesOfPermissionBatch(
+  permissionId: string
+) {
+  await dbConnect();
+
+  const result = await RolePermission.deleteMany({
+    permission_id: permissionId,
+  });
+
+  return {
+    deletedCount: result.deletedCount || 0,
+    success: result.deletedCount > 0,
+  };
+}
+
 export async function removeRolePermissionsBatch(permissionIds: string[], roleId: string) {
   const results = [];
 
   for (const permissionId of permissionIds) {
     const removed = await removeRolePermission(roleId, permissionId);
     results.push({ permissionId, removed });
+  }
+
+  return results;
+}
+
+export async function removePermissionRolesBatch(roleIds: string[], permissionId: string) {
+  const results = [];
+
+  for (const roleId of roleIds) {
+    const removed = await removeRolePermission(roleId, permissionId);
+    results.push({ roleId, removed });
   }
 
   return results;
@@ -453,6 +537,44 @@ export async function customAssignPermissionsToRoleBatch(
   if (toAdd.length > 0) {
     const addResults = await assignPermissionsToRoleBatch(toAdd, roleId);
     added = addResults.map(r => r.permissionId);
+  }
+
+  return {
+    removed,
+    added,
+    skipped,
+    allAssigned: [...added, ...skipped],
+  };
+}
+
+export async function customAssignRolesToPermissionBatch(
+  permissionId: string,
+  newRoleIds: string[]
+) {
+  await dbConnect();
+
+  // Step 1: Fetch currently assigned permissions
+  const currentAssignments = await RolePermission.find({ permission_id: permissionId });
+  const currentRoleIds = currentAssignments.map(r => r.role_id.toString());
+
+  // Step 2: Calculate difference
+  const toRemove = currentRoleIds.filter(id => !newRoleIds.includes(id));
+  const toAdd = newRoleIds.filter(id => !currentRoleIds.includes(id));
+  const skipped = newRoleIds.filter(id => currentRoleIds.includes(id));
+
+  let removed:string[] = [];
+  let added:string[] = [];
+
+  // Step 3: Remove outdated assignments
+  if (toRemove.length > 0) {
+    const removalResults = await removePermissionRolesBatch(toRemove, permissionId);
+    removed = removalResults.map(r => r.roleId);
+  }
+
+  // Step 4: Add new permissions
+  if (toAdd.length > 0) {
+    const addResults = await assignRolesToPermissionBatch(toAdd, permissionId);
+    added = addResults.map(r => r.roleId);
   }
 
   return {

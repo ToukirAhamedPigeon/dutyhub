@@ -31,7 +31,7 @@ export default function SignInPage() {
   const { data: session } = useSession()
   const [error, setError] = useState<string | null>(null)
   const dispatch = useAppDispatch();
-  const t = useTranslations('SignInPage');
+  const t = useTranslations();
   useEffect(() => {
     dispatch(hideLoader());
   }, [dispatch]);

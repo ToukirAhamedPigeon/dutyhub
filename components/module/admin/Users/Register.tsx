@@ -13,6 +13,7 @@ import { useProfilePicture } from '@/hooks/useProfilePicture'
 import { accessToken } from '@/lib/tokens';
 import DateTimeInput,{BasicInput, BasicTextarea, CustomSelect, PasswordInput, SingleImageInput, UniqueInput} from '@/components/custom/FormInputs'
 import { bloodGroups } from '@/constants'
+import { useTranslations } from 'next-intl';
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
@@ -23,12 +24,26 @@ export const schema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmed_password: z.string().min(1, 'Confirmed password is required'),
   image: z
-  .instanceof(File)
-  .optional()
+  .any()
+  .transform((file) => {
+    // If no file selected or it's an empty file from canceled picker, treat it as undefined
+    if (
+      !file ||
+      !(file instanceof File) ||
+      file.size === 0 ||
+      file.name === ""
+    ) {
+      return undefined
+    }
+    return file
+  })
   .refine(
     (file) => !file || file.type.startsWith("image/"),
-    { message: "Only image files are allowed" }
-  ),
+    {
+      message: "Only image files are allowed",
+    }
+  )
+  .optional(),
   bp_no: z.string().optional(),
   phone_1: z.string().min(11, 'Phone Number is required and at least 11 Digits').optional(),
   phone_2: z.string().optional(),
@@ -67,6 +82,7 @@ interface RegisterProps {
 
 
 export default function Register({fetchData}:RegisterProps) {
+  const t = useTranslations();
   const token = accessToken()
   const [submitLoading, setSubmitLoading] = useState(false)
   const model='User'
@@ -112,6 +128,7 @@ export default function Register({fetchData}:RegisterProps) {
 
   // Form Submit
   const onSubmit = async (data: FormData) => {
+    const t = useTranslations();
     setSubmitLoading(true);
   
     try {
@@ -169,7 +186,7 @@ export default function Register({fetchData}:RegisterProps) {
         throw new Error(result.message || "Registration failed");
       }
   
-      toast.success("User registered successfully!", {
+      toast.success(t("User registered successfully!"), {
         style: {
           background: 'green',
           color: 'white',
@@ -213,17 +230,17 @@ export default function Register({fetchData}:RegisterProps) {
         model={model}
       />
        <UniqueInput
-            id="username"
-            label="Username"
-            placeholder="Username"
-            model={model}
-            isRequired={true}
-            register={register('username')}
-            error={errors.username}
-            uniqueErrorMessage="Username already exists"
-            field="username"
-            watchValue={watch('username')}
-          />
+          id="username"
+          label="Username"
+          placeholder="Username"
+          model={model}
+          isRequired={true}
+          register={register('username')}
+          error={errors.username}
+          uniqueErrorMessage="Username already exists"
+          field="username"
+          watchValue={watch('username')}
+        />
       </div>
 
       {/* Password + Confirm Password */}
@@ -427,10 +444,10 @@ export default function Register({fetchData}:RegisterProps) {
         {/* Submit Actions */}
         <div className="flex justify-between gap-4 mt-4 border-t border-gray-300 pt-4">
           <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>
-            Reset Form
+            {t('Reset Form')}
           </Button>
           <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white" disabled={submitLoading}>
-            {submitLoading ? 'Registering...' : 'Register User'}
+            {submitLoading ? t('Registering')+'...' : t('Register User')}
           </Button>
         </div>
         </form>

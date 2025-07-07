@@ -2,6 +2,7 @@
 import React from 'react'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl';
 
 interface ConfirmDialogProps {
   open: boolean
@@ -24,17 +25,18 @@ const ConfirmDialog = ({
   cancelLabel = 'Cancel',
   loading = false,
 }: ConfirmDialogProps) => {
+  const t = useTranslations()
   return (
     <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{t(title)}</DialogTitle>
         </DialogHeader>
-        <div className="text-gray-700 text-center sm:text-left">{description}</div>
+        <div className="text-gray-700 text-center sm:text-left">{t(description)}?</div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onCancel} disabled={loading}>{cancelLabel}</Button>
+          <Button variant="ghost" onClick={onCancel} disabled={loading}>{t(cancelLabel)}</Button>
           <Button variant="destructive" onClick={onConfirm} disabled={loading}>
-            {confirmLabel}
+            {t(confirmLabel)}
           </Button>
         </DialogFooter>
       </DialogContent>

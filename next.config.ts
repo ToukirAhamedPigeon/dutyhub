@@ -3,7 +3,14 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['dutyhubfiles.pigeonic.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'dutyhubfiles.pigeonic.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
   eslint: {
     ignoreDuringBuilds: true,

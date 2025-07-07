@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 
 const FullPageLoader = () => {
   const { isLoading, message, icon } = useAppSelector((state) => state.fullPageLoader);
-  const t = useTranslations('Common');
+  const t = useTranslations();
 
   if (!isLoading) return null;
 

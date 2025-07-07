@@ -39,3 +39,36 @@ export const twoDigitRandomNumber = Math.floor(Math.random() * 90) + 10;
     if (typeof value === 'object') return JSON.stringify(value)
     return String(value)
   }
+
+  type CaseStyle = 'title' | 'lower' | 'upper' | 'sentence'
+
+/**
+ * Formats camelCase, kebab-case, or snake_case into readable text.
+ * Supports 'title', 'lower', 'upper', and 'sentence' casing.
+ */
+export function formatLabel(input: string, style: CaseStyle = 'title'): string {
+  const normalized = input
+    .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase → camel Case
+    .replace(/[_-]/g, ' ')               // snake_case/kebab-case → space
+    .replace(/\s+/g, ' ')                // collapse spaces
+    .trim()
+
+  const words = normalized.split(' ').map(w => w.toLowerCase())
+
+  switch (style) {
+    case 'title':
+      return words.map(capitalize).join(' ')
+    case 'lower':
+      return words.join(' ')
+    case 'upper':
+      return words.join(' ').toUpperCase()
+    case 'sentence':
+      return [capitalize(words[0]), ...words.slice(1)].join(' ')
+    default:
+      return normalized
+  }
+
+  function capitalize(word: string) {
+    return word.charAt(0).toUpperCase() + word.slice(1)
+  }
+}

@@ -8,3 +8,7 @@ export const bloodGroups = [
     { label: 'AB+', value: 'AB+' },
     { label: 'AB-', value: 'AB-' },
   ]
+
+  export const guards = [
+    { label: 'User', value: 'User' },
+  ]

@@ -1,28 +1,20 @@
 import { useState, useEffect } from 'react'
-import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, OnChangeFn, SortingState } from '@tanstack/react-table'
+import type { ColumnDef, SortingState, OnChangeFn } from '@tanstack/react-table'
 
-type FetcherParams = {
+export function useTable<T>({
+  fetcher,
+  initialColumns,
+  defaultSort = 'created_at',
+}: {
+  fetcher: (params: {
     q: string
     page: number
     limit: number
-    sortBy?: string
-    sortOrder?: 'asc' | 'desc'
-  }
-  
-  type UseTableOptions<T> = {
-    fetcher: (params: FetcherParams) => Promise<{ data: T[]; totalCount: number }>
-  }
-  
-
-export function useTable<T>({ fetcher, defaultSort = 'created_at' }: {
-  fetcher: (params: {
-    q: string,
-    page: number,
-    limit: number,
-    sortBy: string,
-    sortOrder: string,
-  }) => Promise<{ data: T[], total: number }>,
-  defaultSort?: string,
+    sortBy: string
+    sortOrder: string
+  }) => Promise<{ data: T[]; total: number }>
+  initialColumns: ColumnDef<T, any>[]
+  defaultSort?: string
 }) {
   const [data, setData] = useState<T[]>([])
   const [loading, setLoading] = useState(false)
@@ -30,21 +22,21 @@ export function useTable<T>({ fetcher, defaultSort = 'created_at' }: {
   const [pageSize, setPageSize] = useState(10)
   const [totalCount, setTotalCount] = useState(0)
   const [globalFilter, setGlobalFilter] = useState('')
-  const [sorting, setSorting] = useState([])
+  const [sorting, setSorting] = useState<SortingState>([])
 
   const fetchData = async () => {
     setLoading(true)
-    const sortBy = sorting.length ? (sorting[0] as any).id : defaultSort
-    const sortOrder = sorting.length ? ((sorting[0] as any).desc ? 'desc' : 'asc') : 'desc'
+    const sortBy = sorting.length ? sorting[0].id : defaultSort
+    const sortOrder = sorting.length && !sorting[0].desc ? 'asc' : 'desc'
 
     try {
-        const res = await fetcher({
-            q: globalFilter,
-            page: pageIndex + 1,
-            limit: pageSize,
-            sortBy,
-            sortOrder,
-          })
+      const res = await fetcher({
+        q: globalFilter,
+        page: pageIndex + 1,
+        limit: pageSize,
+        sortBy,
+        sortOrder,
+      })
       setData(res.data)
       setTotalCount(res.total)
     } finally {
@@ -56,32 +48,18 @@ export function useTable<T>({ fetcher, defaultSort = 'created_at' }: {
     fetchData()
   }, [globalFilter, pageIndex, pageSize, sorting])
 
-  const table = useReactTable({
-    data,
-    columns: [],
-    state: { sorting, pagination: { pageIndex, pageSize } },
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting as OnChangeFn<SortingState>,
-    manualPagination: true,
-    manualSorting: true,
-    pageCount: Math.ceil(totalCount / pageSize),
-  })
-
   return {
     data,
     loading,
-    table,
-    globalFilter,
-    setGlobalFilter,
-    pageIndex,
-    setPageIndex,
-    pageSize,
-    setPageSize,
-    sorting,
-    setSorting,
-    fetchData,
     totalCount,
+    pageIndex,
+    pageSize,
+    globalFilter,
+    sorting,
+    setPageIndex,
+    setPageSize,
+    setGlobalFilter,
+    setSorting: setSorting as OnChangeFn<SortingState>,
+    fetchData,
   }
 }
