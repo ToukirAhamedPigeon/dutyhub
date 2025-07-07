@@ -5,24 +5,24 @@ import { useForm } from 'react-hook-form'
 import { BasicInput, CustomSelect } from '@/components/custom/FormInputs'
 import { guards } from '@/constants'
 
-export interface RoleFilters {
+export interface PermissionFilters {
   name?: string
   guard_name?: string
-  permission_ids?: string[]
+  role_ids?: string[]
 }
 
-interface RoleFilterFormProps {
-  filterValues: RoleFilters
-  setFilterValues: React.Dispatch<React.SetStateAction<RoleFilters>>
+interface PermissionFilterFormProps {
+  filterValues: PermissionFilters
+  setFilterValues: React.Dispatch<React.SetStateAction<PermissionFilters>>
   onClose: () => void
 }
 
-const LOCAL_STORAGE_KEY = 'roleFilters'
+const LOCAL_STORAGE_KEY = 'permissionFilters'
 
-export function RoleFilterForm({
+export function PermissionFilterForm({
   filterValues,
   setFilterValues,
-}: RoleFilterFormProps) {
+}: PermissionFilterFormProps) {
   const initialized = useRef(false)
 
   const {
@@ -31,11 +31,11 @@ export function RoleFilterForm({
     reset,
     setValue,
     formState: { errors },
-  } = useForm<RoleFilters>({
+  } = useForm<PermissionFilters>({
     defaultValues: filterValues,
   })
 
-  const model = 'Role'
+  const model = 'Permission'
 
   // Load from localStorage on first mount and merge with filterValues
   useEffect(() => {
@@ -45,7 +45,7 @@ export function RoleFilterForm({
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
       if (saved) {
-        const savedValues = JSON.parse(saved) as RoleFilters
+        const savedValues = JSON.parse(saved) as PermissionFilters
         const merged = { ...filterValues, ...savedValues }
         reset(merged)
         setFilterValues(merged)
@@ -60,9 +60,9 @@ export function RoleFilterForm({
   // Sync form values with parent state and save to localStorage
   useEffect(() => {
     const subscription = watch((values) => {
-      const cleanedValues: RoleFilters = {
+      const cleanedValues: PermissionFilters = {
         ...values,
-        permission_ids: values.permission_ids?.filter((id): id is string => typeof id === 'string'),
+        role_ids: values.role_ids?.filter((id): id is string => typeof id === 'string'),
       }
 
       setFilterValues((prev) => {
@@ -88,7 +88,7 @@ export function RoleFilterForm({
           register={register('name')}
           model={model}
         />
-        <CustomSelect<RoleFilters>
+        <CustomSelect<PermissionFilters>
           id="guard_name"
           label="Guard Name"
           name="guard_name"
@@ -104,22 +104,22 @@ export function RoleFilterForm({
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
-        <CustomSelect<RoleFilters>
-          id="permission_ids"
-          label="Permissions"
-          name="permission_ids"
+        <CustomSelect<PermissionFilters>
+          id="role_ids"
+          label="Roles"
+          name="role_ids"
           setValue={setValue}
           model={model}
           apiUrl="/get-options"
-          collection="Permission"
+          collection="Role"
           labelFields={['name']}
           valueFields={['_id']}
           sortOrder="asc"
           isRequired={false}
-          placeholder="Select Permissions"
+          placeholder="Select Roles"
           multiple={true}
-          value={watch('permission_ids')}
-          error={errors.permission_ids?.[0]}
+          value={watch('role_ids')}
+          error={errors.role_ids?.[0]}
         />
       </div>
     </form>
