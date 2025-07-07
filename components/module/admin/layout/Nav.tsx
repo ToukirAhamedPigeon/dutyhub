@@ -9,12 +9,12 @@ import {Can} from '@/components/custom/Can';
 import { useTranslations } from 'next-intl';
 
 const menuItems = [
-  { label: 'Dashboard', icon: <LayoutDashboard size={22} className="mr-2" />, basePath: '/admin/dashboard', children: [], permissions: ['manage_dashboard'] },
-  {label: 'Lookups', icon: <ListFilter size={22} className="mr-2" />, basePath: '/admin/lookups', children: [], permissions: ['manage_lookups']},
-  { label: 'Users', icon: <Users size={22} className="mr-2" />, basePath: '/admin/users', children: [], permissions: ['manage_users'] },
-  { label: 'Roles', icon: <UserCog size={22} className="mr-2" />, basePath: '/admin/roles', children: [], permissions: ['manage_roles'] },
-  { label: 'Permissions', icon: <UserCheck size={22} className="mr-2" />, basePath: '/admin/permissions', children: [], permissions: ['manage_permissions'] },
-  {label: 'Logs', icon: <History size={22} className="mr-2" />, basePath: '/admin/logs', children: [], permissions: ['manage_logs']}
+  { label: 'Dashboard', icon: <LayoutDashboard size={22} className="mr-2" />, basePath: '/admin/dashboard', children: [], permissions: ['read-dashboard'] },
+  {label: 'Lookups', icon: <ListFilter size={22} className="mr-2" />, basePath: '/admin/lookups', children: [], permissions: ['read-lookups']},
+  { label: 'Users', icon: <Users size={22} className="mr-2" />, basePath: '/admin/users', children: [], permissions: ['read-users'] },
+  { label: 'Roles', icon: <UserCog size={22} className="mr-2" />, basePath: '/admin/roles', children: [], permissions: ['read-roles'] },
+  { label: 'Permissions', icon: <UserCheck size={22} className="mr-2" />, basePath: '/admin/permissions', children: [], permissions: ['read-permissions'] },
+  {label: 'Logs', icon: <History size={22} className="mr-2" />, basePath: '/admin/logs', children: [], permissions: ['read-logs']}
 ];
 
 export default function Nav({ onLinkClick }: { onLinkClick?: () => void }) {

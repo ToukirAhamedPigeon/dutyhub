@@ -21,7 +21,7 @@ function extractId(value: unknown): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_permissions'])
+    const authCheck = await checkUserAccess(req, ['read-permissions'])
     if (!authCheck.authorized) {
       return authCheck.response
     }

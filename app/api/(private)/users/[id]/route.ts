@@ -19,7 +19,7 @@ import { checkUserAccess } from '@/lib/authcheck/server';
 
 export async function GET(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
       try {
-        const authCheck = await checkUserAccess(req, ['manage_users'])
+        const authCheck = await checkUserAccess(req, ['read-users'])
         if (!authCheck.authorized) {
           return authCheck.response
         }
@@ -66,7 +66,7 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
 
 export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_users'])
+    const authCheck = await checkUserAccess(req, ['update-users'])
     if (!authCheck.authorized) {
       return authCheck.response
     }
@@ -166,7 +166,7 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_users'])
+    const authCheck = await checkUserAccess(req, ['delete-users'])
     if (!authCheck.authorized) {
       return authCheck.response
     }

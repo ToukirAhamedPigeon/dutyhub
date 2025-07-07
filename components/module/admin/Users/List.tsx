@@ -196,12 +196,12 @@ export default function UserListTable() {
 const [filters, setFilters] = useState<UserFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
 const showDetail= true
-const showEdit= can(['manage_users'])
-const showDelete= can(['manage_users'])
+const showEdit= can(['update-users'])
+const showDelete= can(['delete-users'])
 const [showAddButton,setShowAddButton]= useState(false)
 
 useEffect(() => {
-  setShowAddButton(can(['manage_users']))
+  setShowAddButton(can(['create-users']))
 },[])
 
 

@@ -13,7 +13,7 @@ import { checkUserAccess } from '@/lib/authcheck/server'
 export async function POST(req: NextRequest) {
 
   try {
-    const authCheck = await checkUserAccess(req, ['manage_users'])
+    const authCheck = await checkUserAccess(req, ['create-users'])
     if (!authCheck.authorized) {
       return authCheck.response
     }

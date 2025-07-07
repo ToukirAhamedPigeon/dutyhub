@@ -10,7 +10,7 @@ import Role from '@/lib/database/models/role.model'
 
 export async function POST(req: NextRequest) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_roles']);
+    const authCheck = await checkUserAccess(req, ['create-roles']);
     if (!authCheck.authorized) return authCheck.response;
 
     await dbConnect();

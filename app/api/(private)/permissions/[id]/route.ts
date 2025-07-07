@@ -15,7 +15,7 @@ import Permission from '@/lib/database/models/permission.model';
 
 export async function GET(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
       try {
-        const authCheck = await checkUserAccess(req, ['manage_permissions'])
+        const authCheck = await checkUserAccess(req, ['read-permissions'])
         if (!authCheck.authorized) {
           return authCheck.response
         }
@@ -23,7 +23,7 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
         await dbConnect()
 
         if (!Types.ObjectId.isValid(id)) {
-          return NextResponse.json({ error: 'Invalid role ID' }, { status: 400 })
+          return NextResponse.json({ error: 'Invalid permission ID' }, { status: 400 })
         }
 
         try {
@@ -60,7 +60,7 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
 
 export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_permissions'])
+    const authCheck = await checkUserAccess(req, ['update-permissions'])
     if (!authCheck.authorized) {
       return authCheck.response
     }
@@ -70,7 +70,7 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
     await dbConnect()
     const formData = await req.formData()
 
-    const permission = await Role.findById(permissionId)
+    const permission = await Permission.findById(permissionId)
     if (!permission) {
       return NextResponse.json({ success: false, message: 'Permission not found' }, { status: 404 })
     }
@@ -109,7 +109,7 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 
     return NextResponse.json({
       success: true,
-      message: 'Role updated successfully',
+      message: 'Permission updated successfully',
       permission,
       newAssignedRoleInfos,
     })
@@ -124,7 +124,7 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }:  {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_permissions'])
+    const authCheck = await checkUserAccess(req, ['delete-permissions'])
     if (!authCheck.authorized) {
       return authCheck.response
     }

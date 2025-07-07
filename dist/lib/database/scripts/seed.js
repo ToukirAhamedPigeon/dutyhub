@@ -36,10 +36,10 @@ async function seed() {
     console.log(`🔐 Created role: ${role.name}`);
     // 3. Create Permissions
     const permissionNames = [
-        'manage_dashboard',
-        'manage_users',
-        'manage_roles',
-        'manage_permissions',
+        'read-dashboard',
+        'read-users',
+        'read-roles',
+        'read-permissions',
     ];
     const permissions = await permission_model_1.default.insertMany(permissionNames.map(name => ({
         name,

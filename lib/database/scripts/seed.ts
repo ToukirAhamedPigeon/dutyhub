@@ -40,10 +40,10 @@ async function seed() {
 
   // 3. Create Permissions
   const permissionNames = [
-    'manage_dashboard',
-    'manage_users',
-    'manage_roles',
-    'manage_permissions',
+    'read-dashboard',
+    'read-users',
+    'read-roles',
+    'read-permissions',
   ];
 
   const permissions = await Permission.insertMany(

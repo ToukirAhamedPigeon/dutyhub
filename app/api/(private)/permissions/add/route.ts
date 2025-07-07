@@ -35,7 +35,7 @@ function expandPermissionName(input: string): string[] {
 
 export async function POST(req: NextRequest) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_permissions']);
+    const authCheck = await checkUserAccess(req, ['create-permissions']);
     if (!authCheck.authorized) return authCheck.response;
 
     await dbConnect();

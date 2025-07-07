@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const routePermissions: Record<string, string> = {
-  '/admin/dashboard': 'manage_dashboard',
-  '/admin/users': 'manage_users',
-  '/admin/roles': 'manage_roles',
-  '/admin/permissions': 'manage_permissions',
-  '/admin/lookups': 'manage_lookups',
-  '/admin/logs': 'manage_logs',
+  '/admin/dashboard': 'read-dashboard',
+  '/admin/users': 'read-users',
+  '/admin/roles': 'read-roles',
+  '/admin/permissions': 'read-permissions',
+  '/admin/lookups': 'read-lookups',
+  '/admin/logs': 'read-logs',
 };
 
 export function middleware(req: NextRequest) {

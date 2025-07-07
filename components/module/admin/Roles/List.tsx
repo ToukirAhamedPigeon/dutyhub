@@ -136,12 +136,12 @@ export default function RoleListTable() {
 const [filters, setFilters] = useState<RoleFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
 const showDetail= true
-const showEdit= can(['manage_roles'])
-const showDelete= can(['manage_roles'])
+const showEdit= can(['update-roles'])
+const showDelete= can(['delete-roles'])
 const [showAddButton,setShowAddButton]= useState(false)
 
 useEffect(() => {
-  setShowAddButton(can(['manage_roles']))
+  setShowAddButton(can(['create-roles']))
 },[])
 
 

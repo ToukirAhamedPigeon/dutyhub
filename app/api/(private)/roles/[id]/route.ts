@@ -15,7 +15,7 @@ import Permission from '@/lib/database/models/permission.model';
 
 export async function GET(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
       try {
-        const authCheck = await checkUserAccess(req, ['manage_roles'])
+        const authCheck = await checkUserAccess(req, ['read-roles'])
         if (!authCheck.authorized) {
           return authCheck.response
         }
@@ -60,7 +60,7 @@ export async function GET(req:NextRequest, { params }: {params: Promise<{ id: st
 
 export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_roles'])
+    const authCheck = await checkUserAccess(req, ['update-roles'])
     if (!authCheck.authorized) {
       return authCheck.response
     }
@@ -124,7 +124,7 @@ export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }:  {params: Promise<{ id: string }>}) {
   try {
-    const authCheck = await checkUserAccess(req, ['manage_roles'])
+    const authCheck = await checkUserAccess(req, ['delete-roles'])
     if (!authCheck.authorized) {
       return authCheck.response
     }

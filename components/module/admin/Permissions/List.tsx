@@ -135,12 +135,12 @@ export default function PermissionListTable() {
 const [filters, setFilters] = useState<PermissionFilters>(initialFilters)
 const [filterModalOpen, setFilterModalOpen] = useState(false)
 const showDetail= true
-const showEdit= can(['manage_permissions'])
-const showDelete= can(['manage_permissions'])
+const showEdit= can(['update-permissions'])
+const showDelete= can(['delete-permissions'])
 const [showAddButton,setShowAddButton]= useState(false)
 
 useEffect(() => {
-  setShowAddButton(can(['manage_permissions']))
+  setShowAddButton(can(['create-permissions']))
 },[])
 
 

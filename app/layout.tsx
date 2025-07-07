@@ -10,8 +10,8 @@ import getRequestConfig from '@/i18n/request';
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { locale, messages } = await getRequestConfig();
   return (
-    <html lang={locale}>
-      <body>
+    <html lang={locale} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <Providers>
         <NextIntlClientProvider  locale={locale} messages={messages}>
           <FullPageLoader />
