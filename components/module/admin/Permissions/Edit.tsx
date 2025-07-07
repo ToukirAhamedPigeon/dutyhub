@@ -123,7 +123,7 @@ export default function EditPermission({ permission, fetchData, onClose }: EditP
         <div className="flex justify-between gap-4 mt-4 border-t border-gray-300 pt-4">
           <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>{t('Reset')}</Button>
           <Button variant="warning" type="submit" className="" disabled={submitLoading}>
-            {submitLoading ? t('Saving')+'...' : t('Update Role')}
+            {submitLoading ? t('Saving')+'...' : t('Update Permission')}
           </Button>
         </div>
       </form>
