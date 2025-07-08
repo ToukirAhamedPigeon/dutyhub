@@ -105,7 +105,7 @@ export enum BloodGroup {
   }
 
   export interface ILog {
-    _id: Types.ObjectId;
+    _id: string | ObjectId;
     detail?: string;
     changes?: string;
     actionType: EActionType;
