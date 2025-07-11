@@ -216,6 +216,9 @@
     "Role updated successfully": "Role updated successfully",
     "Cannot delete permission due to existing reference": "Cannot delete permission due to existing reference",
     "Permission deleted successfully": "Permission deleted successfully",
-    "Permission Roles":"Permission Roles"
+    "Permission Roles":"Permission Roles",
+    "Collection Name":"Collection Name",
+    "Action Type":"Action Type",
+    "Object ID":"Object ID"
   }
   
