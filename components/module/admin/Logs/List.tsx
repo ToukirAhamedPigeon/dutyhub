@@ -13,25 +13,41 @@ import {
 } from '@tanstack/react-table'
 import { motion } from 'framer-motion'
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'
+import { useTable } from '@/hooks/useTable'
 import { useDetailModal } from '@/hooks/useDetailModal'
 import Modal from '@/components/custom/Modal'
-import { TableLoader, TableHeaderActions, TablePaginationFooter, IndexCell, RowActions } from '@/components/custom/Table'
+import {
+  TableLoader,
+  TableHeaderActions,
+  TablePaginationFooter,
+  RowActions,
+  IndexCell,
+} from '@/components/custom/Table'
 import { getCustomDateTime } from '@/lib/formatDate'
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
 import LogDetail from './LogDetail'
 import { ILog } from '@/types'
+import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
+import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
+import { printTableById } from '@/lib/printTable'
+import { exportVisibleTableToExcel } from '@/lib/exportTable'
+import { FilterModal } from '@/components/custom/FilterModal'
+import { LogFilterForm, LogFilters } from './LogFilterForm'
 import { useTranslations } from 'next-intl'
+import { parseChanges } from '@/lib/helpers'
 
-// Column definitions for Log list
+// 🧱 Column Definitions
 const getAllColumns = ({
   pageIndex,
   pageSize,
   fetchDetail,
+  showDetail=true
 }: {
   pageIndex: number
   pageSize: number
   fetchDetail: (itemOrId: ILog | string) => void
+  showDetail?: boolean
 }): ColumnDef<ILog>[] => [
   {
     header: 'SL',
@@ -45,35 +61,41 @@ const getAllColumns = ({
     header: 'Action',
     id: 'action',
     cell: ({ row }) => (
-      <button
-        className="btn btn-sm btn-primary"
-        onClick={() => fetchDetail(row.original)}
-        type="button"
-      >
-        Detail
-      </button>
+      <RowActions
+        row={row.original}
+        onDetail={() => fetchDetail(row.original)}
+        showDetail={showDetail}
+      />
     ),
   },
-  { header: 'Detail', accessorKey: 'detail' },
-  { header: 'Collection Name', accessorKey: 'collectionName' },
-  { header: 'Action Type', accessorKey: 'actionType' },
-  { header: 'Object ID', accessorKey: 'objectId' },
-  { header: 'Created By', accessorKey: 'createdByName' },
+  { header: 'Detail', id: 'detail', accessorKey: 'detail' },
+  { header: 'Collection Name', id: 'collectionName', accessorKey: 'collectionName' },
+  { header: 'Action Type', id: 'actionType', accessorKey: 'actionType' },
+  { header: 'Object ID', id: 'objectId', accessorKey: 'objectId' },
+  { header: 'Created By', id: 'createdBy', accessorKey: 'createdByName' },
   {
     header: 'Created At',
     accessorKey: 'createdAt',
-    cell: ({ getValue }) => getCustomDateTime(getValue() as string, 'YYYY-MM-DD HH:mm:ss'),
+    id: 'createdAt',
+    cell: ({ getValue }) => getCustomDateTime(getValue() as string,'YYYY-MM-DD HH:mm:ss'),
     meta: {
       customClassName: 'text-center min-w-[150px] whitespace-nowrap',
     },
-  },
+  }
 ]
 
-export default function LogListTable() {
-  const t = useTranslations()
+const initialFilters: LogFilters = {
+  collectionName: [],
+  actionType: [],
+  createdBy: [],
+  createdAtFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  createdAtTo: new Date(),
+}
 
-  const [filters, setFilters] = useState({})
-  const [filterModalOpen, setFilterModalOpen] = useState(false)
+export default function LogListTable() {
+  const t = useTranslations();
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  
 
   const {
     isModalOpen,
@@ -83,38 +105,62 @@ export default function LogListTable() {
     detailLoading,
   } = useDetailModal<ILog>('/logs')
 
-  // Pagination and sorting state
-  const [data, setData] = useState<ILog[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [pageIndex, setPageIndex] = useState(0)
-  const [pageSize, setPageSize] = useState(10)
 
-  // Fetch logs data
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true)
-      const headers = await authorizationHeader()
-      const res = await api.post(
-        '/logs',
-        {
-          q: globalFilter,
-          page: pageIndex + 1,
-          limit: pageSize,
-          sortBy: sorting[0]?.id || 'createdAt',
-          sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
-          ...filters,
-        },
-        { headers }
-      )
-      setData(res.data.logs)
-      setTotalCount(res.data.totalCount)
-      setLoading(false)
-    }
-    fetchData()
-  }, [pageIndex, pageSize, sorting, globalFilter, filters])
+  // New filter state and modal control
+const [filters, setFilters] = useState<LogFilters>(initialFilters)
+const [filterModalOpen, setFilterModalOpen] = useState(false)
+const showDetail= true
+
+
+const {
+  data,
+  totalCount,
+  loading,
+  globalFilter,
+  setGlobalFilter,
+  sorting,
+  setSorting,
+  pageIndex,
+  setPageIndex,
+  pageSize,
+  setPageSize,
+  fetchData,
+} = useTable<ILog>({
+  fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
+    const headers = await authorizationHeader();
+    const res = await api.post(
+      '/logs',
+      {
+        q,
+        page,
+        limit,
+        sortBy: sortBy || 'createdAt',
+        sortOrder: sortOrder || 'desc',
+        ...(filters.createdAtFrom && { createdAtFrom: filters.createdAtFrom }),
+        ...(filters.createdAtTo && { createdAtTo: filters.createdAtTo }),
+        ...(filters.collectionName && filters.collectionName.length > 0 && { collectionName: filters.collectionName }),
+        ...(filters.actionType && filters.actionType.length > 0 && { actionType: filters.actionType }),
+        ...(filters.createdBy && filters.createdBy.length > 0 && { createdBy: filters.createdBy }),
+      },
+      { headers }
+    );
+
+    return {
+      data: res.data.logs,
+      total: res.data.totalCount,
+    };
+  },
+  initialColumns: [],
+  defaultSort: 'createdAt',
+});
+
+const isFilterActive = useMemo(() => {
+  return Object.entries(filters).some(([key, value]) => {
+    if (Array.isArray(value)) return value.length > 0
+    return value !== ''
+  })
+}, [filters])
+
 
   const allColumns = useMemo(
     () =>
@@ -122,13 +168,51 @@ export default function LogListTable() {
         pageIndex,
         pageSize,
         fetchDetail,
+        showDetail
       }),
-    [pageIndex, pageSize, fetchDetail]
+    [pageIndex, pageSize, fetchDetail, showDetail]
+  )
+
+  
+
+  const [visible, setVisible] = useState<ColumnDef<ILog>[]>([])
+  const [showColumnModal, setShowColumnModal] = useState(false)
+
+  useEffect(() => {
+    (async () => {
+      const refreshedColumns = await refreshColumnSettings<ILog>('logTable', allColumns)
+      setVisible(refreshedColumns)
+    })()
+  }, [])
+
+  const handleColumnChange = (cols: ColumnDef<ILog>[]) => {
+    setVisible(cols)
+    setShowColumnModal(false)
+  }
+
+  // Load saved filters from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('logFilters')
+    if (saved) setFilters(JSON.parse(saved))
+  }, [])
+
+  // Refetch data & save filters when filters change
+  useEffect(() => {
+    fetchData()
+    setPageIndex(0) // Reset page on filter change
+    localStorage.setItem('logFilters', JSON.stringify(filters))
+  }, [filters])
+
+  // ✅ Correct visible column IDs for export
+  const visibleIds = visible.map(
+    (col) =>
+      col.id ??
+      (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : '')
   )
 
   const table = useReactTable({
     data,
-    columns: allColumns,
+    columns: visible,
     state: { sorting, pagination: { pageIndex, pageSize } },
     onSortingChange: setSorting as OnChangeFn<SortingState>,
     manualPagination: true,
@@ -139,23 +223,29 @@ export default function LogListTable() {
     getPaginationRowModel: getPaginationRowModel(),
   })
 
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
       <div className="table-container relative space-y-2">
-        <TableHeaderActions
-          searchValue={globalFilter}
-          onSearchChange={setGlobalFilter}
-          onFilter={() => setFilterModalOpen(true)}
-          isFilterActive={false}
-          showAddButton={false}
-          onAddNew={() => {}}
-          onColumnSettings={() => {}}
-          onPrint={() => {}}
-          onExport={() => {}}
-          addButtonLabel=""
-        />
+      <TableHeaderActions
+        searchValue={globalFilter}
+        onSearchChange={setGlobalFilter}
+        onColumnSettings={() => setShowColumnModal(true)}
+        onPrint={() => printTableById('printable-user-table', 'Log Table')}
+        onExport={() =>
+          exportVisibleTableToExcel({
+            data,
+            columns: allColumns,
+            visibleColumnIds: visibleIds,
+            fileName: 'Logs',
+            sheetName: 'Logs',
+          })
+        }
+        onFilter={() => setFilterModalOpen(true)}
+        isFilterActive={isFilterActive}
+      />
 
-        <div className="relative rounded-sm shadow overflow-hidden bg-white">
+        <div className="relative rounded-sm shadow overflow-hidden bg-white" id="printable-user-table">
           <div className="max-h-[600px] min-h-[200px] overflow-y-auto">
             {loading && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-opacity-70 mt-20">
@@ -180,8 +270,8 @@ export default function LogListTable() {
                         >
                           <span>
                             {(() => {
-                              const content = flexRender(header.column.columnDef.header, header.getContext())
-                              return typeof content === 'string' ? t(content) : content
+                              const content = flexRender(header.column.columnDef.header, header.getContext());
+                              return typeof content === "string" ? t(content) : content;
                             })()}
                           </span>
                           <span className="ml-2">
@@ -223,29 +313,54 @@ export default function LogListTable() {
         />
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="Log Details">
+      {showDetail && <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="Log Details">
         {detailLoading || !selectedItem ? (
           <div className="flex items-center justify-center min-h-[150px]">
             <TableLoader loading />
           </div>
         ) : (
-          (() => {
-            // Transform selectedItem here before passing
-            const transformedLog = {
+          <LogDetail
+            log={{
               ...selectedItem,
-              createdByName: selectedItem.createdBy?.name || 'Unknown',
-              createdAt: getCustomDateTime(selectedItem.createdAt.toISOString(), 'YYYY-MM-DD HH:mm:ss'),
-              changes: selectedItem.changes ? JSON.parse(selectedItem.changes) : undefined,
-              objectId: selectedItem.objectId || '',
-              detail: selectedItem.detail || '',
-              collectionName: selectedItem.collectionName,
-              actionType: selectedItem.actionType,
-            };
-
-            return <LogDetail log={transformedLog} />;
-          })()
+              objectId: selectedItem.objectId ?? 'N/A',
+              createdByName: selectedItem.createdByName ?? 'Unknown User',
+              createdAt: selectedItem.createdAt.toString(), // Ensure it's a string
+              changes: parseChanges(selectedItem.changes),
+            }}
+          />
         )}
-      </Modal>
+      </Modal>}
+
+
+      {showColumnModal && (
+        <ColumnVisibilityManager<ILog>
+          tableId="logTable"
+          open={showColumnModal}
+          onClose={() => setShowColumnModal(false)}
+          initialColumns={allColumns}
+          onChange={handleColumnChange}
+        />
+      )}
+
+      <FilterModal
+        tableId="logTable"
+        title="Filter Logs"
+        open={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        onApply={(newFilters) => {
+          setFilters(newFilters)
+          setFilterModalOpen(false)
+        }}
+        initialFilters={initialFilters}
+        renderForm={(filterValues, setFilterValues) => (
+          <LogFilterForm
+            filterValues={filterValues}             // ✅ MATCHES expected prop
+            setFilterValues={setFilterValues}       // ✅ MATCHES expected prop
+            onClose={() => setFilterModalOpen(false)}
+          />
+        )}
+      />
+
     </motion.div>
   )
 }

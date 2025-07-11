@@ -80,7 +80,7 @@ export function FilterModal<T>({
           <DialogTitle>{t(title)}</DialogTitle>
         </DialogHeader>
 
-        <div className="py-4 px-2 max-h-[400px] overflow-y-auto">{renderForm(filterValues, setFilterValues)}</div>
+        <div className="py-4 px-2 h-[400px] overflow-y-auto">{renderForm(filterValues, setFilterValues)}</div>
 
         <DialogFooter className="flex flex-row justify-center sm:justify-end gap-2">
           <Button variant="outline" onClick={handleReset}>

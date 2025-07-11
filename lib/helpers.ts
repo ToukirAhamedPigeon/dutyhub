@@ -72,3 +72,13 @@ export function formatLabel(input: string, style: CaseStyle = 'title'): string {
     return word.charAt(0).toUpperCase() + word.slice(1)
   }
 }
+
+
+export function parseChanges(changes?: string): Record<string, any> | undefined {
+  if (!changes) return undefined;
+  try {
+    return JSON.parse(changes);
+  } catch {
+    return { raw: changes }; // fallback
+  }
+}

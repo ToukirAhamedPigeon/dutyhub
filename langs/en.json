@@ -219,6 +219,13 @@
     "Permission Roles":"Permission Roles",
     "Collection Name":"Collection Name",
     "Action Type":"Action Type",
-    "Object ID":"Object ID"
+    "Filter Logs":"Filter Logs",
+    "Select Collection":"Select Collection",
+    "Select Action":"Select Action",
+    "From Date":"From Date",
+    "To Date":"To Date",
+    "Object ID":"Object ID",
+    "Changes":"Changes",
+    "Log Details":"Log Details"
   }
   

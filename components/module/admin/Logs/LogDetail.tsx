@@ -29,7 +29,7 @@ export default function LogDetail({ log }: { log: LogDetailProps['log'] }) {
     : [];
 
   const rows = [
-    { label: 'Detail', value: log.detail },
+    { label: 'Detail', value: log.detail ?? 'No detail provided' },
     { label: 'Collection Name', value: log.collectionName },
     { label: 'Action Type', value: log.actionType },
     { label: 'Object ID', value: log.objectId },

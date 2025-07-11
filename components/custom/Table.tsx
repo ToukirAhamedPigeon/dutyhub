@@ -113,7 +113,7 @@ export function TableHeaderActions({
           placeholder={t("Search")+"..."}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-[150px] md:w-1/3"
+          className="w-[120px] md:w-1/3"
         />
       }
       <div className="flex gap-2 relative">

@@ -753,6 +753,7 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
             )}
             wrapperClassName="w-full"
             disabled={disabled}
+            popperClassName="!z-[9999] !overflow-visible"
           />
           {showResetButton && value && !disabled && !readOnly && (
             <button

@@ -106,7 +106,7 @@ export enum BloodGroup {
 
   export interface ILog {
     _id: string | ObjectId;
-    detail?: string;
+    detail: string;
     changes?: string;
     actionType: EActionType;
     collectionName: string;
@@ -114,6 +114,7 @@ export enum BloodGroup {
     createdBy: IUser;
     createdAtId?: number;
     createdAt: Date;
+    createdByName: string | null;
   }
 
   export interface IUserTableCombination {
