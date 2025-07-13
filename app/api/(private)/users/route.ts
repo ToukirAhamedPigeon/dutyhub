@@ -7,7 +7,6 @@ import ModelPermission from '@/lib/database/models/modelPermission.model';
 import Permission from '@/lib/database/models/permission.model';
 import RolePermission from '@/lib/database/models/rolePermission.model';
 import { IUser, IRole, IPermission, IRolePermission } from '@/types';
-import { Types } from 'mongoose';
 import { checkUserAccess } from '@/lib/authcheck/server';
 import { extractId } from '@/lib/helpers';
 
