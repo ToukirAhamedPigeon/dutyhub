@@ -240,7 +240,7 @@ export function ColumnVisibilityManager<T>({
           {/* Visible Columns */}
           <div>
             <h3 className="font-bold mb-2">{t('Display')}</h3>
-            <ScrollArea className="border border-gray-600 rounded h-120 space-y-1">
+            <ScrollArea className="border border-gray-600 rounded min-h-[50vh] max-h-[75vh] space-y-1">
               {visible.map(col => {
                 const colId = getColumnId(col)
                 return (
@@ -275,7 +275,7 @@ export function ColumnVisibilityManager<T>({
           {/* Hidden Columns */}
           <div>
             <h3 className="font-bold mb-2">{t('Do Not Display')}</h3>
-            <ScrollArea className="border border-gray-600 rounded h-120 space-y-1">
+            <ScrollArea className="border border-gray-600 rounded min-h-[50vh] max-h-[75vh] space-y-1">
               {filteredHidden.map(col => {
                 const colId = getColumnId(col)
                 return (
