@@ -65,6 +65,7 @@ export default function SignInPage() {
       if (!res || !res.ok) {
         toast.error(t('Login failed'));
         console.error('Login failed:', res?.error);
+        dispatch(hideLoader());
         throw new Error(t('Invalid username or password'));
       }
   
@@ -78,6 +79,7 @@ export default function SignInPage() {
       }
   
       if (!session) {
+        dispatch(hideLoader());
         throw new Error('Session not established after login.');
       }
   
