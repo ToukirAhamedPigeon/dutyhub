@@ -9,17 +9,7 @@ import RolePermission from '@/lib/database/models/rolePermission.model';
 import { IUser, IRole, IPermission, IRolePermission } from '@/types';
 import { Types } from 'mongoose';
 import { checkUserAccess } from '@/lib/authcheck/server';
-
-function extractId(value: unknown): string {
-  if (value instanceof Types.ObjectId) {
-    return value.toString();
-  } else if (typeof value === 'object' && value !== null && '_id' in value) {
-    const obj = value as { _id: Types.ObjectId };
-    return obj._id.toString();
-  } else {
-    throw new Error('Invalid value passed to extractId');
-  }
-}
+import { extractId } from '@/lib/helpers';
 
 export async function POST(req: NextRequest) {
 

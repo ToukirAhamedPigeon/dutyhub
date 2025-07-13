@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx'
 import { formatDateTime } from './formatDate'
+import { Types } from 'mongoose'
 
 export const exportExcel = ({data, fileName, sheetName}: {data: any, fileName: string, sheetName: string}) => {
     const ws = XLSX.utils.json_to_sheet(data)
@@ -81,4 +82,13 @@ export function parseChanges(changes?: string): Record<string, any> | undefined 
   } catch {
     return { raw: changes }; // fallback
   }
+}
+
+export function extractId(value: unknown): string {
+  if (value instanceof Types.ObjectId) {
+    return (value as Types.ObjectId).toString();
+  } else if (typeof value === 'object' && value !== null && '_id' in value) {
+    return (value as { _id: Types.ObjectId })._id.toString();
+  }
+  throw new Error('Invalid value passed to extractId');
 }

@@ -5,16 +5,7 @@ import Log from '@/lib/database/models/log.model';
 import { checkUserAccess } from '@/lib/authcheck/server';
 import { Types } from 'mongoose';
 import { ILog, IUser } from '@/types';
-
-function extractId(value: unknown): string {
-  if (value instanceof Types.ObjectId) {
-    return value.toString();
-  } else if (typeof value === 'object' && value !== null && '_id' in value) {
-    return (value as { _id: Types.ObjectId })._id.toString();
-  } else {
-    throw new Error('Invalid value passed to extractId');
-  }
-}
+import { extractId } from '@/lib/helpers';
 
 export async function POST(req: NextRequest) {
   try {
