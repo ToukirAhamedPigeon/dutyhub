@@ -1,182 +1,165 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { dbConnect } from '@/lib/database/mongoose';
-import { Types } from 'mongoose'
-import { IPermission, IRole} from '@/types';
-import Role from '@/lib/database/models/role.model';
-import { omitFields } from '@/lib/helpers'
-import { logAction } from '@/lib/logger'
-import { EActionType } from '@/types'
-import { customAssignPermissionsToRoleBatch,removePermissionsOfRoleBatch } from '@/lib/authorization'
+import { Types } from 'mongoose';
+import Lookup from '@/lib/database/models/lookup.model';
+import User from '@/lib/database/models/user.model';
+import { omitFields } from '@/lib/helpers';
+import { logAction } from '@/lib/logger';
+import { EActionType, IUser } from '@/types';
 import { checkReferenceBeforeDelete } from '@/lib/checkRefBeforeDelete';
 import { checkUserAccess } from '@/lib/authcheck/server';
-import RolePermission from '@/lib/database/models/rolePermission.model';
-import Permission from '@/lib/database/models/permission.model';
+import { ILookup } from '@/types';
 
-
-export async function GET(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
-      try {
-        const authCheck = await checkUserAccess(req, ['read-roles'])
-        if (!authCheck.authorized) {
-          return authCheck.response
-        }
-        const { id } = await params;
-        await dbConnect()
-
-        if (!Types.ObjectId.isValid(id)) {
-          return NextResponse.json({ error: 'Invalid role ID' }, { status: 400 })
-        }
-
-        try {
-            const role = await Role.findById(id).lean<IRole>()
-
-            if (!role) {
-              return NextResponse.json({ error: 'Role not found' }, { status: 404 })
-            }
-
-            const rolePermissions = await RolePermission.find({
-              role_id: role._id,
-            }).lean();
-            const permissionIds = rolePermissions.map((rp) => rp.permission_id);
-            const permissions = await Permission.find({ _id: { $in: permissionIds } }).lean<IPermission[]>();
-
-             // Directly get role names from roles
-            const permissionNames = permissions.map((permission) => permission.name).join(", ");
-
-            const formattedRole = {
-              ...role,
-              permissionNames,
-              permission_ids:permissionIds,
-            };
-
-            return NextResponse.json(formattedRole)
-          } catch (err) {
-            console.error('Error fetching role detail:', err)
-            return NextResponse.json({ error: 'Server error' }, { status: 500 })
-          }
-        } catch (err) {
-          return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
-        }
-}
-
-export async function PATCH(req:NextRequest, { params }: {params: Promise<{ id: string }>}) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const authCheck = await checkUserAccess(req, ['update-roles'])
-    if (!authCheck.authorized) {
-      return authCheck.response
-    }
+    const authCheck = await checkUserAccess(req, ['read-lookups']);
+    if (!authCheck.authorized) return authCheck.response;
 
     const { id } = await params;
-    const roleId = id
-    await dbConnect()
-    const formData = await req.formData()
+    await dbConnect();
 
-    const role = await Role.findById(roleId)
-    if (!role) {
-      return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 })
-    }
-    const originalRole = role.toObject();
-
-    const updatableFields = [
-      'name',
-      'guard_name'
-    ]
-
-    for (const field of updatableFields) {
-      const val = formData.get(field)
-      if (val !== null) role[field] = val
+    if (!Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid lookup ID' }, { status: 400 });
     }
 
-    role.updated_by = authCheck.userId
-    role.updated_at = new Date()
-    await role.save()
+    const lookup = await Lookup.findById(id).lean<ILookup>();
+    if (!lookup) {
+      return NextResponse.json({ error: 'Lookup not found' }, { status: 404 });
+    }
 
-    // Handle roles and permissions
- 
-    const permission_ids = JSON.parse(formData.get('permission_ids') as string || '[]') as string[]
-    const newAssignedPermissionInfos = customAssignPermissionsToRoleBatch(role._id.toString(), permission_ids)
+    // Fetch parent names and user names
+    const [parent, altParent, createdByUser, updatedByUser] = await Promise.all([
+      lookup.parent_id ? Lookup.findById(lookup.parent_id).lean<ILookup>() : null,
+      lookup.alt_parent_id ? Lookup.findById(lookup.alt_parent_id).lean<ILookup>() : null,
+      lookup.created_by ? User.findById(lookup.created_by).lean<IUser>() : null,
+      lookup.updated_by ? User.findById(lookup.updated_by).lean<IUser>() : null,
+    ]);
 
-    // Log the update
-    await logAction({
-      detail: `Role updated: ${role.name}`,
-      changes: JSON.stringify({
-        before: omitFields(originalRole, ['created_by','created_at']),
-        after: omitFields(role.toObject?.() || role, ['created_by','created_at']),
-      }),
-      actionType: EActionType.UPDATE,
-      collectionName: 'Role',
-      objectId: roleId,
-    })
+    const formattedLookup = {
+      ...lookup,
+      parent_name: parent?.name || null,
+      alt_parent_name: altParent?.name || null,
+      creator_user_name: createdByUser?.name || null,
+      updater_user_name: updatedByUser?.name || null,
+    };
 
-    return NextResponse.json({
-      success: true,
-      message: 'Role updated successfully',
-      role,
-      newAssignedPermissionInfos,
-    })
-  } catch (err: any) {
-    console.error('Role Update Error:', err)
-    return NextResponse.json(
-      { success: false, message: err?.message || 'Update failed' },
-      { status: err.name === 'JsonWebTokenError' ? 403 : 500 }
-    )
+    return NextResponse.json(formattedLookup);
+  } catch (err) {
+    console.error('Error fetching lookup detail:', err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest, { params }:  {params: Promise<{ id: string }>}) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const authCheck = await checkUserAccess(req, ['delete-roles'])
-    if (!authCheck.authorized) {
-      return authCheck.response
-    }
+    const authCheck = await checkUserAccess(req, ['update-lookups']);
+    if (!authCheck.authorized) return authCheck.response;
 
-    const { id: roleId } = await params;
+    const { id } = await params;
     await dbConnect();
 
-    const role = await Role.findById(roleId);
-    if (!role) {
-      return NextResponse.json({ error: 'Role not found' }, { status: 404 });
+    if (!Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: 'Invalid ID' }, { status: 400 });
     }
 
-    const originalRole = role.toObject();
+    const lookup = await Lookup.findById(id);
+    if (!lookup) {
+      return NextResponse.json({ success: false, message: 'Lookup not found' }, { status: 404 });
+    }
 
-    // 🔍 Reference check
-    const refCheck = await checkReferenceBeforeDelete(roleId, [
-      // { collectionName: 'RolePermission', columnNames: ['role_id'] },
-      // { collectionName: 'ModelRole', columnNames: ['role_id'] },
+    const originalLookup = lookup.toObject();
+    const formData = await req.formData();
+
+    const updatableFields = ['name', 'bn_name', 'description', 'parent_id', 'alt_parent_id'];
+
+    for (const field of updatableFields) {
+      const value = formData.get(field);
+      if (value !== null) {
+        lookup[field] = field.endsWith('_id') && value
+          ? new Types.ObjectId(value.toString())
+          : value?.toString() || null;
+      }
+    }
+
+    lookup.updated_by = authCheck.userId;
+    lookup.updated_at = new Date();
+    await lookup.save();
+
+    await logAction({
+      detail: `Lookup updated: ${lookup.name}`,
+      changes: JSON.stringify({
+        before: omitFields(originalLookup, ['created_by', 'created_at']),
+        after: omitFields(lookup.toObject?.() || lookup, ['created_by', 'created_at']),
+      }),
+      actionType: EActionType.UPDATE,
+      collectionName: 'Lookup',
+      objectId: id,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Lookup updated successfully',
+      lookup,
+    });
+  } catch (err: any) {
+    console.error('Lookup Update Error:', err);
+    return NextResponse.json(
+      { success: false, message: err?.message || 'Update failed' },
+      { status: err.name === 'JsonWebTokenError' ? 403 : 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const authCheck = await checkUserAccess(req, ['delete-lookups']);
+    if (!authCheck.authorized) return authCheck.response;
+
+    const { id } = await params;
+    await dbConnect();
+
+    if (!Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+    }
+
+    const lookup = await Lookup.findById(id);
+    if (!lookup) {
+      return NextResponse.json({ error: 'Lookup not found' }, { status: 404 });
+    }
+
+    const originalLookup = lookup.toObject();
+
+    const refCheck = await checkReferenceBeforeDelete(id, [
+      // Add reference checks here if needed
+      // { collectionName: 'SomeOtherCollection', columnNames: ['lookup_id'] },
     ]);
 
     if (refCheck) {
       return NextResponse.json({
-        error: 'Cannot delete role due to existing reference.',
+        error: 'Cannot delete lookup due to existing reference.',
         reference: refCheck,
       }, { status: 400 });
     }
 
-
-    await removePermissionsOfRoleBatch(role._id.toString());
-
-    await role.deleteOne();
+    await lookup.deleteOne();
 
     await logAction({
-      detail: `Role deleted: ${originalRole.name}`,
+      detail: `Lookup deleted: ${originalLookup.name}`,
       actionType: EActionType.DELETE,
-      collectionName: 'Role',
-      objectId: roleId,
+      collectionName: 'Lookup',
+      objectId: id,
       changes: JSON.stringify({
-        before: omitFields(originalRole, ['created_by', 'created_at']),
+        before: omitFields(originalLookup, ['created_by', 'created_at']),
         after: null,
       }),
     });
 
-    return NextResponse.json({ success: true, status: 'deleted', message: 'Role deleted successfully' });
-
+    return NextResponse.json({ success: true, status: 'deleted', message: 'Lookup deleted successfully' });
   } catch (err: any) {
-    console.error('Delete Role Error:', err);
+    console.error('Delete Lookup Error:', err);
     return NextResponse.json(
       { error: err?.message || 'Delete failed' },
       { status: err.name === 'JsonWebTokenError' ? 403 : 500 }
     );
   }
 }
-
-
