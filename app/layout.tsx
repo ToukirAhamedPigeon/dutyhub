@@ -13,13 +13,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale}>
       <body suppressHydrationWarning>
         <Providers>
-        <NextIntlClientProvider  locale={locale} messages={messages}>
-          <FullPageLoader />
-          <AuthUserWrapper />
-          {children}
-          <Toaster />
-        </NextIntlClientProvider>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <FullPageLoader />
+            <AuthUserWrapper />
+            {children}
+            <Toaster />
+          </NextIntlClientProvider>
         </Providers>
+
+        {/* ⬇️ Required for react-datepicker portal to work properly */}
+        <div
+          id="datepicker-portal"
+          className="fixed top-0 left-0 w-full h-full z-[9999] pointer-events-none"
+        />
       </body>
     </html>
   );

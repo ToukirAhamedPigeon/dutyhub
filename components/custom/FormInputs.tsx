@@ -629,27 +629,6 @@ export const SingleImageInput: React.FC<SingleImageInputProps> = ({
   );
 };
 
-
-//DateTimeInput
-
-type DateTimeProps = {
-  id: string;
-  label: string;
-  name: string;
-  value: Date | null;
-  setValue: (field: string, value: any, options?: object) => void;
-  placeholder?: string;
-  isRequired?: boolean;
-  showTime?: boolean;
-  error?: any;
-  disabled?: boolean;
-  readOnly?: boolean;
-  allowTyping?: boolean;
-  showResetButton?: boolean;   // <-- new prop
-  className?: string;
-  model: string;
-};
-
 // BasicTextarea
 
 interface BasicTextareaProps {
@@ -694,6 +673,29 @@ export const BasicTextarea: React.FC<BasicTextareaProps> = ({
 };
 
 
+
+
+//DateTimeInput
+
+type DateTimeProps = {
+  id: string;
+  label: string;
+  name: string;
+  value: Date | null;
+  setValue: (field: string, value: any, options?: object) => void;
+  placeholder?: string;
+  isRequired?: boolean;
+  showTime?: boolean;
+  error?: any;
+  disabled?: boolean;
+  readOnly?: boolean;
+  allowTyping?: boolean;
+  showResetButton?: boolean;   // <-- new prop
+  className?: string;
+  model: string;
+};
+
+
 const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, DateTimeProps>(
   (
     {
@@ -709,7 +711,7 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
       disabled,
       readOnly,
       allowTyping = false,
-      showResetButton = false, // default off
+      showResetButton = false,
       className,
       model,
     },
@@ -718,7 +720,7 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
     const t = useTranslations();
 
     const handleReset = (e: React.MouseEvent) => {
-      e.stopPropagation(); // prevent popover toggle if any
+      e.stopPropagation(); // prevent popover toggle
       setValue(name, null);
     };
 
@@ -753,7 +755,9 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
             )}
             wrapperClassName="w-full"
             disabled={disabled}
-            popperClassName="!z-[9999] !overflow-visible"
+            popperClassName="z-[9999] pointer-events-auto"
+            popperPlacement="top-start"
+            portalId="datepicker-portal"
           />
           {showResetButton && value && !disabled && !readOnly && (
             <button
@@ -761,9 +765,11 @@ const DateTimeInput = React.forwardRef<React.ComponentRef<typeof DatePicker>, Da
               onClick={handleReset}
               aria-label="Clear date"
               className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              tabIndex={-1} // exclude from tab order, optional
+              tabIndex={-1}
             >
-              <span className="text-xs text-gray-800 hover:text-red-700 cursor-pointer hover:font-bold">&#10005;</span> {/* or use an SVG icon for 'X' */}
+              <span className="text-xs text-gray-800 hover:text-red-700 cursor-pointer hover:font-bold">
+                &#10005;
+              </span>
             </button>
           )}
         </div>
