@@ -125,3 +125,16 @@ export enum BloodGroup {
     updatedBy?: IUser
     updatedAt?: Date
   }
+
+  export interface ILookup {
+    _id: ObjectId;
+    name: string;
+    bn_name?: string;
+    parent_id?: ObjectId | ILookup;
+    alt_parent_id?: ObjectId | ILookup;
+    description?: string;
+    created_at?: Date;
+    created_by?: ObjectId | IUser;
+    updated_at?: Date;
+    updated_by?: ObjectId | IUser;
+  }
