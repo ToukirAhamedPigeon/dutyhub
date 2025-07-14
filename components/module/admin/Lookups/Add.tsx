@@ -97,7 +97,7 @@ export default function AddLookup({ fetchData }: AddLookupProps) {
             <BasicInput
               id="name"
               label="Name(s)"
-              placeholder="e.g. Color=Size"
+              placeholder="Name(s)"
               register={register('name')}
               error={errors.name}
               model={model}

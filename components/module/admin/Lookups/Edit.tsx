@@ -95,7 +95,7 @@ export default function EditLookup({ lookup, fetchData, onClose }: EditLookupPro
             <BasicInput
               id="name"
               label="Name"
-              placeholder="e.g. Size, Color"
+              placeholder="Name"
               register={register('name')}
               error={errors.name}
               model={model}
