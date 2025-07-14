@@ -39,6 +39,7 @@ import { useEditSheet } from '@/hooks/useEditSheet'
 import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
 import { can } from '@/lib/authcheck/client'
 import { LookupFilters, LookupFilterForm } from './LookupFilterForm'
+import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
 
 const getAllColumns = ({
   pageIndex,
@@ -186,14 +187,33 @@ export default function LookupListTable() {
     showDelete,
   }), [pageIndex, pageSize, fetchDetail, openEdit, confirmDelete])
 
-  useEffect(() => {
-    setVisible(allColumns)
-  }, [allColumns])
+  
+    useEffect(() => {
+      (async () => {
+        const refreshedColumns = await refreshColumnSettings<ILookup>('roleTable', allColumns)
+        setVisible(refreshedColumns)
+      })()
+    }, [])
+  
+    const handleColumnChange = (cols: ColumnDef<ILookup>[]) => {
+      setVisible(cols)
+      setShowColumnModal(false)
+    }
+  
+    // Load saved filters from localStorage on mount
+    useEffect(() => {
+      const saved = localStorage.getItem('roleFilters')
+      if (saved) setFilters(JSON.parse(saved))
+    }, [])
+  
+    // Refetch data & save filters when filters change
+    useEffect(() => {
+      fetchData()
+      setPageIndex(0) // Reset page on filter change
+      localStorage.setItem('roleFilters', JSON.stringify(filters))
+    }, [filters])
 
-  useEffect(() => {
-    fetchData()
-    setPageIndex(0)
-  }, [filters])
+
 
   const table = useReactTable({
     data,
@@ -307,7 +327,7 @@ export default function LookupListTable() {
           open={showColumnModal}
           onClose={() => setShowColumnModal(false)}
           initialColumns={allColumns}
-          onChange={(cols) => { setVisible(cols); setShowColumnModal(false) }}
+          onChange={handleColumnChange}
         />
       )}
     </motion.div>
