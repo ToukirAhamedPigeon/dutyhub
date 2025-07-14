@@ -25,9 +25,9 @@ export default function LookupDetail({ lookup }: LookupDetailProps) {
     { label: 'Parent', value: lookup.parent_name || '-' },
     { label: 'Alt Parent', value: lookup.alt_parent_name || '-' },
     { label: 'Created By', value: lookup.creator_user_name || '-' },
-    { label: 'Created At', value: (lookup.created_at)?getCustomDateTime(lookup.created_at.toISOString(), 'YYYY-MM-DD HH:mm:ss'):'' },
+    { label: 'Created At', value: (lookup.created_at)?getCustomDateTime(lookup.created_at.toISOString(), 'YYYY-MM-DD HH:mm:ss'):'-' },
     { label: 'Updated By', value: lookup.updater_user_name || '-' },
-    { label: 'Updated At', value: (lookup.updated_at)?getCustomDateTime(lookup.updated_at.toISOString(), 'YYYY-MM-DD HH:mm:ss'):'' },
+    { label: 'Updated At', value: (lookup.updated_at)?getCustomDateTime(lookup.updated_at.toISOString(), 'YYYY-MM-DD HH:mm:ss'):'-' },
   ];
 
   return (

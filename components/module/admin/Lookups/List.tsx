@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
-  flexRender,
+  useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
+  flexRender,
   ColumnDef,
   SortingState,
   OnChangeFn,
@@ -18,57 +18,51 @@ import { useDetailModal } from '@/hooks/useDetailModal'
 import Modal from '@/components/custom/Modal'
 import FormHolderSheet from '@/components/custom/FormHolderSheet'
 import {
-  TableLoader,
   TableHeaderActions,
   TablePaginationFooter,
+  TableLoader,
   RowActions,
   IndexCell,
 } from '@/components/custom/Table'
 import { getCustomDateTime } from '@/lib/formatDate'
 import api from '@/lib/axios'
 import { authorizationHeader } from '@/lib/tokens'
-import Add from './Add'
-import RoleDetail from './LookupDetail'
-import { IRole } from '@/types'
+import { ILookup } from '@/types'
+import LookupDetail from './LookupDetail'
+import AddLookup from './Add'
+import EditLookup from './Edit'
 import { ColumnVisibilityManager } from '@/components/custom/ColumnVisibilityManager'
-import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
 import { printTableById } from '@/lib/printTable'
 import { exportVisibleTableToExcel } from '@/lib/exportTable'
 import { FilterModal } from '@/components/custom/FilterModal'
-import { RoleFilterForm, RoleFilters } from './LookupFilterForm'
-import EditRole from './Edit'
 import { useEditSheet } from '@/hooks/useEditSheet'
-import ConfirmDialog from '@/components/custom/ConfirmDialog'
 import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
 import { can } from '@/lib/authcheck/client'
-import { useTranslations } from 'next-intl'
+import { LookupFilters, LookupFilterForm } from './LookupFilterForm'
 
-// 🧱 Column Definitions
 const getAllColumns = ({
   pageIndex,
   pageSize,
   fetchDetail,
   handleEditClick,
   confirmDelete,
-  showDetail=true,
-  showEdit=true,
-  showDelete=true,
+  showDetail = true,
+  showEdit = true,
+  showDelete = true,
 }: {
   pageIndex: number
   pageSize: number
-  fetchDetail: (itemOrId: IRole | string) => void
-  handleEditClick: (user: IRole) => void
+  fetchDetail: (itemOrId: ILookup | string) => void
+  handleEditClick: (lookup: ILookup) => void
   confirmDelete: (id: string) => void
   showDetail?: boolean
   showEdit?: boolean
   showDelete?: boolean
-}): ColumnDef<IRole>[] => [
+}): ColumnDef<ILookup>[] => [
   {
     header: 'SL',
     id: 'sl',
-    cell: ({ row }) => (
-      <IndexCell rowIndex={row.index} pageIndex={pageIndex} pageSize={pageSize} />
-    ),
+    cell: ({ row }) => <IndexCell rowIndex={row.index} pageIndex={pageIndex} pageSize={pageSize} />,
     meta: { customClassName: 'text-center' },
   },
   {
@@ -86,167 +80,120 @@ const getAllColumns = ({
       />
     ),
   },
-  { header: 'Name', id: 'name', accessorKey: 'name' },
-  { header: 'Guard Name', id: 'guard_name', accessorKey: 'guard_name' },
-  { header: 'Created By', id: 'created_by', accessorKey: 'created_by_name' },
+  { header: 'Name', accessorKey: 'name', id: 'name' },
+  { header: 'BN Name', accessorKey: 'bn_name', id: 'bn_name' },
+  { header: 'Parent', accessorKey: 'parent_name', id: 'parent_name' },
+  { header: 'Alt Parent', accessorKey: 'alt_parent_name', id: 'alt_parent_name' },
+  { header: 'Created By', accessorKey: 'creator_user_name', id: 'creator_user_name' },
+  { header: 'Updated By', accessorKey: 'updater_user_name', id: 'updater_user_name' },
   {
     header: 'Created At',
     accessorKey: 'created_at',
     id: 'created_at',
-    cell: ({ getValue }) => getCustomDateTime(getValue() as string,'YYYY-MM-DD HH:mm:ss'),
-    meta: {
-      customClassName: 'text-center min-w-[150px] whitespace-nowrap',
-    },
+    cell: ({ getValue }) => getCustomDateTime(getValue() as string, 'YYYY-MM-DD HH:mm:ss'),
   },
-  { header: 'Updated By', id: 'updated_by', accessorKey: 'updated_by_name' },
   {
     header: 'Updated At',
     accessorKey: 'updated_at',
     id: 'updated_at',
-    cell: ({ getValue }) => getCustomDateTime(getValue() as string,'YYYY-MM-DD HH:mm:ss'),
-    meta: {
-      customClassName: 'text-center min-w-[150px] whitespace-nowrap',
-    },
+    cell: ({ getValue }) => getCustomDateTime(getValue() as string, 'YYYY-MM-DD HH:mm:ss'),
   },
 ]
 
-const initialFilters: RoleFilters = {
+const initialFilters: LookupFilters = {
   name: '',
-  guard_name: '',
-  permission_ids: [],
+  bn_name: '',
+  parent_id: '',
+  alt_parent_id: '',
 }
 
-export default function RoleListTable() {
-  const t = useTranslations();
+export default function LookupListTable() {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
-  
+  const [filters, setFilters] = useState<LookupFilters>(initialFilters)
+  const [filterModalOpen, setFilterModalOpen] = useState(false)
+  const [visible, setVisible] = useState<ColumnDef<ILookup>[]>([])
+  const [showColumnModal, setShowColumnModal] = useState(false)
+  const showDetail = true
+  const showEdit = can(['update-lookups'])
+  const showDelete = can(['delete-lookups'])
+  const [showAddButton, setShowAddButton] = useState(false)
+
+  useEffect(() => {
+    setShowAddButton(can(['create-lookups']))
+  }, [])
 
   const {
     isModalOpen,
     selectedItem,
     fetchDetail,
-    closeModal: closeDetailModal,
+    closeModal,
     detailLoading,
-  } = useDetailModal<IRole>('/roles')
+  } = useDetailModal<ILookup>('/lookups')
 
-  const {isOpen: isEditSheetOpen,itemToEdit: roleToEdit,openEdit: handleEditClick,closeEdit: closeEditSheet} = useEditSheet<IRole>()
+  const { isOpen: isEditSheetOpen, itemToEdit, openEdit, closeEdit } = useEditSheet<ILookup>()
 
-  // New filter state and modal control
-const [filters, setFilters] = useState<RoleFilters>(initialFilters)
-const [filterModalOpen, setFilterModalOpen] = useState(false)
-const showDetail= true
-const showEdit= can(['update-roles'])
-const showDelete= can(['delete-roles'])
-const [showAddButton,setShowAddButton]= useState(false)
-
-useEffect(() => {
-  setShowAddButton(can(['create-roles']))
-},[])
-
-
-const {
-  data,
-  totalCount,
-  loading,
-  globalFilter,
-  setGlobalFilter,
-  sorting,
-  setSorting,
-  pageIndex,
-  setPageIndex,
-  pageSize,
-  setPageSize,
-  fetchData,
-} = useTable<IRole>({
-  fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
-    const headers = await authorizationHeader();
-    const res = await api.post(
-      '/roles',
-      {
+  const {
+    data,
+    totalCount,
+    loading,
+    globalFilter,
+    setGlobalFilter,
+    sorting,
+    setSorting,
+    pageIndex,
+    setPageIndex,
+    pageSize,
+    setPageSize,
+    fetchData,
+  } = useTable<ILookup>({
+    fetcher: async ({ q, page, limit, sortBy, sortOrder }) => {
+      const headers = await authorizationHeader()
+      const res = await api.post('/lookups', {
         q,
         page,
         limit,
         sortBy: sortBy || 'created_at',
         sortOrder: sortOrder || 'desc',
-        ...(filters.name && { name: filters.name }),
-        ...(filters.guard_name && { guard_name: filters.guard_name }),
-        ...(filters.permission_ids && filters.permission_ids.length > 0 && { permission_ids: filters.permission_ids }),
-      },
-      { headers }
-    );
+        ...filters,
+      }, { headers })
 
-    return {
-      data: res.data.roles,
-      total: res.data.totalCount,
-    };
-  },
-  initialColumns: [],
-  defaultSort: 'created_at',
-});
-
-const isFilterActive = useMemo(() => {
-  return Object.entries(filters).some(([key, value]) => {
-    if (Array.isArray(value)) return value.length > 0
-    return value !== ''
+      return {
+        data: res.data.lookups,
+        total: res.data.totalCount,
+      }
+    },
+    initialColumns: [],
+    defaultSort: 'created_at',
   })
-}, [filters])
 
-const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDeleteWithConfirm({
-  endpoint: '/roles',
-  onSuccess: fetchData,
-})
-
-  const allColumns = useMemo(
-    () =>
-      getAllColumns({
-        pageIndex,
-        pageSize,
-        fetchDetail,
-        handleEditClick,
-        confirmDelete,
-        showDetail,
-        showEdit,
-        showDelete,
-      }),
-    [pageIndex, pageSize, fetchDetail, handleEditClick, confirmDelete, showDetail, showEdit, showDelete]
-  )
-
-  
-
-  const [visible, setVisible] = useState<ColumnDef<IRole>[]>([])
-  const [showColumnModal, setShowColumnModal] = useState(false)
-
-  useEffect(() => {
-    (async () => {
-      const refreshedColumns = await refreshColumnSettings<IRole>('roleTable', allColumns)
-      setVisible(refreshedColumns)
-    })()
-  }, [])
-
-  const handleColumnChange = (cols: ColumnDef<IRole>[]) => {
-    setVisible(cols)
-    setShowColumnModal(false)
-  }
-
-  // Load saved filters from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('roleFilters')
-    if (saved) setFilters(JSON.parse(saved))
-  }, [])
-
-  // Refetch data & save filters when filters change
-  useEffect(() => {
-    fetchData()
-    setPageIndex(0) // Reset page on filter change
-    localStorage.setItem('roleFilters', JSON.stringify(filters))
+  const isFilterActive = useMemo(() => {
+    return Object.values(filters).some((val) => val && val !== '')
   }, [filters])
 
-  // ✅ Correct visible column IDs for export
-  const visibleIds = visible.map(
-    (col) =>
-      col.id ??
-      (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : '')
-  )
+  const { dialogOpen, confirmDelete, cancelDelete, handleDelete, deleteLoading } = useDeleteWithConfirm({
+    endpoint: '/lookups',
+    onSuccess: fetchData,
+  })
+
+  const allColumns = useMemo(() => getAllColumns({
+    pageIndex,
+    pageSize,
+    fetchDetail,
+    handleEditClick: openEdit,
+    confirmDelete,
+    showDetail,
+    showEdit,
+    showDelete,
+  }), [pageIndex, pageSize, fetchDetail, openEdit, confirmDelete])
+
+  useEffect(() => {
+    setVisible(allColumns)
+  }, [allColumns])
+
+  useEffect(() => {
+    fetchData()
+    setPageIndex(0)
+  }, [filters])
 
   const table = useReactTable({
     data,
@@ -261,150 +208,87 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
     getPaginationRowModel: getPaginationRowModel(),
   })
 
+  const visibleIds = visible.map((col) => col.id ?? (typeof (col as any).accessorKey === 'string' ? (col as any).accessorKey : ''))
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-      <div className="table-container relative space-y-2">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <TableHeaderActions
         searchValue={globalFilter}
         onSearchChange={setGlobalFilter}
         onAddNew={() => setIsSheetOpen(true)}
         showAddButton={showAddButton}
         onColumnSettings={() => setShowColumnModal(true)}
-        onPrint={() => printTableById('printable-user-table', 'Role Table')}
-        onExport={() =>
-          exportVisibleTableToExcel({
-            data,
-            columns: allColumns,
-            visibleColumnIds: visibleIds,
-            fileName: 'Roles',
-            sheetName: 'Roles',
-          })
-        }
-        addButtonLabel="Add New Role"
+        onPrint={() => printTableById('printable-lookup-table', 'Lookup Table')}
+        onExport={() => exportVisibleTableToExcel({ data, columns: allColumns, visibleColumnIds: visibleIds, fileName: 'Lookups', sheetName: 'Lookups' })}
+        addButtonLabel="Add New Lookup"
         onFilter={() => setFilterModalOpen(true)}
         isFilterActive={isFilterActive}
       />
 
-        <div className="relative rounded-sm shadow overflow-hidden bg-white" id="printable-user-table">
-          <div className="max-h-[600px] min-h-[200px] overflow-y-auto">
-            {loading && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-opacity-70 mt-20">
-                <TableLoader loading />
-              </div>
-            )}
-
-            <table className="table-auto w-full text-left border border-collapse">
-              <thead className="sticky -top-1 z-10 bg-gray-200 shadow-[-2px_6px_8px_-4px_rgba(0,0,0,0.2)]">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className={`p-2 border border-gray-300 bg-gray-200 ${
-                          (header.column.columnDef.meta as { customClassName?: string })?.customClassName || ''
-                        }`}
-                      >
-                        <div
-                          className="flex justify-between items-center w-full cursor-pointer"
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          <span>
-                            {(() => {
-                              const content = flexRender(header.column.columnDef.header, header.getContext());
-                              return typeof content === "string" ? t(content) : content;
-                            })()}
-                          </span>
-                          <span className="ml-2">
-                            {header.column.getIsSorted() === 'asc' ? (
-                              <FaSortUp size={12} />
-                            ) : header.column.getIsSorted() === 'desc' ? (
-                              <FaSortDown size={12} />
-                            ) : (
-                              <FaSort size={12} />
-                            )}
-                          </span>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border-b">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="p-2 border border-gray-300">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <div className="relative rounded shadow bg-white" id="printable-lookup-table">
+        <div className="overflow-y-auto max-h-[600px]">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-opacity-70 z-10">
+              <TableLoader loading />
+            </div>
+          )}
+          <table className="table-auto w-full text-left border">
+            <thead className="sticky top-0 bg-gray-200 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th key={header.id} className="p-2 border">
+                      <div className="flex justify-between cursor-pointer" onClick={header.column.getToggleSortingHandler()}>
+                        <span>{header.column.columnDef.header as string}</span>
+                        <span>
+                          {header.column.getIsSorted() === 'asc' ? <FaSortUp size={12} /> :
+                           header.column.getIsSorted() === 'desc' ? <FaSortDown size={12} /> :
+                           <FaSort size={12} />}
+                        </span>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="border-b">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="p-2 border">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <TablePaginationFooter
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          totalCount={totalCount}
-          setPageIndex={setPageIndex}
-          setPageSize={setPageSize}
-        />
       </div>
 
-      {showDetail && <Modal isOpen={isModalOpen} onClose={closeDetailModal} title="Role Details">
-        {detailLoading || !selectedItem ? (
-          <div className="flex items-center justify-center min-h-[150px]">
-            <TableLoader loading />
-          </div>
-        ) : (
-          <RoleDetail role={selectedItem} />
-        )}
-      </Modal>}
+      <TablePaginationFooter
+        pageIndex={pageIndex}
+        pageSize={pageSize}
+        totalCount={totalCount}
+        setPageIndex={setPageIndex}
+        setPageSize={setPageSize}
+      />
 
-      {showAddButton && <FormHolderSheet
-        open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
-        title="Add New Role"
-        titleDivClassName="success-gradient"
-      >
-        <Add fetchData={fetchData} />
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="Lookup Details">
+        {detailLoading || !selectedItem ? <TableLoader loading /> : <LookupDetail lookup={selectedItem} />}
+      </Modal>
+
+      {showAddButton && <FormHolderSheet open={isSheetOpen} onOpenChange={setIsSheetOpen} title="Add New Lookup">
+        <AddLookup fetchData={fetchData} />
       </FormHolderSheet>}
 
-       {/* Edit Modal */}  
-      {showEdit && <FormHolderSheet
-        open={isEditSheetOpen}
-        onOpenChange={closeEditSheet}
-        title="Edit Role"
-        titleDivClassName="warning-gradient"
-      >
-        {roleToEdit && (
-          <EditRole
-            role={roleToEdit}
-            onClose={closeEditSheet}
-            fetchData={async () => {
-              //closeEditSheet()
-              fetchData()
-            }}
-          />
-        )}
+      {showEdit && <FormHolderSheet open={isEditSheetOpen} onOpenChange={closeEdit} title="Edit Lookup">
+        {itemToEdit && <EditLookup lookup={itemToEdit} onClose={closeEdit} fetchData={fetchData} />}
       </FormHolderSheet>}
-
-      {showColumnModal && (
-        <ColumnVisibilityManager<IRole>
-          tableId="roleTable"
-          open={showColumnModal}
-          onClose={() => setShowColumnModal(false)}
-          initialColumns={allColumns}
-          onChange={handleColumnChange}
-        />
-      )}
 
       <FilterModal
-        tableId="roleTable"
-        title="Filter Roles"
+        tableId="lookupTable"
+        title="Filter Lookups"
         open={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
         onApply={(newFilters) => {
@@ -413,25 +297,19 @@ const {dialogOpen,confirmDelete,cancelDelete,handleDelete,deleteLoading} = useDe
         }}
         initialFilters={initialFilters}
         renderForm={(filterValues, setFilterValues) => (
-          <RoleFilterForm
-            filterValues={filterValues}             // ✅ MATCHES expected prop
-            setFilterValues={setFilterValues}       // ✅ MATCHES expected prop
-            onClose={() => setFilterModalOpen(false)}
-          />
+          <LookupFilterForm filterValues={filterValues} setFilterValues={setFilterValues} onClose={() => setFilterModalOpen(false)} />
         )}
       />
 
-      {/* Confirm Dialog */}
-      {showDelete && <ConfirmDialog
-        open={dialogOpen}
-        onCancel={cancelDelete}
-        onConfirm={handleDelete}
-        title="Confirm Deletion"
-        description="Are you sure you want to delete"
-        confirmLabel={deleteLoading ? 'Deleting' : 'Delete'}
-        loading={deleteLoading}
-      />}
-
+      {showColumnModal && (
+        <ColumnVisibilityManager<ILookup>
+          tableId="lookupTable"
+          open={showColumnModal}
+          onClose={() => setShowColumnModal(false)}
+          initialColumns={allColumns}
+          onChange={(cols) => { setVisible(cols); setShowColumnModal(false) }}
+        />
+      )}
     </motion.div>
   )
 }
