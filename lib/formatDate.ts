@@ -99,7 +99,12 @@ export function formatDateTime(dateStr: string): string {
     return parseInt(createdAtId)
   }
 
-  export function getCustomDateTime(utcDate: string, format:string="YYYY-MM-DD", tz:string="Asia/Dhaka"): string {
-        return moment.utc(utcDate).tz(tz).format(format);
+  export function getCustomDateTime(
+    utcDate?: string,
+    format: string = 'YYYY-MM-DD',
+    tz: string = 'Asia/Dhaka'
+  ): string {
+    if (!utcDate) return '';
+    return moment.utc(utcDate).tz(tz).format(format);
   }
   

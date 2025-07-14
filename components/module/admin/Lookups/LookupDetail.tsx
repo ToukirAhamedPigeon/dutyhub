@@ -1,50 +1,50 @@
 'use client';
 
-import { getCustomDateTime } from '@/lib/formatDate';
 import React from 'react';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { getCustomDateTime } from '@/lib/formatDate';
 import { useTranslations } from 'next-intl';
+import { ILookup } from '@/types';
 
-export default function RoleDetail({ role }: { role: any }) {
+interface LookupDetailProps {
+  lookup: ILookup & {
+    parent_name?: string | null;
+    alt_parent_name?: string | null;
+    creator_user_name?: string | null;
+    updater_user_name?: string | null;
+  };
+}
+
+export default function LookupDetail({ lookup }: LookupDetailProps) {
   const t = useTranslations();
 
-  // Prepare static rows data
   const rows = [
-    { label: 'Name', value: role.name },
-    { label: 'Guard Name', value: role.guard_name },
-    {
-      label: 'Role Permissions',
-      value: <div className="max-w-[300px] break-words whitespace-normal">{role.permissionNames}</div>,
-    },
-    {
-      label: 'Created By',
-      value: role.created_by_name,
-    },
-    {
-      label: 'Created At',
-      value: getCustomDateTime(role.created_at, 'YYYY-MM-DD HH:mm:ss'),
-    },
-    {
-      label: 'Updated By',
-      value: role.updated_by_name,
-    },
-    {
-      label: 'Updated At',
-      value: getCustomDateTime(role.updated_at, 'YYYY-MM-DD HH:mm:ss'),
-    },
+    { label: 'Name', value: lookup.name },
+    { label: 'Bangla Name', value: lookup.bn_name || '-' },
+    { label: 'Description', value: lookup.description || '-' },
+    { label: 'Parent', value: lookup.parent_name || '-' },
+    { label: 'Alt Parent', value: lookup.alt_parent_name || '-' },
+    { label: 'Created By', value: lookup.creator_user_name || '-' },
+    { label: 'Created At', value: (lookup.created_at)?getCustomDateTime(lookup.created_at.toISOString(), 'YYYY-MM-DD HH:mm:ss'):'' },
+    { label: 'Updated By', value: lookup.updater_user_name || '-' },
+    { label: 'Updated At', value: (lookup.updated_at)?getCustomDateTime(lookup.updated_at.toISOString(), 'YYYY-MM-DD HH:mm:ss'):'' },
   ];
 
   return (
     <div className="flex flex-col md:flex-row lg:flex-row gap-6 px-4 md:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
-
-      {/* Role Info */}
       <div className="flex-1">
         <Table>
           <TableBody>
             {rows.map(({ label, value }, idx) => (
               <TableRow key={idx}>
-                <TableCell className="font-semibold w-32">{t(label)}:</TableCell>
-                <TableCell>{value}</TableCell>
+                <TableCell className="font-semibold w-40">{t(label)}:</TableCell>
+                <TableCell>
+                  {typeof value === 'string' || typeof value === 'number' ? (
+                    <span className="whitespace-pre-wrap break-words">{value}</span>
+                  ) : (
+                    value
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
