@@ -3,26 +3,26 @@
 import React, { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { BasicInput, CustomSelect } from '@/components/custom/FormInputs'
-import { guards } from '@/constants'
 
-export interface RoleFilters {
+export interface LookupFilters {
   name?: string
-  guard_name?: string
-  permission_ids?: string[]
+  bn_name?: string
+  parent_id?: string
+  alt_parent_id?: string
 }
 
-interface RoleFilterFormProps {
-  filterValues: RoleFilters
-  setFilterValues: React.Dispatch<React.SetStateAction<RoleFilters>>
+interface LookupFilterFormProps {
+  filterValues: LookupFilters
+  setFilterValues: React.Dispatch<React.SetStateAction<LookupFilters>>
   onClose: () => void
 }
 
-const LOCAL_STORAGE_KEY = 'roleFilters'
+const LOCAL_STORAGE_KEY = 'lookupFilters'
 
-export function RoleFilterForm({
+export function LookupFilterForm({
   filterValues,
   setFilterValues,
-}: RoleFilterFormProps) {
+}: LookupFilterFormProps) {
   const initialized = useRef(false)
 
   const {
@@ -31,13 +31,13 @@ export function RoleFilterForm({
     reset,
     setValue,
     formState: { errors },
-  } = useForm<RoleFilters>({
+  } = useForm<LookupFilters>({
     defaultValues: filterValues,
   })
 
-  const model = 'Role'
+  const model = 'Lookup'
 
-  // Load from localStorage on first mount and merge with filterValues
+  // Load saved filters from localStorage
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
@@ -45,7 +45,7 @@ export function RoleFilterForm({
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
       if (saved) {
-        const savedValues = JSON.parse(saved) as RoleFilters
+        const savedValues = JSON.parse(saved) as LookupFilters
         const merged = { ...filterValues, ...savedValues }
         reset(merged)
         setFilterValues(merged)
@@ -53,17 +53,14 @@ export function RoleFilterForm({
         reset(filterValues)
       }
     } catch (err) {
-      console.error('Failed to load filter values from localStorage:', err)
+      console.error('Failed to load lookup filters from localStorage:', err)
     }
   }, [filterValues, reset, setFilterValues])
 
-  // Sync form values with parent state and save to localStorage
+  // Sync form values with parent and localStorage
   useEffect(() => {
     const subscription = watch((values) => {
-      const cleanedValues: RoleFilters = {
-        ...values,
-        permission_ids: values.permission_ids?.filter((id): id is string => typeof id === 'string'),
-      }
+      const cleanedValues: LookupFilters = { ...values }
 
       setFilterValues((prev) => {
         if (JSON.stringify(prev) !== JSON.stringify(cleanedValues)) {
@@ -84,42 +81,55 @@ export function RoleFilterForm({
           id="name"
           label="Name"
           isRequired={false}
-          placeholder="Name"
+          placeholder="Enter English Name"
           register={register('name')}
           model={model}
         />
-        <CustomSelect<RoleFilters>
-          id="guard_name"
-          label="Guard Name"
-          name="guard_name"
-          placeholder="Select Guard Name"
+        <BasicInput
+          id="bn_name"
+          label="Bangla Name"
           isRequired={false}
-          options={guards}
-          defaultOption={{ label: 'All', value: '' }}
-          error={errors.guard_name}
-          setValue={setValue}
-          value={watch('guard_name')}
+          placeholder="Enter Bangla Name"
+          register={register('bn_name')}
           model={model}
         />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
-        <CustomSelect<RoleFilters>
-          id="permission_ids"
-          label="Permissions"
-          name="permission_ids"
+        <CustomSelect<LookupFilters>
+          id="parent_id"
+          label="Parent"
+          name="parent_id"
           setValue={setValue}
           model={model}
           apiUrl="/get-options"
-          collection="Permission"
+          collection="Lookup"
           labelFields={['name']}
           valueFields={['_id']}
           sortOrder="asc"
           isRequired={false}
-          placeholder="Select Permissions"
-          multiple={true}
-          value={watch('permission_ids')}
-          error={errors.permission_ids?.[0]}
+          placeholder="Select Parent"
+          multiple={false}
+          value={watch('parent_id')}
+          error={errors.parent_id}
+          filter={{ parent_id: { $in: [null, ''] } }}
+        />
+        <CustomSelect<LookupFilters>
+          id="alt_parent_id"
+          label="Alt Parent"
+          name="alt_parent_id"
+          setValue={setValue}
+          model={model}
+          apiUrl="/get-options"
+          collection="Lookup"
+          labelFields={['name']}
+          valueFields={['_id']}
+          sortOrder="asc"
+          isRequired={false}
+          placeholder="Select Alt Parent"
+          multiple={false}
+          value={watch('alt_parent_id')}
+          error={errors.alt_parent_id}
         />
       </div>
     </form>

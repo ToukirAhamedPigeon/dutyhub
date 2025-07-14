@@ -8,6 +8,7 @@ import { dbConnect } from '@/lib/database/mongoose'
 import User from '@/lib/database/models/user.model'
 import Role from '@/lib/database/models/role.model'
 import Permission from '@/lib/database/models/permission.model'
+import Lookup from '@/lib/database/models/lookup.model'
 // Add other models as needed
 
 // Map of collection names to actual Mongoose models
@@ -15,6 +16,7 @@ const modelMap: Record<string, any> = {
   User,
   Role,
   Permission,
+  Lookup
   // Add more models here...
 }
 
