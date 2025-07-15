@@ -92,3 +92,24 @@ export function extractId(value: unknown): string {
   }
   throw new Error('Invalid value passed to extractId');
 }
+
+
+export function sanitizeWhere(where: Record<string, any>) {
+  const sanitized: Record<string, any> = {}
+
+  for (const key in where) {
+    const value = where[key]
+
+    // Handle ObjectId-like fields (commonly end in `_id`)
+    if (key.endsWith('_id')) {
+      if (Types.ObjectId.isValid(value)) {
+        sanitized[key] = new Types.ObjectId(value)
+      }
+      // Skip invalid ObjectId like empty strings
+    } else {
+      sanitized[key] = value
+    }
+  }
+
+  return sanitized
+}

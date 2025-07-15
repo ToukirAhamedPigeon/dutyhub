@@ -18,9 +18,15 @@ const schema = z.object({
   _id: z.string().regex(objectIdRegex, 'Invalid ID'),
   name: z.string().min(1, 'Name is required'),
   bn_name: z.string().optional(),
-  description: z.string().optional(),
-  parent_id: z.string().regex(objectIdRegex, { message: 'Invalid parent ID' }).optional().or(z.literal('')),
-  alt_parent_id: z.string().regex(objectIdRegex, { message: 'Invalid alternate parent ID' }).optional().or(z.literal('')),
+  description: z.string().optional().nullable(),
+  parent_id: z.union([
+    z.string().regex(objectIdRegex, { message: 'Invalid parent ID' }),
+    z.literal('')
+  ]).optional().nullable(),
+  alt_parent_id: z.union([
+    z.string().regex(objectIdRegex, { message: 'Invalid alternate parent ID' }),
+    z.literal('')
+  ]).optional().nullable(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -48,10 +54,22 @@ export default function EditLookup({ lookup, fetchData, onClose }: EditLookupPro
     resolver: zodResolver(schema),
     defaultValues: {
       ...lookup,
-      parent_id: lookup.parent_id?._id || '',
-      alt_parent_id: lookup.alt_parent_id?._id || '',
-    },
+      },
   })
+
+  const parentIdRaw = watch('parent_id')
+
+  const parentId =
+    typeof parentIdRaw === 'object' && parentIdRaw !== null
+      ? (parentIdRaw as unknown as { value: string }).value
+      : parentIdRaw || ''
+
+  const altParentIdRaw = watch('alt_parent_id')
+
+  const altParentId =
+    typeof altParentIdRaw === 'object' && altParentIdRaw !== null
+      ? (altParentIdRaw as unknown as { value: string }).value
+      : altParentIdRaw || ''
 
   const onSubmit = async (data: FormData) => {
     setSubmitLoading(true)
@@ -69,7 +87,9 @@ export default function EditLookup({ lookup, fetchData, onClose }: EditLookupPro
 
       if (!res.data.success) throw new Error(res.data.message || 'Update failed')
 
-      toast.success(t('Lookup updated successfully!'))
+      toast.success(t('Lookup updated successfully!'), {
+        style: { background: 'green', color: 'white' },
+      })
       await fetchData()
       onClose()
     } catch (err: any) {
@@ -139,7 +159,7 @@ export default function EditLookup({ lookup, fetchData, onClose }: EditLookupPro
               sortOrder="asc"
               isRequired={false}
               placeholder="Select Parent"
-              value={watch('parent_id')}
+              value={parentId}
               error={errors.parent_id}
               filter={{ parent_id: { $in: [null, ''] } }}
             />
@@ -159,7 +179,7 @@ export default function EditLookup({ lookup, fetchData, onClose }: EditLookupPro
               sortOrder="asc"
               isRequired={false}
               placeholder="Select Alternate Parent"
-              value={watch('alt_parent_id')}
+              value={altParentId}
               error={errors.alt_parent_id}
             />
           </div>
@@ -169,7 +189,7 @@ export default function EditLookup({ lookup, fetchData, onClose }: EditLookupPro
           <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>
             {t('Reset')}
           </Button>
-          <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700" disabled={submitLoading}>
+          <Button variant="warning" type="submit" className="" disabled={submitLoading}>
             {submitLoading ? t('Saving') + '...' : t('Update Lookup')}
           </Button>
         </div>

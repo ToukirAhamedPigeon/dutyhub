@@ -71,7 +71,12 @@ export default function AddLookup({ fetchData }: AddLookupProps) {
       const result = res.data;
       if (!result.success) throw new Error(result.message || 'Failed to add lookup');
 
-      toast.success(result.message || t('Lookup(s) added successfully!'));
+      toast.success(result.message || t('Lookup(s) added successfully!'), {
+        style: {
+          background: 'green',
+          color: 'white',
+        },
+      });
       reset();
       await fetchData();
     } catch (err: any) {
@@ -172,7 +177,7 @@ export default function AddLookup({ fetchData }: AddLookupProps) {
           <Button type="button" variant="outline" onClick={handleReset} disabled={submitLoading}>
             {t('Reset Form')}
           </Button>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={submitLoading}>
+          <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white" disabled={submitLoading}>
             {submitLoading ? t('Adding') + '...' : t('Add Lookup')}
           </Button>
         </div>

@@ -83,11 +83,16 @@ export function ColumnVisibilityManager<T>({
           setSelectedVisible([])
           setSelectedHidden([])
           setSearch('')
+
+          toast.success(t('Column settings refreshed from database'), {
+            style: { background: 'green', color: 'white' },
+          })
       
-          toast.success(t('Column settings refreshed from database'))
         } catch (err) {
           console.warn('Failed to refresh column settings from DB:', err)
-          toast.error(t('Failed to refresh column settings from database'))
+          toast.error(t('Failed to refresh column settings from database'), {
+            style: { background: 'red', color: 'white' },
+          })
         }
       }
 

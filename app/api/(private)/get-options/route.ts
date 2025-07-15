@@ -9,6 +9,7 @@ import User from '@/lib/database/models/user.model'
 import Role from '@/lib/database/models/role.model'
 import Permission from '@/lib/database/models/permission.model'
 import Lookup from '@/lib/database/models/lookup.model'
+import { sanitizeWhere } from '@/lib/helpers'
 // Add other models as needed
 
 // Map of collection names to actual Mongoose models
@@ -77,8 +78,8 @@ export async function POST(req: NextRequest) {
     const Model = modelMap[collection]
 
     const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
-
-    const docs = await Model.find(where)
+    const sanitizedWhere = sanitizeWhere(where);
+    const docs = await Model.find(sanitizedWhere)
       .sort(sort)
       .skip(skip)
       .limit(limit)

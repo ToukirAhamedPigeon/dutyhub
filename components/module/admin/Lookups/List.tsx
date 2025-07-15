@@ -40,6 +40,7 @@ import { useDeleteWithConfirm } from '@/hooks/useDeleteWithConfirm'
 import { can } from '@/lib/authcheck/client'
 import { LookupFilters, LookupFilterForm } from './LookupFilterForm'
 import { refreshColumnSettings } from '@/lib/refreshColumnSettings'
+import ConfirmDialog from '@/components/custom/ConfirmDialog'
 
 const getAllColumns = ({
   pageIndex,
@@ -190,7 +191,7 @@ export default function LookupListTable() {
   
     useEffect(() => {
       (async () => {
-        const refreshedColumns = await refreshColumnSettings<ILookup>('roleTable', allColumns)
+        const refreshedColumns = await refreshColumnSettings<ILookup>('lookupTable', allColumns)
         setVisible(refreshedColumns)
       })()
     }, [])
@@ -298,11 +299,11 @@ export default function LookupListTable() {
         {detailLoading || !selectedItem ? <TableLoader loading /> : <LookupDetail lookup={selectedItem} />}
       </Modal>
 
-      {showAddButton && <FormHolderSheet open={isSheetOpen} onOpenChange={setIsSheetOpen} title="Add New Lookup">
+      {showAddButton && <FormHolderSheet open={isSheetOpen} onOpenChange={setIsSheetOpen} title="Add New Lookup" titleDivClassName="success-gradient">
         <AddLookup fetchData={fetchData} />
       </FormHolderSheet>}
 
-      {showEdit && <FormHolderSheet open={isEditSheetOpen} onOpenChange={closeEdit} title="Edit Lookup">
+      {showEdit && <FormHolderSheet open={isEditSheetOpen} onOpenChange={closeEdit} title="Edit Lookup" titleDivClassName="warning-gradient">
         {itemToEdit && <EditLookup lookup={itemToEdit} onClose={closeEdit} fetchData={fetchData} />}
       </FormHolderSheet>}
 
@@ -330,6 +331,36 @@ export default function LookupListTable() {
           onChange={handleColumnChange}
         />
       )}
+
+      <FilterModal
+        tableId="lookupTable"
+        title="Filter Lookups"
+        open={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        onApply={(newFilters) => {
+          setFilters(newFilters)
+          setFilterModalOpen(false)
+        }}
+        initialFilters={initialFilters}
+        renderForm={(filterValues, setFilterValues) => (
+          <LookupFilterForm
+            filterValues={filterValues}             // ✅ MATCHES expected prop
+            setFilterValues={setFilterValues}       // ✅ MATCHES expected prop
+            onClose={() => setFilterModalOpen(false)}
+          />
+        )}
+      />
+
+      {/* Confirm Dialog */}
+      {showDelete && <ConfirmDialog
+        open={dialogOpen}
+        onCancel={cancelDelete}
+        onConfirm={handleDelete}
+        title="Confirm Deletion"
+        description="Are you sure you want to delete"
+        confirmLabel={deleteLoading ? 'Deleting' : 'Delete'}
+        loading={deleteLoading}
+      />}
     </motion.div>
   )
 }
