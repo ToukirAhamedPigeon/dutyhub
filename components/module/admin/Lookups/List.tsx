@@ -105,8 +105,8 @@ const getAllColumns = ({
 const initialFilters: LookupFilters = {
   name: '',
   bn_name: '',
-  parent_id: '',
-  alt_parent_id: '',
+  parent_id: [],
+  alt_parent_id: [],
 }
 
 export default function LookupListTable() {
@@ -169,7 +169,11 @@ export default function LookupListTable() {
   })
 
   const isFilterActive = useMemo(() => {
-    return Object.values(filters).some((val) => val && val !== '')
+    return Object.entries(filters).some(([key, val]) => {
+      if (Array.isArray(val)) return val.length > 0
+      if (typeof val === 'string') return val.trim() !== ''
+      return false
+    })
   }, [filters])
 
   const { dialogOpen, confirmDelete, cancelDelete, handleDelete, deleteLoading } = useDeleteWithConfirm({
@@ -203,7 +207,7 @@ export default function LookupListTable() {
   
     // Load saved filters from localStorage on mount
     useEffect(() => {
-      const saved = localStorage.getItem('roleFilters')
+      const saved = localStorage.getItem('lookupFilters')
       if (saved) setFilters(JSON.parse(saved))
     }, [])
   
@@ -211,7 +215,7 @@ export default function LookupListTable() {
     useEffect(() => {
       fetchData()
       setPageIndex(0) // Reset page on filter change
-      localStorage.setItem('roleFilters', JSON.stringify(filters))
+      localStorage.setItem('lookupFilters', JSON.stringify(filters))
     }, [filters])
 
 

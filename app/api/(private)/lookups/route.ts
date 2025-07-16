@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
       sortOrder = 'desc',
       name = '',
       bn_name = '',
-      parent_id = '',
-      alt_parent_id = '',
+      parent_id = [],
+      alt_parent_id = [],
     } = body;
 
     const skip = (page - 1) * limit;
@@ -35,8 +35,21 @@ export async function POST(req: NextRequest) {
     const filterQuery: any = {};
     if (name) filterQuery.name = { $regex: name, $options: 'i' };
     if (bn_name) filterQuery.bn_name = { $regex: bn_name, $options: 'i' };
-    if (parent_id) filterQuery.parent_id = new Types.ObjectId(parent_id);
-    if (alt_parent_id) filterQuery.alt_parent_id = new Types.ObjectId(alt_parent_id);
+    if (Array.isArray(parent_id) && parent_id.length > 0) {
+      filterQuery.parent_id = {
+        $in: parent_id
+          .filter((id) => Types.ObjectId.isValid(id))
+          .map((id) => new Types.ObjectId(id)),
+      };
+    }
+
+    if (Array.isArray(alt_parent_id) && alt_parent_id.length > 0) {
+      filterQuery.alt_parent_id = {
+        $in: alt_parent_id
+          .filter((id) => Types.ObjectId.isValid(id))
+          .map((id) => new Types.ObjectId(id)),
+      };
+    }
 
     const globalSearchQuery = q
       ? {

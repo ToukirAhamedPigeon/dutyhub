@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/(public)/auth/[...nextauth]/route'
 import { verifyAccessToken } from '@/lib/jwt'
 import { dbConnect } from '@/lib/database/mongoose'
+import { Types } from 'mongoose';
 
 // Import all your models
 import User from '@/lib/database/models/user.model'
